@@ -50,11 +50,12 @@ export const newObjectKey = (deliveryId: string, fileId: string) =>
 
 const UPLOAD_URL_SECONDS = 60 * 60 * 6;
 const DOWNLOAD_URL_SECONDS = 60 * 10;
-// Thumbnails are shown only to the signed-in owner, so their links can live long enough for a working session.
-// Thumbnail links are signed from a rounded start time, so the same picture keeps the same address while the owner
-// edits the page and the browser does not fetch every thumbnail again after each save.
+// The owner's editor shows thumbnails for a whole working session. Those links are signed from a rounded start time,
+// so the same picture keeps the same address while the owner edits and the browser does not fetch every thumbnail
+// again after each save. A client's thumbnails are short-lived like downloads, so unpublishing cuts them off quickly.
 const THUMB_URL_SECONDS = 2 * 60 * 60;
 const THUMB_SIGNING_STEP_MS = 30 * 60 * 1000;
+const CLIENT_THUMB_URL_SECONDS = 60 * 10;
 
 export function presignPut(key: string, type: string, size: number) {
   return getSignedUrl(
@@ -193,6 +194,16 @@ export function presignThumb(key: string) {
       expiresIn: THUMB_URL_SECONDS,
       signingDate: new Date(Math.floor(Date.now() / THUMB_SIGNING_STEP_MS) * THUMB_SIGNING_STEP_MS),
     },
+  );
+}
+
+// A link to a thumbnail for a client who has the delivery link. Handed out by the preview route after it checks
+// that the delivery is published.
+export function presignClientThumb(key: string) {
+  return getSignedUrl(
+    s3(),
+    new GetObjectCommand({ Bucket: bucket(), Key: key, ResponseContentType: "image/jpeg" }),
+    { expiresIn: CLIENT_THUMB_URL_SECONDS },
   );
 }
 

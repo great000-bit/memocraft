@@ -210,6 +210,21 @@ export async function getPublishedFile(slug: string, fileId: string) {
   return rows[0] ?? null;
 }
 
+// The preview picture of a file a client may see: attached, with a thumbnail, in a delivery published right now.
+export async function getPublishedThumbKey(slug: string, fileId: string): Promise<string | null> {
+  if (!/^[a-z0-9-]{1,80}$/.test(slug) || !isUuid(fileId)) return null;
+  const { rows } = await pool.query<{ thumbKey: string }>(
+    `select f."thumbKey"
+       from "deliveryFile" f
+       join "deliverySection" s on s."id" = f."sectionId"
+       join "delivery" d on d."id" = s."deliveryId"
+      where f."id" = $1 and d."slug" = $2 and d."status" = 'published'
+        and f."storageKey" is not null and f."thumbKey" is not null`,
+    [fileId, slug],
+  );
+  return rows[0]?.thumbKey ?? null;
+}
+
 // The name a client's device saves the file under: the label the creative chose, with the original extension kept.
 export function downloadName(name: string, ext: string | null): string {
   const base = name.trim().replace(/[\\/:*?"<>|\u0000-\u001f]+/g, "-") || "file";

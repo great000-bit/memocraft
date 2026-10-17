@@ -11,7 +11,8 @@ import {
 import { limits } from "@/lib/delivery-limits";
 import type { Delivery, DeliveryFile, DeliverySection } from "@/lib/deliveries";
 import type { Activity } from "@/lib/delivery-events";
-import { presignThumb, storageConfigured } from "@/lib/storage";
+import { storageConfigured } from "@/lib/storage";
+import { ownerThumbnailLinks } from "@/lib/thumbnails";
 import { formatSize } from "@/lib/storage-limits";
 import { ActionButton } from "./ActionButton";
 import { ActivityPanel } from "./ActivityPanel";
@@ -28,17 +29,6 @@ function fileStatus(file: DeliveryFile): string {
     return `${label} · Downloaded ${file.downloads === 1 ? "once" : `${file.downloads} times`}`;
   }
   return file.uploading ? "Upload not finished" : "No file attached";
-}
-
-// Signed links to the pictures made in the browser. Only the signed-in owner's editor gets them.
-async function thumbnailLinks(delivery: Delivery): Promise<Map<string, string>> {
-  const files = delivery.sections.flatMap((section) => section.files).filter((file) => file.attached && file.thumbKey);
-  const links = await Promise.allSettled(files.map((file) => presignThumb(file.thumbKey as string)));
-  const found = new Map<string, string>();
-  links.forEach((link, index) => {
-    if (link.status === "fulfilled") found.set(files[index].id, link.value);
-  });
-  return found;
 }
 
 function Step({
@@ -147,14 +137,14 @@ function FileCards({
   storageReady,
 }: {
   section: DeliverySection;
-  thumbs: Map<string, string>;
+  thumbs: Record<string, string>;
   storageReady: boolean;
 }) {
   if (section.files.length === 0) return null;
   return (
     <ul className={styles.fileList}>
       {section.files.map((file) => (
-        <FileCard key={file.id} file={file} section={section} thumb={thumbs.get(file.id)} storageReady={storageReady} />
+        <FileCard key={file.id} file={file} section={section} thumb={thumbs[file.id]} storageReady={storageReady} />
       ))}
     </ul>
   );
@@ -164,7 +154,7 @@ function FileCards({
 export async function DeliveryEditor({ delivery, activity }: { delivery: Delivery; activity: Activity }) {
   const published = delivery.status === "published";
   const storageReady = storageConfigured();
-  const thumbs = storageReady ? await thumbnailLinks(delivery) : new Map<string, string>();
+  const thumbs = await ownerThumbnailLinks(delivery);
   const grouped = delivery.sections.length > 1;
   const fileCount = delivery.sections.reduce((sum, section) => sum + section.files.length, 0);
   const only = delivery.sections[0];
