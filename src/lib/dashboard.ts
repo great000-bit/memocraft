@@ -21,9 +21,11 @@ export async function getDashboardStats(ownerId: string): Promise<DashboardStats
                 group by lower(btrim("clientName"))) c`,
       [ownerId],
     ),
-    // The same count the upload check uses: files that are in storage, not pictures made for previews.
+    // The same count the upload check uses: files that are in storage plus their earlier versions, not pictures
+    // made for previews.
     pool.query<{ used: string; files: string }>(
-      `select coalesce(sum(f."sizeBytes") filter (where f."storageKey" is not null), 0) as "used",
+      `select coalesce(sum(f."sizeBytes") filter (where f."storageKey" is not null), 0)
+              + coalesce(sum((select coalesce(sum(v."sizeBytes"), 0) from "deliveryFileVersion" v where v."fileId" = f."id")), 0) as "used",
               count(*) filter (where f."storageKey" is not null) as "files"
          from "deliveryFile" f
          join "deliverySection" s on s."id" = f."sectionId"

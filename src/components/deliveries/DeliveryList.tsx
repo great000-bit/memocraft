@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { FeatureIcon } from "../FeatureIcons";
-import type { DeliverySummary } from "@/lib/deliveries";
+import { linkState, type DeliverySummary } from "@/lib/deliveries";
 import styles from "./DeliveryList.module.css";
+
+const pillText = { draft: "Draft", live: "Published", paused: "Paused", expired: "Expired" } as const;
 
 const dateFormat = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeZone: "UTC" });
 
@@ -17,6 +19,7 @@ export function DeliveryList({ deliveries }: { deliveries: DeliverySummary[] }) 
     <ul className={styles.list}>
       {deliveries.map((delivery) => {
         const seen = proof(delivery);
+        const state = linkState(delivery);
         return (
           <li key={delivery.id}>
             <Link href={`/deliveries/${delivery.id}`} className={styles.row}>
@@ -37,8 +40,8 @@ export function DeliveryList({ deliveries }: { deliveries: DeliverySummary[] }) 
                     {seen.text}
                   </span>
                 )}
-                <span className={styles.pill} data-status={delivery.status}>
-                  {delivery.status === "published" ? "Published" : "Draft"}
+                <span className={styles.pill} data-status={state}>
+                  {pillText[state]}
                 </span>
               </span>
             </Link>

@@ -125,7 +125,7 @@ export default function Home() {
             <h2 className={styles.panelTitle}>Only the people you chose get in</h2>
             <p className={styles.panelBody}>
               Password-protect a delivery, set the day it closes, or pause the link in one tap. Anyone turned away
-              sees a way to ask you for access, not a dead page.
+              sees who sent it and what to do next, not a dead page.
             </p>
             <div className={styles.panelCtas}>
               <Button href="/signup" variant="outline">

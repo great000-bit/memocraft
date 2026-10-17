@@ -2,15 +2,16 @@
 
 import { useState, useSyncExternalStore } from "react";
 import { setPublished } from "@/lib/delivery-actions";
+import type { LinkState } from "@/lib/deliveries";
 import { ActionButton } from "./ActionButton";
 import styles from "./Editor.module.css";
 
 const noopSubscribe = () => () => {};
 
-type PublishPanelProps = { deliveryId: string; slug: string; published: boolean };
+type PublishPanelProps = { deliveryId: string; slug: string; state: LinkState };
 
 // The link is built from the address the page was opened on, so it is right on every host.
-export function PublishPanel({ deliveryId, slug, published }: PublishPanelProps) {
+export function PublishPanel({ deliveryId, slug, state }: PublishPanelProps) {
   const origin = useSyncExternalStore(noopSubscribe, () => window.location.origin, () => "");
   const [copied, setCopied] = useState(false);
   const url = `${origin}/d/${slug}`;
@@ -25,7 +26,7 @@ export function PublishPanel({ deliveryId, slug, published }: PublishPanelProps)
     }
   }
 
-  if (!published) {
+  if (state === "draft") {
     return (
       <section className={styles.share} aria-labelledby="share-title">
         <div>
@@ -41,11 +42,28 @@ export function PublishPanel({ deliveryId, slug, published }: PublishPanelProps)
     );
   }
 
+  // Pausing is the switch that was always there: the link stops working at once and the same link comes back on resume.
+  if (state === "paused") {
+    return (
+      <section className={styles.share} aria-labelledby="share-title">
+        <div>
+          <h2 id="share-title" className={styles.shareTitle}>
+            Link paused
+          </h2>
+          <p className={styles.shareText}>Your client sees that the link is not available. Resume to switch the same link back on.</p>
+        </div>
+        <ActionButton key="resume" action={() => setPublished(deliveryId, true)} variant="primary">
+          Resume link
+        </ActionButton>
+      </section>
+    );
+  }
+
   return (
     <section className={styles.share} aria-labelledby="share-title">
       <div className={styles.shareMain}>
         <h2 id="share-title" className={styles.shareTitle}>
-          Shared with anyone who has the link
+          {state === "expired" ? "This link has expired" : "Shared with anyone who has the link"}
         </h2>
         <div className={styles.linkRow}>
           <input
@@ -59,10 +77,14 @@ export function PublishPanel({ deliveryId, slug, published }: PublishPanelProps)
             {copied ? "Copied" : "Copy link"}
           </button>
         </div>
-        <p className={styles.shareText}>Unpublishing switches the link off straight away. Publishing again turns the same link back on.</p>
+        <p className={styles.shareText}>
+          {state === "expired"
+            ? "Your client sees that it has expired. Pick a new date under Link settings, or remove the date, to switch it back on."
+            : "Pausing switches the link off straight away. Resume turns the same link back on."}
+        </p>
       </div>
-      <ActionButton key="unpublish" action={() => setPublished(deliveryId, false)} variant="secondary">
-        Unpublish
+      <ActionButton key="pause" action={() => setPublished(deliveryId, false)} variant="secondary">
+        Pause link
       </ActionButton>
     </section>
   );

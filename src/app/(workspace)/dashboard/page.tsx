@@ -4,6 +4,7 @@ import { Button } from "@/components/Button";
 import { FeatureIcon } from "@/components/FeatureIcons";
 import { DeliveryList } from "@/components/deliveries/DeliveryList";
 import { listDeliveries } from "@/lib/deliveries";
+import { countOpenRequests } from "@/lib/requests";
 import { requireUser } from "@/lib/session";
 import { StatCards, StatCardsFallback } from "@/components/workspace/StatCards";
 import styles from "@/components/workspace/Workspace.module.css";
@@ -12,6 +13,22 @@ async function Greeting() {
   const user = await requireUser();
   const first = user.name.trim().split(/\s+/)[0] || "there";
   return <h1 className={styles.heading}>Welcome back, {first}</h1>;
+}
+
+// A line, not a card: the three cards stay the three things the dashboard is about. It only shows when someone is waiting.
+async function WaitingRequests() {
+  const user = await requireUser();
+  const open = await countOpenRequests(user.id);
+  if (open === 0) return null;
+  return (
+    <Link href="/requests" className={styles.requestsNotice}>
+      <FeatureIcon name="request" />
+      <span>
+        {open === 1 ? "1 client request is waiting for you" : `${open} client requests are waiting for you`}
+      </span>
+      <span className={styles.requestsView}>View</span>
+    </Link>
+  );
 }
 
 async function Recent() {
@@ -61,6 +78,9 @@ export default function DashboardPage() {
         <Button href="/deliveries/new">New delivery</Button>
       </div>
       <p className={styles.sub}>Your deliveries live here. Each one is a single link your clients open on any phone.</p>
+      <Suspense fallback={null}>
+        <WaitingRequests />
+      </Suspense>
       <Suspense fallback={<StatCardsFallback />}>
         <StatCards />
       </Suspense>

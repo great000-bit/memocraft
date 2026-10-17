@@ -91,9 +91,19 @@
   color: var(--proof-text);
 }
 
-.pill[data-status="published"] {
+.pill[data-status="live"] {
   background: var(--fixer-tint);
   color: var(--fixer);
+}
+
+.pill[data-status="paused"] {
+  background: var(--proof-tint);
+  color: var(--proof-text);
+}
+
+.pill[data-status="expired"] {
+  background: #fdeeea;
+  color: #8f2a1a;
 }
 
 /* On a narrow phone the pills drop under the text so the title keeps its room. */

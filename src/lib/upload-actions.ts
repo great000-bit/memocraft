@@ -102,16 +102,18 @@ export async function beginUpload(input: BeginUploadInput): Promise<BeginUploadR
     previousPending = existing.rows[0].pending;
   }
 
-  // Counted: attached files, plus uploads started in the last day. A replaced file does not count against itself.
+  // Counted: attached files, earlier versions kept from replaced files, and uploads started in the last day. A file
+  // being replaced still counts, because its current copy becomes a version when the new one arrives.
   const usage = await pool.query<{ used: string }>(
     `select coalesce(sum(case when f."storageKey" is not null then f."sizeBytes" end), 0)
           + coalesce(sum(case when f."pending" is not null and (f."pending"->>'at')::timestamptz > now() - interval '24 hours'
-                              then (f."pending"->>'size')::bigint end), 0) as "used"
+                              then (f."pending"->>'size')::bigint end), 0)
+          + coalesce(sum((select coalesce(sum(v."sizeBytes"), 0) from "deliveryFileVersion" v where v."fileId" = f."id")), 0) as "used"
        from "deliveryFile" f
        join "deliverySection" s on s."id" = f."sectionId"
        join "delivery" d on d."id" = s."deliveryId"
-      where d."ownerId" = $1 and ($2::uuid is null or f."id" <> $2::uuid)`,
-    [user.id, input.fileId ?? null],
+      where d."ownerId" = $1`,
+    [user.id],
   );
   if (Number(usage.rows[0].used) + size > storageLimits.accountBytes) {
     return fail(`This would pass your ${formatSize(storageLimits.accountBytes)} of storage. Remove a file or upload less.`);
@@ -228,18 +230,26 @@ export async function completeUpload(fileId: string): Promise<Result> {
     return fail("Storage did not respond. Try again in a moment.");
   }
 
+  // A file that already had a copy in storage keeps it as an earlier version, and is marked as replaced so the
+  // client page can show it as Updated. Both happen in the one statement that attaches the new copy.
   const updated = await pool.query(
-    `update "deliveryFile"
-        set "storageKey" = $1, "sizeBytes" = $2, "mimeType" = $3, "ext" = $4, "thumbKey" = $6, "pending" = null
+    `with old as (
+       select "storageKey", "thumbKey", "sizeBytes", "mimeType", "ext" from "deliveryFile"
+        where "id" = $5 and "pending"->>'key' = $1 for update
+     ), kept as (
+       insert into "deliveryFileVersion" ("fileId", "storageKey", "thumbKey", "sizeBytes", "mimeType", "ext")
+       select $5, old."storageKey", old."thumbKey", old."sizeBytes", old."mimeType", old."ext"
+         from old where old."storageKey" is not null and old."storageKey" <> $1
+       returning 1
+     )
+     update "deliveryFile"
+        set "storageKey" = $1, "sizeBytes" = $2, "mimeType" = $3, "ext" = $4, "thumbKey" = $6, "pending" = null,
+            "replacedAt" = case when exists (select 1 from kept) then now() else "replacedAt" end
       where "id" = $5 and "pending"->>'key' = $1`,
     [pending.key, pending.size, pending.type, pending.ext, fileId, thumbKey],
   );
   if (!updated.rowCount) return fail("This upload was replaced by a newer one.");
   await pool.query(`update "delivery" set "updatedAt" = now() where "id" = $1`, [row.deliveryId]);
-  await deleteObjects([
-    ...(row.storageKey && row.storageKey !== pending.key ? [row.storageKey] : []),
-    ...(row.thumbKey && row.thumbKey !== thumbKey ? [row.thumbKey] : []),
-  ]);
   refresh(row.deliveryId);
   return { ok: true };
 }

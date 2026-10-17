@@ -16,6 +16,26 @@ export type DeliveryFile = {
   uploading: boolean;
   // How many times a client started this download. Only the owner's editor shows it.
   downloads: number;
+  // When the file was added, and when it was last swapped for a new one. The client page compares these with the
+  // moment the delivery was first published to mark a file New or Updated.
+  addedAt: Date;
+  replacedAt: Date | null;
+  // Earlier versions kept in storage. Filled in for the owner's editor only.
+  versions: FileVersion[];
+};
+
+export type FileVersion = {
+  id: string;
+  sizeBytes: number;
+  ext: string | null;
+  replacedAt: Date;
+};
+
+// A note the creative posted about what changed. The newest shows above the files on the client page.
+export type DeliveryUpdate = {
+  id: string;
+  note: string;
+  createdAt: Date;
 };
 
 export type DeliverySection = {
@@ -35,7 +55,19 @@ export type Delivery = {
   updatedAt: Date;
   publishedAt: Date | null;
   sections: DeliverySection[];
+  updates: DeliveryUpdate[];
 };
+
+// What the owner sees about the link itself: when it stops working, and whether it asks for a password.
+export type OwnerDelivery = Delivery & { expiresAt: Date | null; expired: boolean; hasPassword: boolean };
+
+// The state of a client link, in the words the owner sees. A paused link is one that was sent and switched off.
+export type LinkState = "draft" | "live" | "paused" | "expired";
+
+export function linkState(delivery: { status: "draft" | "published"; publishedAt: Date | null; expired: boolean }): LinkState {
+  if (delivery.status === "draft") return delivery.publishedAt ? "paused" : "draft";
+  return delivery.expired ? "expired" : "live";
+}
 
 export type DeliverySummary = {
   id: string;
@@ -43,10 +75,15 @@ export type DeliverySummary = {
   clientName: string | null;
   status: "draft" | "published";
   updatedAt: Date;
+  publishedAt: Date | null;
+  expired: boolean;
   fileCount: number;
   opens: number;
   downloads: number;
 };
+
+// A link a client can use right now: published, and not past its expiry date.
+const live = `d."status" = 'published' and (d."expiresAt" is null or d."expiresAt" > now())`;
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -98,8 +135,11 @@ async function loadSections(deliveryId: string, onlyAttached: boolean): Promise<
     attached: boolean;
     uploading: boolean;
     downloads: string;
+    addedAt: Date;
+    replacedAt: Date | null;
   }>(
     `select f."id", f."sectionId", f."name", f."note", f."sizeBytes", f."mimeType", f."ext", f."thumbKey",
+            f."createdAt" as "addedAt", f."replacedAt",
             f."storageKey" is not null as "attached", f."pending" is not null as "uploading",
             (select count(*) from "deliveryEvent" e where e."fileId" = f."id" and e."kind" = 'download') as "downloads"
        from "deliveryFile" f
@@ -108,6 +148,18 @@ async function loadSections(deliveryId: string, onlyAttached: boolean): Promise<
       order by f."position", f."createdAt", f."id"`,
     [deliveryId, onlyAttached],
   );
+  // Earlier versions are the owner's business; a client's page never loads them.
+  const versions = onlyAttached
+    ? { rows: [] as { id: string; fileId: string; sizeBytes: string; ext: string | null; replacedAt: Date }[] }
+    : await pool.query<{ id: string; fileId: string; sizeBytes: string; ext: string | null; replacedAt: Date }>(
+        `select v."id", v."fileId", v."sizeBytes", v."ext", v."replacedAt"
+           from "deliveryFileVersion" v
+           join "deliveryFile" f on f."id" = v."fileId"
+           join "deliverySection" s on s."id" = f."sectionId"
+          where s."deliveryId" = $1
+          order by v."replacedAt" desc, v."id"`,
+        [deliveryId],
+      );
   return sections.rows.map((section) => ({
     ...section,
     files: files.rows
@@ -123,15 +175,34 @@ async function loadSections(deliveryId: string, onlyAttached: boolean): Promise<
         attached: file.attached,
         uploading: file.uploading,
         downloads: Number(file.downloads),
+        addedAt: file.addedAt,
+        replacedAt: file.replacedAt,
+        versions: versions.rows
+          .filter((version) => version.fileId === file.id)
+          .map((version) => ({
+            id: version.id,
+            sizeBytes: Number(version.sizeBytes),
+            ext: version.ext,
+            replacedAt: version.replacedAt,
+          })),
       })),
   }));
+}
+
+async function loadUpdates(deliveryId: string): Promise<DeliveryUpdate[]> {
+  const { rows } = await pool.query<DeliveryUpdate>(
+    `select "id", "note", "createdAt" from "deliveryUpdate" where "deliveryId" = $1 order by "createdAt" desc, "id" limit 30`,
+    [deliveryId],
+  );
+  return rows;
 }
 
 export async function listDeliveries(ownerId: string, limit = 50): Promise<DeliverySummary[]> {
   const { rows } = await pool.query<
     Omit<DeliverySummary, "fileCount" | "opens" | "downloads"> & { fileCount: string; opens: string; downloads: string }
   >(
-    `select d."id", d."title", d."clientName", d."status", d."updatedAt",
+    `select d."id", d."title", d."clientName", d."status", d."updatedAt", d."publishedAt",
+            (d."expiresAt" is not null and d."expiresAt" <= now()) as "expired",
             (select count(*) from "deliveryFile" f join "deliverySection" s on s."id" = f."sectionId"
               where s."deliveryId" = d."id") as "fileCount",
             ev."opens", ev."downloads"
@@ -154,42 +225,47 @@ export async function listDeliveries(ownerId: string, limit = 50): Promise<Deliv
   }));
 }
 
-export async function getDeliveryForOwner(id: string, ownerId: string): Promise<Delivery | null> {
+export async function getDeliveryForOwner(id: string, ownerId: string): Promise<OwnerDelivery | null> {
   if (!isUuid(id)) return null;
-  const { rows } = await pool.query<DeliveryRow>(
-    `select "id", "title", "clientName", "message", "slug", "status", "updatedAt", "publishedAt"
+  const { rows } = await pool.query<DeliveryRow & { expiresAt: Date | null; expired: boolean; hasPassword: boolean }>(
+    `select "id", "title", "clientName", "message", "slug", "status", "updatedAt", "publishedAt", "expiresAt",
+            ("expiresAt" is not null and "expiresAt" <= now()) as "expired",
+            "passwordHash" is not null as "hasPassword"
        from "delivery" where "id" = $1 and "ownerId" = $2`,
     [id, ownerId],
   );
   if (!rows[0]) return null;
-  return { ...rows[0], sections: await loadSections(rows[0].id, false) };
+  const [sections, updates] = await Promise.all([loadSections(rows[0].id, false), loadUpdates(rows[0].id)]);
+  return { ...rows[0], sections, updates };
 }
 
-// What a client sees: only published deliveries, found by slug, with the sender's name.
+// What a client sees: only deliveries whose link is live, found by slug, with the sender's name. Whether the
+// client has typed the password is the caller's question (see getLinkBySlug and passesPassword).
 export async function getPublishedBySlug(slug: string): Promise<(Delivery & { senderName: string }) | null> {
   if (!/^[a-z0-9-]{1,80}$/.test(slug)) return null;
   const { rows } = await pool.query<DeliveryRow & { senderName: string }>(
     `select d."id", d."title", d."clientName", d."message", d."slug", d."status", d."updatedAt", d."publishedAt",
             u."name" as "senderName"
        from "delivery" d join "user" u on u."id" = d."ownerId"
-      where d."slug" = $1 and d."status" = 'published'`,
+      where d."slug" = $1 and ${live}`,
     [slug],
   );
   if (!rows[0]) return null;
-  return { ...rows[0], sections: await loadSections(rows[0].id, true) };
+  const [sections, updates] = await Promise.all([loadSections(rows[0].id, true), loadUpdates(rows[0].id)]);
+  return { ...rows[0], sections, updates };
 }
 
-// Enough to attribute an event to a delivery: found by slug, only while it is published.
-export async function getPublishedRef(slug: string): Promise<{ id: string; ownerId: string } | null> {
+// Enough to attribute an event to a delivery: found by slug, only while its link is live.
+export async function getPublishedRef(slug: string): Promise<{ id: string; ownerId: string; passwordHash: string | null } | null> {
   if (!/^[a-z0-9-]{1,80}$/.test(slug)) return null;
-  const { rows } = await pool.query<{ id: string; ownerId: string }>(
-    `select "id", "ownerId" from "delivery" where "slug" = $1 and "status" = 'published'`,
+  const { rows } = await pool.query<{ id: string; ownerId: string; passwordHash: string | null }>(
+    `select d."id", d."ownerId", d."passwordHash" from "delivery" d where d."slug" = $1 and ${live}`,
     [slug],
   );
   return rows[0] ?? null;
 }
 
-// A file a client may download: attached, in a delivery that is published right now.
+// A file a client may download: attached, in a delivery whose link is live right now.
 export async function getPublishedFile(slug: string, fileId: string) {
   if (!/^[a-z0-9-]{1,80}$/.test(slug) || !isUuid(fileId)) return null;
   const { rows } = await pool.query<{
@@ -199,30 +275,57 @@ export async function getPublishedFile(slug: string, fileId: string) {
     storageKey: string;
     deliveryId: string;
     ownerId: string;
+    passwordHash: string | null;
   }>(
-    `select f."name", f."ext", f."mimeType", f."storageKey", d."id" as "deliveryId", d."ownerId"
+    `select f."name", f."ext", f."mimeType", f."storageKey", d."id" as "deliveryId", d."ownerId", d."passwordHash"
        from "deliveryFile" f
        join "deliverySection" s on s."id" = f."sectionId"
        join "delivery" d on d."id" = s."deliveryId"
-      where f."id" = $1 and d."slug" = $2 and d."status" = 'published' and f."storageKey" is not null`,
+      where f."id" = $1 and d."slug" = $2 and ${live} and f."storageKey" is not null`,
     [fileId, slug],
   );
   return rows[0] ?? null;
 }
 
-// The preview picture of a file a client may see: attached, with a thumbnail, in a delivery published right now.
-export async function getPublishedThumbKey(slug: string, fileId: string): Promise<string | null> {
+// The preview picture of a file a client may see: attached, with a thumbnail, in a delivery whose link is live.
+export async function getPublishedThumb(slug: string, fileId: string) {
   if (!/^[a-z0-9-]{1,80}$/.test(slug) || !isUuid(fileId)) return null;
-  const { rows } = await pool.query<{ thumbKey: string }>(
-    `select f."thumbKey"
+  const { rows } = await pool.query<{ thumbKey: string; deliveryId: string; passwordHash: string | null }>(
+    `select f."thumbKey", d."id" as "deliveryId", d."passwordHash"
        from "deliveryFile" f
        join "deliverySection" s on s."id" = f."sectionId"
        join "delivery" d on d."id" = s."deliveryId"
-      where f."id" = $1 and d."slug" = $2 and d."status" = 'published'
+      where f."id" = $1 and d."slug" = $2 and ${live}
         and f."storageKey" is not null and f."thumbKey" is not null`,
     [fileId, slug],
   );
-  return rows[0]?.thumbKey ?? null;
+  return rows[0] ?? null;
+}
+
+export type LinkGate = {
+  id: string;
+  senderName: string;
+  expired: boolean;
+  passwordHash: string | null;
+  // Minutes until a locked link takes guesses again; null when it is not locked.
+  lockedMinutes: number | null;
+};
+
+// What the client page needs to decide between the delivery, a password form and an "expired" notice. Found by
+// slug while the delivery is published; an expired link is still found, so the client can be told why it stopped.
+export async function getLinkBySlug(slug: string): Promise<LinkGate | null> {
+  if (!/^[a-z0-9-]{1,80}$/.test(slug)) return null;
+  const { rows } = await pool.query<LinkGate>(
+    `select d."id", u."name" as "senderName",
+            (d."expiresAt" is not null and d."expiresAt" <= now()) as "expired",
+            d."passwordHash",
+            case when d."passwordLockedUntil" > now()
+                 then ceil(extract(epoch from d."passwordLockedUntil" - now()) / 60)::int end as "lockedMinutes"
+       from "delivery" d join "user" u on u."id" = d."ownerId"
+      where d."slug" = $1 and d."status" = 'published'`,
+    [slug],
+  );
+  return rows[0] ?? null;
 }
 
 // The name a client's device saves the file under: the label the creative chose, with the original extension kept.

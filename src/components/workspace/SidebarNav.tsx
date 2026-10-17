@@ -8,7 +8,7 @@ import styles from "./Workspace.module.css";
 const items: { label: string; icon: FeatureIconName; href?: string }[] = [
   { label: "Home", icon: "home", href: "/dashboard" },
   { label: "Deliveries", icon: "upload", href: "/deliveries" },
-  { label: "Requests", icon: "request" },
+  { label: "Requests", icon: "request", href: "/requests" },
   { label: "Team", icon: "people" },
 ];
 

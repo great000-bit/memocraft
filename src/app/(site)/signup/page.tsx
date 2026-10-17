@@ -4,6 +4,8 @@ import { Suspense } from "react";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { RedirectIfSignedIn } from "@/components/auth/RedirectIfSignedIn";
+import { emailConfigured } from "@/lib/email";
+import { googleConfigured } from "@/lib/providers";
 
 export const metadata: Metadata = { title: "Create your Memocraft account" };
 
@@ -21,7 +23,7 @@ export default function SignupPage() {
       <Suspense>
         <RedirectIfSignedIn />
       </Suspense>
-      <AuthForm mode="signup" />
+      <AuthForm mode="signup" resetEnabled={emailConfigured()} googleEnabled={googleConfigured()} />
     </AuthShell>
   );
 }

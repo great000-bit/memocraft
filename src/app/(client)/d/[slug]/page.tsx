@@ -2,19 +2,26 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ClientView } from "@/components/deliveries/ClientView";
+import { LinkExpired } from "@/components/deliveries/LinkNotice";
 import { OpenBeacon } from "@/components/deliveries/OpenBeacon";
-import { getPublishedBySlug } from "@/lib/deliveries";
+import { PasswordGate } from "@/components/deliveries/PasswordGate";
+import { getLinkBySlug, getPublishedBySlug } from "@/lib/deliveries";
+import { passesPassword } from "@/lib/link-access";
 import { clientThumbnailPaths } from "@/lib/thumbnails";
 
 export const metadata: Metadata = { title: "Your delivery" };
 
 async function Delivery({ params }: Pick<PageProps<"/d/[slug]">, "params">) {
   const { slug } = await params;
+  const link = await getLinkBySlug(slug);
+  if (!link) notFound();
+  if (link.expired) return <LinkExpired senderName={link.senderName} />;
+  if (!(await passesPassword(link.id, link.passwordHash))) return <PasswordGate slug={slug} senderName={link.senderName} />;
   const delivery = await getPublishedBySlug(slug);
   if (!delivery) notFound();
   return (
     <>
-      <ClientView delivery={delivery} senderName={delivery.senderName} thumbs={clientThumbnailPaths(delivery)} />
+      <ClientView delivery={delivery} senderName={delivery.senderName} thumbs={clientThumbnailPaths(delivery)} canAsk />
       <OpenBeacon slug={delivery.slug} />
     </>
   );
