@@ -5,7 +5,7 @@
   aspect-ratio: 71.5 / 147.6;
   border-radius: calc(var(--w) * 0.18);
   padding: calc(var(--w) * 0.035);
-  background: linear-gradient(145deg, #8e8a85, #3c3a38 30%, #1b1a19 55%, #4a4744 85%, #9a958f);
+  background: linear-gradient(145deg, #d3e5f6, #a3bfda 35%, #7fa3c4 70%, #bcd2e6);
   box-shadow:
     inset 0 0 0 1px rgb(255 255 255 / 0.25),
     0 2px 2px rgb(0 0 0 / 0.08),
@@ -20,7 +20,7 @@
   background: #fff;
   color: #1e1919;
   overflow: hidden;
-  box-shadow: 0 0 0 3px #0c0c0c;
+  box-shadow: 0 0 0 calc(var(--w) * 0.022) #0b0b0c;
   display: flex;
   flex-direction: column;
 }
@@ -87,7 +87,7 @@
   position: absolute;
   width: 3px;
   border-radius: 2px;
-  background: #5c5955;
+  background: #86a6c6;
 }
 
 .action {
@@ -112,4 +112,29 @@
   right: -2px;
   top: 28%;
   height: 12%;
+}
+
+/* Turned in 3D, like a product shot. The slices sit behind the face and read as the phone's edge. */
+.tilt {
+  transform-style: preserve-3d;
+  transform: perspective(1500px) rotateY(-24deg) rotateX(5deg) rotateZ(7deg);
+}
+
+.tilt .screen {
+  transform: translateZ(0.1px);
+}
+
+.slice {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: color-mix(in srgb, #a9c4de, #3f6385 calc(var(--z) * 5.5%));
+  transform: translateZ(calc(var(--z) * -1px));
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tilt {
+    transition: none;
+  }
 }

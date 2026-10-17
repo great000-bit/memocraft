@@ -1,11 +1,18 @@
 import styles from "./Phone.module.css";
 
-type PhoneProps = { children: React.ReactNode; className?: string; label: string };
+type PhoneProps = { children: React.ReactNode; className?: string; label: string; tilt?: boolean };
 
-// iPhone-style device frame: titanium edge, Dynamic Island, status bar and home indicator.
-export function Phone({ children, className = "", label }: PhoneProps) {
+const SLICES = Array.from({ length: 16 }, (_, i) => i + 1);
+
+// iPhone-style device frame in blue titanium: Dynamic Island, status bar and home indicator.
+// `tilt` turns it in 3D and stacks thin slices behind the face so the right edge has real thickness.
+export function Phone({ children, className = "", label, tilt = false }: PhoneProps) {
   return (
-    <div className={`${styles.device} ${className}`} role="img" aria-label={label}>
+    <div className={`${styles.device} ${tilt ? styles.tilt : ""} ${className}`} role="img" aria-label={label}>
+      {tilt &&
+        SLICES.map((z) => (
+          <i key={z} className={styles.slice} style={{ "--z": z } as React.CSSProperties} aria-hidden="true" />
+        ))}
       <span className={`${styles.button} ${styles.action}`} aria-hidden="true" />
       <span className={`${styles.button} ${styles.volUp}`} aria-hidden="true" />
       <span className={`${styles.button} ${styles.volDown}`} aria-hidden="true" />
