@@ -179,7 +179,7 @@ export function HeroDemo({ className = "" }: { className?: string }) {
   const pressed = (name: string) => (s.pressed === name ? styles.pressed : "");
 
   return (
-    <div ref={root}>
+    <div ref={root} className={styles.frame} data-scene={s.scene}>
       <Phone className={className} label="A walkthrough: sending a delivery in Memocraft, the client saving the photos, and the proof of delivery">
         <div className={`${styles.film} ${s.fading ? styles.fading : ""}`} aria-hidden="true">
           <div className={styles.progress}>

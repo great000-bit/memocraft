@@ -1,12 +1,24 @@
 /* Sizes are in cqi: the phone frame is the container, so the film scales with the phone. The screen's content area is
    about 93cqi wide and 186cqi tall. Cursor targets sit at fixed percentages of that area (see film() in HeroDemo.tsx). */
 
+/* The screen colour follows the scene, so the status bar and home indicator area always match the page. */
+.frame {
+  --screen: #f3f5f4;
+}
+
+.frame[data-scene="link"] {
+  --screen: #f9fbfa;
+}
+
+.frame[data-scene="client"] {
+  --screen: #fff;
+}
+
 .film {
   --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-move: cubic-bezier(0.65, 0, 0.35, 1);
   position: relative;
   height: 100%;
-  background: #f3f5f4;
   color: #171a19;
   overflow: hidden;
   transition: opacity 0.6s ease;
