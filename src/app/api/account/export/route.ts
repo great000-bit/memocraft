@@ -1,6 +1,7 @@
 import { pool } from "@/lib/auth";
 import { signInMethods } from "@/lib/profile";
 import { getSession } from "@/lib/session";
+import { getStudio } from "@/lib/studio";
 
 // Everything Memocraft holds about the signed-in person, as one JSON file they can keep. Files themselves are not
 // included (they are the creative's own and already on their computer); every file is listed by name and size.
@@ -9,7 +10,7 @@ export async function GET() {
   if (!session) return new Response(null, { status: 401 });
   const user = session.user;
 
-  const [deliveries, sections, files, updates, requests, events, methods] = await Promise.all([
+  const [deliveries, sections, files, updates, requests, events, methods, studio] = await Promise.all([
     pool.query(
       `select "id", "title", "clientName", "message", "status", "createdAt", "updatedAt", "publishedAt", "expiresAt",
               ("passwordHash" is not null) as "passwordProtected"
@@ -49,11 +50,13 @@ export async function GET() {
       [user.id],
     ),
     signInMethods(user.id),
+    getStudio(user.id),
   ]);
 
   const body = {
     exportedAt: new Date().toISOString(),
     account: { name: user.name, email: user.email, emailVerified: user.emailVerified, createdAt: user.createdAt, signInMethods: methods },
+    studio: { name: studio?.name ?? null, hasLogo: Boolean(studio?.logoVersion) },
     deliveries: deliveries.rows,
     sections: sections.rows,
     files: files.rows,

@@ -196,3 +196,27 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* The logo sits on white, as it will on the client page, inside a box the size of the page's header. */
+.logoFrame {
+  width: 272px;
+  max-width: 100%;
+  min-height: 88px;
+  padding: var(--space-4);
+  display: grid;
+  place-items: center start;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.logoImage {
+  display: block;
+  height: auto;
+  max-width: 100%;
+}
+
+.logoEmpty {
+  font-size: 14px;
+  color: #737c78;
+}

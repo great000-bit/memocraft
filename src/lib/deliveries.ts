@@ -1,5 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { pool } from "./auth";
+import type { Brand } from "./brand";
+import { brandFrom, clientLogoPath, type Studio } from "./studio";
 
 export type DeliveryFile = {
   id: string;
@@ -239,20 +241,26 @@ export async function getDeliveryForOwner(id: string, ownerId: string): Promise<
   return { ...rows[0], sections, updates };
 }
 
-// What a client sees: only deliveries whose link is live, found by slug, with the sender's name. Whether the
-// client has typed the password is the caller's question (see getLinkBySlug and passesPassword).
-export async function getPublishedBySlug(slug: string): Promise<(Delivery & { senderName: string }) | null> {
+// The sender as a client sees them: the studio name when one is set, else the person's own name, and the logo.
+const senderColumns = `coalesce(st."name", u."name") as "senderName",
+            st."name", st."logoVersion", st."logoWidth", st."logoHeight"`;
+const senderJoins = `join "user" u on u."id" = d."ownerId" left join "studio" st on st."userId" = d."ownerId"`;
+
+// What a client sees: only deliveries whose link is live, found by slug, with the sender's name and brand. Whether
+// the client has typed the password is the caller's question (see getLinkBySlug and passesPassword).
+export async function getPublishedBySlug(slug: string): Promise<(Delivery & { senderName: string; brand: Brand }) | null> {
   if (!/^[a-z0-9-]{1,80}$/.test(slug)) return null;
-  const { rows } = await pool.query<DeliveryRow & { senderName: string }>(
+  const { rows } = await pool.query<DeliveryRow & Studio & { senderName: string }>(
     `select d."id", d."title", d."clientName", d."message", d."slug", d."status", d."updatedAt", d."publishedAt",
-            u."name" as "senderName"
-       from "delivery" d join "user" u on u."id" = d."ownerId"
+            ${senderColumns}
+       from "delivery" d ${senderJoins}
       where d."slug" = $1 and ${live}`,
     [slug],
   );
   if (!rows[0]) return null;
-  const [sections, updates] = await Promise.all([loadSections(rows[0].id, true), loadUpdates(rows[0].id)]);
-  return { ...rows[0], sections, updates };
+  const { name, logoVersion, logoWidth, logoHeight, ...row } = rows[0];
+  const [sections, updates] = await Promise.all([loadSections(row.id, true), loadUpdates(row.id)]);
+  return { ...row, sections, updates, brand: brandFrom({ name, logoVersion, logoWidth, logoHeight }, clientLogoPath(slug)) };
 }
 
 // Enough to attribute an event to a delivery: found by slug, only while its link is live.
@@ -304,7 +312,9 @@ export async function getPublishedThumb(slug: string, fileId: string) {
 
 export type LinkGate = {
   id: string;
+  ownerId: string;
   senderName: string;
+  brand: Brand;
   expired: boolean;
   passwordHash: string | null;
   // Minutes until a locked link takes guesses again; null when it is not locked.
@@ -315,17 +325,19 @@ export type LinkGate = {
 // slug while the delivery is published; an expired link is still found, so the client can be told why it stopped.
 export async function getLinkBySlug(slug: string): Promise<LinkGate | null> {
   if (!/^[a-z0-9-]{1,80}$/.test(slug)) return null;
-  const { rows } = await pool.query<LinkGate>(
-    `select d."id", u."name" as "senderName",
+  const { rows } = await pool.query<Omit<LinkGate, "brand"> & Studio>(
+    `select d."id", d."ownerId", ${senderColumns},
             (d."expiresAt" is not null and d."expiresAt" <= now()) as "expired",
             d."passwordHash",
             case when d."passwordLockedUntil" > now()
                  then ceil(extract(epoch from d."passwordLockedUntil" - now()) / 60)::int end as "lockedMinutes"
-       from "delivery" d join "user" u on u."id" = d."ownerId"
+       from "delivery" d ${senderJoins}
       where d."slug" = $1 and d."status" = 'published'`,
     [slug],
   );
-  return rows[0] ?? null;
+  if (!rows[0]) return null;
+  const { name, logoVersion, logoWidth, logoHeight, ...gate } = rows[0];
+  return { ...gate, brand: brandFrom({ name, logoVersion, logoWidth, logoHeight }, clientLogoPath(slug)) };
 }
 
 // The name a client's device saves the file under: the label the creative chose, with the original extension kept.

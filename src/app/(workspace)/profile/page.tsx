@@ -3,7 +3,9 @@ import { Suspense } from "react";
 import { avatarSource } from "@/lib/avatar";
 import { signInMethods } from "@/lib/profile";
 import { requireUser } from "@/lib/session";
+import { brandFrom, getStudio, ownerLogoPath } from "@/lib/studio";
 import { NameForm, PhotoEditor } from "@/components/workspace/ProfileForms";
+import { LogoEditor, StudioNameForm } from "@/components/workspace/StudioForms";
 import styles from "@/components/workspace/Workspace.module.css";
 import panels from "@/components/workspace/Settings.module.css";
 
@@ -14,7 +16,8 @@ const methodText = { google: "Google", password: "Email and password" } as const
 
 async function ProfilePanels() {
   const user = await requireUser();
-  const methods = await signInMethods(user.id);
+  const [methods, studio] = await Promise.all([signInMethods(user.id), getStudio(user.id)]);
+  const brand = brandFrom(studio, ownerLogoPath);
   const hasPhoto = avatarSource(user.image, 96) !== null;
   return (
     <div className={panels.panels}>
@@ -51,6 +54,16 @@ async function ProfilePanels() {
           </div>
         </dl>
       </section>
+
+      <section className={panels.panel} aria-labelledby="studio-title">
+        <h2 id="studio-title" className={panels.panelTitle}>
+          Your studio
+        </h2>
+        <p className={panels.panelText}>Your logo and studio name lead every client page, so clients remember who delivered.</p>
+        <LogoEditor brand={brand} />
+        <hr className={panels.divider} />
+        <StudioNameForm name={brand.name} />
+      </section>
     </div>
   );
 }
@@ -61,7 +74,7 @@ export default function ProfilePage() {
       <div className={styles.headRow}>
         <h1 className={styles.heading}>Profile</h1>
       </div>
-      <p className={styles.sub}>How you appear in Memocraft.</p>
+      <p className={styles.sub}>How you appear in Memocraft and to your clients.</p>
       <Suspense fallback={null}>
         <ProfilePanels />
       </Suspense>

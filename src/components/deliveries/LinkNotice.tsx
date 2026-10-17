@@ -1,11 +1,14 @@
 import { FeatureIcon } from "../FeatureIcons";
+import type { Brand } from "@/lib/brand";
+import { ClientBrand } from "./ClientBrand";
 import styles from "./LinkGate.module.css";
 
 // Shown instead of a delivery whose link has passed its expiry date. The client holds the link, so telling them
 // why it stopped is kinder than a blank "not available".
-export function LinkExpired({ senderName }: { senderName: string }) {
+export function LinkExpired({ senderName, brand }: { senderName: string; brand: Brand }) {
   return (
     <main className={styles.page}>
+      <ClientBrand brand={brand} />
       <span className={styles.badge} aria-hidden="true">
         <FeatureIcon name="history" />
       </span>

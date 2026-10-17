@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { ClientView } from "@/components/deliveries/ClientView";
 import { getDeliveryForOwner } from "@/lib/deliveries";
 import { requireUser } from "@/lib/session";
+import { brandFrom, getStudio, ownerLogoPath } from "@/lib/studio";
 import { ownerThumbnailLinks } from "@/lib/thumbnails";
 import styles from "@/components/workspace/Workspace.module.css";
 
@@ -15,7 +16,8 @@ async function Preview({ params }: Pick<PageProps<"/deliveries/[id]/preview">, "
   const { id } = await params;
   const delivery = await getDeliveryForOwner(id, user.id);
   if (!delivery) notFound();
-  const thumbs = await ownerThumbnailLinks(delivery);
+  const [thumbs, studio] = await Promise.all([ownerThumbnailLinks(delivery), getStudio(user.id)]);
+  const brand = brandFrom(studio, ownerLogoPath);
   return (
     <>
       <div className={styles.previewBar}>
@@ -27,7 +29,7 @@ async function Preview({ params }: Pick<PageProps<"/deliveries/[id]/preview">, "
         </Link>
       </div>
       <div className={`light-scope ${styles.previewFrame}`}>
-        <ClientView delivery={delivery} senderName={user.name} thumbs={thumbs} />
+        <ClientView delivery={delivery} senderName={brand.name ?? user.name} brand={brand} thumbs={thumbs} />
       </div>
     </>
   );
