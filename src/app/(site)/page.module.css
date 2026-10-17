@@ -290,20 +290,10 @@
     display: none;
   }
 
+  /* No room beside a phone-width phone: the side cards would cover the walkthrough playing on its screen. */
   .floatLeft,
   .floatRight {
-    padding: 10px 12px;
-    border-radius: 14px;
-  }
-
-  .floatLeft {
-    top: 200px;
-    left: -2px;
-  }
-
-  .floatRight {
-    top: 12px;
-    right: -2px;
+    display: none;
   }
 
   .floatFigure {

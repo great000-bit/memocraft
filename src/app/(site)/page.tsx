@@ -3,7 +3,7 @@ import { FeatureIcon, type FeatureIconName } from "@/components/FeatureIcons";
 import { FeatureTabs } from "@/components/FeatureTabs";
 import { HeroHook } from "@/components/HeroHook";
 import { Logo, LogoMark } from "@/components/Logo";
-import { PhoneMock } from "@/components/Mockups";
+import { HeroDemo } from "@/components/HeroDemo";
 import { Photo } from "@/components/Photo";
 import type { PhotoKey } from "@/components/photos";
 import { Reveal } from "@/components/Reveal";
@@ -44,7 +44,7 @@ export default function Home() {
           <div className={styles.heroGrid} aria-hidden="true" />
           <Reveal className={styles.heroText}>
             <HeroHook className={styles.display} accentClassName={styles.displayAccent} />
-            <p className={styles.heroLede}>Every finished file, labelled, in one link. You see when itOne link for every finished file. You see when it&rsquo;s opened.rsquo;s opened.</p>
+            <p className={styles.heroLede}>Every finished file, labelled, in one link. You see when it&rsquo;s opened.</p>
             <div className={styles.ctas}>
               <Button href="/signup" size="lg">
                 Send your first delivery free
@@ -59,7 +59,7 @@ export default function Home() {
           {/* The client's phone in the middle, with the proof of delivery floating round it. */}
           <Reveal effect="scale" delay={150} className={styles.heroStage}>
             <div id="example" className={styles.stage}>
-              <PhoneMock className={styles.heroPhone} tilt={false} />
+              <HeroDemo className={styles.heroPhone} />
               <div className={`${styles.float} ${styles.floatPill}`} aria-hidden="true">
                 <span className={styles.floatDot} />
                 Opened 2 min ago
