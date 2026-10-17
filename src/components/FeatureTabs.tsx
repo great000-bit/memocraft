@@ -20,7 +20,7 @@ const tabs = [
   {
     title: "Made for your client’s phone",
     body: "Clients save straight to their camera roll and ask for a missing file in one tap. No account, no app, no zip they cannot open.",
-    visual: <PhoneMock />,
+    visual: <PhoneMock className={styles.phone} />,
   },
 ];
 

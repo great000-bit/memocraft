@@ -71,67 +71,6 @@
   display: none;
 }
 
-.phoneInner {
-  position: relative;
-  display: grid;
-  gap: 8px;
-  padding: 10px;
-  align-content: start;
-  height: 100%;
-}
-
-/* The gallery scrolls under a fade, with the save bar pinned to the bottom like a real client page. */
-.phoneInner::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 0;
-  height: 84px;
-  background: linear-gradient(rgb(255 255 255 / 0), #fff 62%);
-  pointer-events: none;
-}
-
-.phoneStudio {
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.phoneTitle {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 18px;
-  line-height: 22px;
-}
-
-.phoneGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-}
-
-.phoneGrid i {
-  position: relative;
-  aspect-ratio: 3 / 4;
-  border-radius: 4px;
-  display: block;
-  overflow: hidden;
-  background: var(--sunken);
-}
-
-.phoneSave {
-  position: absolute;
-  inset: auto 10px 26px;
-  z-index: 1;
-  text-align: center;
-  font-size: 12px;
-  font-weight: 600;
-  color: #fff;
-  background: var(--fixer);
-  border-radius: 8px;
-  padding: 8px;
-}
-
 /* Audience strip */
 .strip {
   overflow: hidden;

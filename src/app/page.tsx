@@ -2,8 +2,7 @@ import { Button } from "@/components/Button";
 import { FeatureIcon, type FeatureIconName } from "@/components/FeatureIcons";
 import { FeatureTabs } from "@/components/FeatureTabs";
 import { Logo, LogoMark } from "@/components/Logo";
-import { DeliveryMock } from "@/components/Mockups";
-import { Phone } from "@/components/Phone";
+import { DeliveryMock, PhoneMock } from "@/components/Mockups";
 import { Photo } from "@/components/Photo";
 import type { PhotoKey } from "@/components/photos";
 import { Reveal } from "@/components/Reveal";
@@ -21,7 +20,6 @@ const extras: { title: string; body: string; icon: FeatureIconName; tone: "mint"
   { title: "Collaborators", body: "Invite a second shooter or editor to help on a delivery.", icon: "people", tone: "mint" },
 ];
 
-const heroTiles: PhotoKey[] = ["printLaugh", "capFists", "faceSculpture", "purplePhone", "limePhone", "beretPhone"];
 const galleryTiles: PhotoKey[] = ["printLaugh", "capFists", "purplePhone", "beretPhone"];
 
 const footer = [
@@ -53,20 +51,7 @@ export default function Home() {
           <Reveal effect="scale" delay={150} className={styles.heroMedia}>
             <div id="example" className={styles.heroStack}>
               <DeliveryMock />
-              <Phone label="A delivery on an iPhone with Save to phone" className={styles.heroPhone} tilt>
-                <div className={styles.phoneInner}>
-                  <p className={styles.phoneStudio}>Lumen Studio</p>
-                  <p className={styles.phoneTitle}>Spring Lookbook</p>
-                  <div className={styles.phoneGrid}>
-                    {heroTiles.map((photo) => (
-                      <i key={photo}>
-                        <Photo name={photo} sizes="120px" />
-                      </i>
-                    ))}
-                  </div>
-                  <span className={styles.phoneSave}>Save to phone</span>
-                </div>
-              </Phone>
+              <PhoneMock className={styles.heroPhone} />
             </div>
           </Reveal>
         </section>
