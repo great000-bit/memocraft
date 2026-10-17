@@ -1438,6 +1438,8 @@ textarea.heading {
   .shareTick {
     animation: none;
   }
+}
+
 /* Quality check: pictures that may disappoint the client, in the Proof amber so they read as "check", not "error". */
 .checkNotes {
   display: grid;
