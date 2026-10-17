@@ -10,9 +10,11 @@ import {
 } from "@/lib/delivery-actions";
 import { limits } from "@/lib/delivery-limits";
 import type { Delivery, DeliveryFile } from "@/lib/deliveries";
+import type { Activity } from "@/lib/delivery-events";
 import { storageConfigured } from "@/lib/storage";
 import { formatSize } from "@/lib/storage-limits";
 import { ActionButton } from "./ActionButton";
+import { ActivityPanel } from "./ActivityPanel";
 import { EditableField } from "./EditableField";
 import { PublishPanel } from "./PublishPanel";
 import { FileFooter, SectionUploader } from "./Uploader";
@@ -21,13 +23,15 @@ import styles from "./Editor.module.css";
 function fileStatus(file: DeliveryFile): string {
   if (file.attached) {
     const size = file.sizeBytes ? formatSize(file.sizeBytes) : "Attached";
-    return file.ext ? `${size} · ${file.ext.toUpperCase()}` : size;
+    const label = file.ext ? `${size} · ${file.ext.toUpperCase()}` : size;
+    if (file.downloads === 0) return label;
+    return `${label} · Downloaded ${file.downloads === 1 ? "once" : `${file.downloads} times`}`;
   }
   return file.uploading ? "Upload not finished" : "No file attached";
 }
 
 // Bound actions are passed to client components, which call them when a field loses focus.
-export function DeliveryEditor({ delivery }: { delivery: Delivery }) {
+export function DeliveryEditor({ delivery, activity }: { delivery: Delivery; activity: Activity }) {
   const published = delivery.status === "published";
   const storageReady = storageConfigured();
   return (
@@ -58,6 +62,8 @@ export function DeliveryEditor({ delivery }: { delivery: Delivery }) {
       </div>
 
       <PublishPanel deliveryId={delivery.id} slug={delivery.slug} published={published} />
+
+      <ActivityPanel activity={activity} published={published} />
 
       <section className={styles.details} aria-label="Delivery details">
         <EditableField

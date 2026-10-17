@@ -62,6 +62,11 @@ export function ClientView({ delivery, senderName }: { delivery: Delivery; sende
       ))}
 
       <footer className={styles.foot}>
+        {live && (
+          <p className={styles.notice}>
+            {senderName} sees when you open this page or start a download, and the kind of device, such as iPhone.
+          </p>
+        )}
         <Link href="/" className={styles.footLink}>
           Sent with Memocraft
         </Link>

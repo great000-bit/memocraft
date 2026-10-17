@@ -12,6 +12,8 @@ export type DeliveryFile = {
   attached: boolean;
   // True while an upload for this row was started and not finished.
   uploading: boolean;
+  // How many times a client started this download. Only the owner's editor shows it.
+  downloads: number;
 };
 
 export type DeliverySection = {
@@ -40,6 +42,8 @@ export type DeliverySummary = {
   status: "draft" | "published";
   updatedAt: Date;
   fileCount: number;
+  opens: number;
+  downloads: number;
 };
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -90,9 +94,11 @@ async function loadSections(deliveryId: string, onlyAttached: boolean): Promise<
     ext: string | null;
     attached: boolean;
     uploading: boolean;
+    downloads: string;
   }>(
     `select f."id", f."sectionId", f."name", f."note", f."sizeBytes", f."mimeType", f."ext",
-            f."storageKey" is not null as "attached", f."pending" is not null as "uploading"
+            f."storageKey" is not null as "attached", f."pending" is not null as "uploading",
+            (select count(*) from "deliveryEvent" e where e."fileId" = f."id" and e."kind" = 'download') as "downloads"
        from "deliveryFile" f
        join "deliverySection" s on s."id" = f."sectionId"
       where s."deliveryId" = $1 and ($2 = false or f."storageKey" is not null)
@@ -112,22 +118,36 @@ async function loadSections(deliveryId: string, onlyAttached: boolean): Promise<
         ext: file.ext,
         attached: file.attached,
         uploading: file.uploading,
+        downloads: Number(file.downloads),
       })),
   }));
 }
 
 export async function listDeliveries(ownerId: string, limit = 50): Promise<DeliverySummary[]> {
-  const { rows } = await pool.query<DeliverySummary & { fileCount: string }>(
+  const { rows } = await pool.query<
+    Omit<DeliverySummary, "fileCount" | "opens" | "downloads"> & { fileCount: string; opens: string; downloads: string }
+  >(
     `select d."id", d."title", d."clientName", d."status", d."updatedAt",
             (select count(*) from "deliveryFile" f join "deliverySection" s on s."id" = f."sectionId"
-              where s."deliveryId" = d."id") as "fileCount"
+              where s."deliveryId" = d."id") as "fileCount",
+            ev."opens", ev."downloads"
        from "delivery" d
+       cross join lateral (
+         select count(*) filter (where e."kind" = 'open') as "opens",
+                count(*) filter (where e."kind" = 'download') as "downloads"
+           from "deliveryEvent" e where e."deliveryId" = d."id"
+       ) ev
       where d."ownerId" = $1
       order by d."updatedAt" desc
       limit $2`,
     [ownerId, limit],
   );
-  return rows.map((row) => ({ ...row, fileCount: Number(row.fileCount) }));
+  return rows.map((row) => ({
+    ...row,
+    fileCount: Number(row.fileCount),
+    opens: Number(row.opens),
+    downloads: Number(row.downloads),
+  }));
 }
 
 export async function getDeliveryForOwner(id: string, ownerId: string): Promise<Delivery | null> {
@@ -155,11 +175,28 @@ export async function getPublishedBySlug(slug: string): Promise<(Delivery & { se
   return { ...rows[0], sections: await loadSections(rows[0].id, true) };
 }
 
+// Enough to attribute an event to a delivery: found by slug, only while it is published.
+export async function getPublishedRef(slug: string): Promise<{ id: string; ownerId: string } | null> {
+  if (!/^[a-z0-9-]{1,80}$/.test(slug)) return null;
+  const { rows } = await pool.query<{ id: string; ownerId: string }>(
+    `select "id", "ownerId" from "delivery" where "slug" = $1 and "status" = 'published'`,
+    [slug],
+  );
+  return rows[0] ?? null;
+}
+
 // A file a client may download: attached, in a delivery that is published right now.
 export async function getPublishedFile(slug: string, fileId: string) {
   if (!/^[a-z0-9-]{1,80}$/.test(slug) || !isUuid(fileId)) return null;
-  const { rows } = await pool.query<{ name: string; ext: string | null; mimeType: string | null; storageKey: string }>(
-    `select f."name", f."ext", f."mimeType", f."storageKey"
+  const { rows } = await pool.query<{
+    name: string;
+    ext: string | null;
+    mimeType: string | null;
+    storageKey: string;
+    deliveryId: string;
+    ownerId: string;
+  }>(
+    `select f."name", f."ext", f."mimeType", f."storageKey", d."id" as "deliveryId", d."ownerId"
        from "deliveryFile" f
        join "deliverySection" s on s."id" = f."sectionId"
        join "delivery" d on d."id" = s."deliveryId"
