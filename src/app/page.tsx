@@ -123,22 +123,34 @@ export default function Home() {
           </div>
         </section>
 
-        <section className={styles.dark} id="privacy">
-          <div className={styles.darkInner}>
-            <Reveal className={styles.darkHead}>
-              <p className={styles.kickerLight}>Privacy</p>
-              <h2 className={styles.h2Light}>Private by default</h2>
-              <p className={styles.bodyLight}>
-                Lock a delivery with a password, set when it closes, and pause any link in one tap. Clients who are
-                turned away get a way to ask you for access, never a dead page.
-              </p>
-            </Reveal>
-            <Reveal delay={120} className={styles.darkMedia}>
-              <div className={styles.lockCard}>
+        <section className={styles.panelSection} id="privacy">
+          <div className={styles.panel}>
+            <span className={styles.panelIcon}>
+              <FeatureIcon name="lock" />
+            </span>
+            <h2 className={styles.panelTitle}>Private by default</h2>
+            <p className={styles.panelBody}>
+              Lock a delivery with a password, set when it closes, and pause any link in one tap. Clients who are
+              turned away get a way to ask you for access, never a dead page.
+            </p>
+            <div className={styles.panelCtas}>
+              <Button href="/signup" variant="outline">
+                Start free
+              </Button>
+              <Button href="#how" variant="link">
+                Learn more
+              </Button>
+            </div>
+            <div className={styles.collage} aria-hidden="true">
+              <span className={styles.cTile} />
+              <span className={styles.cPhoto}>
+                <span className={styles.cShare}>Share</span>
+              </span>
+              <div className={styles.cModal}>
                 <p className={styles.lockTitle}>Link settings</p>
                 <div className={styles.lockRow}>
                   <span>Password</span>
-                  <span className={styles.toggleOn} aria-label="On" />
+                  <span className={styles.toggleOn} />
                 </div>
                 <div className={styles.lockRow}>
                   <span>Closes</span>
@@ -150,10 +162,10 @@ export default function Home() {
                 </div>
                 <div className={styles.lockRow}>
                   <span>Link</span>
-                  <span className={styles.toggleOn} aria-label="On" />
+                  <span className={styles.toggleOn} />
                 </div>
               </div>
-            </Reveal>
+            </div>
           </div>
         </section>
 

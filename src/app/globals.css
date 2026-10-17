@@ -89,7 +89,8 @@ h1,
 h2,
 h3 {
   font-family: var(--font-display);
-  font-stretch: 118%;
+  font-stretch: 106%;
+  font-weight: 600;
   margin: 0;
   text-wrap: balance;
 }
