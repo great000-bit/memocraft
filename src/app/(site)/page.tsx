@@ -1,4 +1,5 @@
 import { Button } from "@/components/Button";
+import { GetAppButton } from "@/components/GetAppButton";
 import { FeatureIcon, type FeatureIconName } from "@/components/FeatureIcons";
 import { FeatureTabs } from "@/components/FeatureTabs";
 import { HeroHook } from "@/components/HeroHook";
@@ -51,9 +52,7 @@ export default function Home() {
               <Button href="/signup" size="lg">
                 Send your first delivery free
               </Button>
-              <Button href="#how" variant="outline" size="lg" arrow={false}>
-                See how it works
-              </Button>
+              <GetAppButton />
             </div>
             <p className={styles.fine}>No card. No zip files. Your clients never make an account.</p>
           </Reveal>
