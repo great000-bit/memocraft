@@ -91,9 +91,10 @@
 }
 
 /* The phone is cut by the bottom of the band, so it reads as rising out of it. */
+/* Tall enough for the whole phone, so its bottom edge shows above the audience strip. */
 .stage {
   position: relative;
-  height: 470px;
+  padding-bottom: var(--space-12);
   display: grid;
   justify-items: center;
   align-items: start;
@@ -275,10 +276,6 @@
 
   .ctas {
     width: 100%;
-  }
-
-  .stage {
-    height: 380px;
   }
 
   .heroPhone {
