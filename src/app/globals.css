@@ -1,0 +1,107 @@
+/* Memocraft design tokens. Source of truth: the Memocraft Design System (tokens.json). */
+:root {
+  --bg: #f7f8f7;
+  --surface: #ffffff;
+  --sunken: #eceeed;
+  --line: #d5dad7;
+  --control-border: #848c88;
+  --text: #171a19;
+  --text-muted: #565e5a;
+  --text-subtle: #737c78;
+  --fixer: #0b6b5d;
+  --fixer-hover: #09564b;
+  --fixer-tint: #eaf6f4;
+  --on-fixer: #ffffff;
+  --proof: #e8a33d;
+  --proof-text: #8a5208;
+  --proof-tint: #fcefd9;
+  --focus-ring: #8a5208;
+  --success: #1d7a3a;
+  --error: #b93a26;
+  --info: #2b63a8;
+  --logo-ink: #171a19;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+
+  --font-display: var(--font-schibsted), "Helvetica Neue", Arial, sans-serif;
+  --font-body: var(--font-instrument), "Segoe UI", Arial, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, Menlo, monospace;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1211;
+    --surface: #181c1a;
+    --sunken: #202523;
+    --line: #2e3431;
+    --control-border: #69716d;
+    --text: #e6eae8;
+    --text-muted: #9aa29e;
+    --text-subtle: #7e8783;
+    --fixer: #5fbbae;
+    --fixer-hover: #8ad1c6;
+    --fixer-tint: #14302b;
+    --on-fixer: #0f1211;
+    --proof-text: #e8a33d;
+    --proof-tint: #2e2210;
+    --focus-ring: #e8a33d;
+    --success: #5cc27e;
+    --error: #f08a75;
+    --info: #7fb0e8;
+    --logo-ink: #e6eae8;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 24px;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  margin: 0;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
