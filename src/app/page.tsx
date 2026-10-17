@@ -4,6 +4,8 @@ import { FeatureTabs } from "@/components/FeatureTabs";
 import { Logo, LogoMark } from "@/components/Logo";
 import { DeliveryMock } from "@/components/Mockups";
 import { Phone } from "@/components/Phone";
+import { Photo } from "@/components/Photo";
+import type { PhotoKey } from "@/components/photos";
 import { Reveal } from "@/components/Reveal";
 import { SiteNav } from "@/components/SiteNav";
 import styles from "./page.module.css";
@@ -18,6 +20,9 @@ const extras: { title: string; body: string; icon: FeatureIconName; tone: "mint"
   { title: "Big files, no fuss", body: "Uploads pause and resume on a weak connection.", icon: "upload", tone: "amber" },
   { title: "Collaborators", body: "Invite a second shooter or editor to help on a delivery.", icon: "people", tone: "mint" },
 ];
+
+const heroTiles: PhotoKey[] = ["printLaugh", "capFists", "faceSculpture", "purplePhone", "limePhone", "beretPhone"];
+const galleryTiles: PhotoKey[] = ["printLaugh", "capFists", "purplePhone", "beretPhone"];
 
 const footer = [
   { head: "Products", links: ["Deliveries", "Client links", "File requests", "Proof of delivery"] },
@@ -51,10 +56,12 @@ export default function Home() {
               <Phone label="A delivery on an iPhone with Save to phone" className={styles.heroPhone} tilt>
                 <div className={styles.phoneInner}>
                   <p className={styles.phoneStudio}>Lumen Studio</p>
-                  <p className={styles.phoneTitle}>Adaeze &amp; Tobi</p>
+                  <p className={styles.phoneTitle}>Spring Lookbook</p>
                   <div className={styles.phoneGrid}>
-                    {[0, 1, 2, 3].map((n) => (
-                      <i key={n} className={styles[`tone${n}`]} />
+                    {heroTiles.map((photo) => (
+                      <i key={photo}>
+                        <Photo name={photo} sizes="120px" />
+                      </i>
                     ))}
                   </div>
                   <span className={styles.phoneSave}>Save to phone</span>
@@ -143,21 +150,25 @@ export default function Home() {
             </div>
             <div className={styles.collage} aria-hidden="true">
               <div className={`${styles.cCard} ${styles.cCover}`}>
-                <span className={styles.coverPhoto} />
+                <span className={styles.coverPhoto}>
+                  <Photo name="headphones" sizes="(min-width: 720px) 300px, 60vw" />
+                </span>
                 <p className={styles.coverName}>launch-film-4k.mp4</p>
                 <span className={styles.chip}>Downloaded Mon 09:44</span>
               </div>
               <div className={`${styles.cCard} ${styles.cGallery}`}>
                 <div className={styles.galleryHead}>
                   <div>
-                    <p className={styles.galleryTitle}>Adaeze &amp; Tobi</p>
-                    <p className={styles.gallerySub}>Wedding &middot; 48 files</p>
+                    <p className={styles.galleryTitle}>Spring Lookbook</p>
+                    <p className={styles.gallerySub}>Lookbook &middot; 48 files</p>
                   </div>
                   <span className={styles.cShare}>Share</span>
                 </div>
                 <div className={styles.galleryGrid}>
-                  {[0, 1, 2, 3].map((n) => (
-                    <i key={n} className={styles[`tone${n}`]} />
+                  {galleryTiles.map((photo) => (
+                    <i key={photo}>
+                      <Photo name={photo} sizes="(min-width: 720px) 200px, 40vw" />
+                    </i>
                   ))}
                 </div>
                 <p className={styles.galleryFoot}>
@@ -241,7 +252,7 @@ export default function Home() {
                   <FeatureIcon name="upload" />
                 </span>
                 <ul className={styles.chips}>
-                  <li>ceremony-001.jpg</li>
+                  <li>hero-001.jpg</li>
                   <li>launch-film.mp4</li>
                   <li>brand-guide.pdf</li>
                 </ul>
@@ -255,7 +266,7 @@ export default function Home() {
               </div>
               <div className={styles.linkBox} aria-hidden="true">
                 <div className={styles.linkPill}>
-                  <span>memocraft.app/d/adaeze-tobi</span>
+                  <span>memocraft.app/d/spring-lookbook</span>
                   <b>Copy</b>
                 </div>
                 <p className={styles.linkNote}>Opened on iPhone, Mon 09:40</p>

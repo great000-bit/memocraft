@@ -72,11 +72,22 @@
 }
 
 .phoneInner {
+  position: relative;
   display: grid;
   gap: 8px;
   padding: 10px;
   align-content: start;
   height: 100%;
+}
+
+/* The gallery scrolls under a fade, with the save bar pinned to the bottom like a real client page. */
+.phoneInner::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 84px;
+  background: linear-gradient(rgb(255 255 255 / 0), #fff 62%);
+  pointer-events: none;
 }
 
 .phoneStudio {
@@ -100,29 +111,18 @@
 }
 
 .phoneGrid i {
+  position: relative;
   aspect-ratio: 3 / 4;
   border-radius: 4px;
   display: block;
-}
-
-.tone0 {
-  background: linear-gradient(135deg, #0b6b5d, #5fbbae);
-}
-
-.tone1 {
-  background: linear-gradient(135deg, #e8a33d, #f4d29a);
-}
-
-.tone2 {
-  background: linear-gradient(135deg, #2e3431, #848c88);
-}
-
-.tone3 {
-  background: linear-gradient(135deg, #9ad6cc, #eaf6f4);
+  overflow: hidden;
+  background: var(--sunken);
 }
 
 .phoneSave {
-  margin-top: auto;
+  position: absolute;
+  inset: auto 10px 26px;
+  z-index: 1;
   text-align: center;
   font-size: 12px;
   font-weight: 600;
@@ -413,9 +413,11 @@
 
 .coverPhoto {
   position: relative;
+  display: block;
   aspect-ratio: 4 / 3;
   border-radius: 14px;
   background: linear-gradient(145deg, #2e3431, #848c88);
+  overflow: hidden;
 }
 
 .coverPhoto::after {
@@ -488,9 +490,12 @@
 }
 
 .galleryGrid i {
+  position: relative;
   display: block;
   aspect-ratio: 4 / 3;
   border-radius: 10px;
+  overflow: hidden;
+  background: var(--sunken);
 }
 
 .galleryFoot {
