@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { FeatureIcon } from "../FeatureIcons";
+import { isAdmin } from "@/lib/admin-check";
 import { requireUser } from "@/lib/session";
 import { Avatar } from "./Avatar";
 import { SignOutButton } from "./SignOutButton";
@@ -17,6 +19,12 @@ export async function UserMenu() {
           <span className={styles.userEmail}>{user.email}</span>
         </span>
       </Link>
+      {isAdmin(user) && (
+        <Link href="/admin" className={styles.signOut} data-label="Admin">
+          <FeatureIcon name="lock" />
+          <span className={styles.signOutLabel}>Admin</span>
+        </Link>
+      )}
       <ThemeToggle />
       <SignOutButton />
     </div>
