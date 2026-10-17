@@ -4,16 +4,19 @@ import { useActionState, useState } from "react";
 import { FeatureIcon } from "../FeatureIcons";
 import { unlockDelivery, type UnlockResult } from "@/lib/link-actions";
 import { passwordRules } from "@/lib/delivery-limits";
+import type { Brand } from "@/lib/brand";
+import { ClientBrand } from "./ClientBrand";
 import styles from "./LinkGate.module.css";
 
 // The page a client sees first when the sender put a password on the link. Nothing about the delivery is shown
 // until the password is right; the sender's name is, so the client knows whose files these are.
-export function PasswordGate({ slug, senderName }: { slug: string; senderName: string }) {
+export function PasswordGate({ slug, senderName, brand }: { slug: string; senderName: string; brand: Brand }) {
   const [state, formAction, pending] = useActionState<UnlockResult, FormData>(unlockDelivery.bind(null, slug), null);
   const [shown, setShown] = useState(false);
 
   return (
     <main className={styles.page}>
+      <ClientBrand brand={brand} />
       <span className={styles.badge} aria-hidden="true">
         <FeatureIcon name="lock" />
       </span>

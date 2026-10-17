@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { FeatureIcon } from "../FeatureIcons";
+import { noBrand, type Brand } from "@/lib/brand";
 import { downloadName, type Delivery, type DeliveryFile } from "@/lib/deliveries";
 import { saveLimits, saveType, type SaveTarget } from "@/lib/save-to-phone";
 import { formatSize } from "@/lib/storage-limits";
+import { ClientBrand } from "./ClientBrand";
 import { AskAbout, RequestFile } from "./RequestFile";
 import { SaveToPhone } from "./SaveToPhone";
 import styles from "./ClientView.module.css";
@@ -71,11 +73,14 @@ function DownloadButton({ file, href, className }: { file: DeliveryFile; href: s
 export function ClientView({
   delivery,
   senderName,
+  brand = noBrand,
   thumbs = {},
   canAsk = false,
 }: {
   delivery: Delivery;
+  // The studio name when one is set, else the person's own name.
   senderName: string;
+  brand?: Brand;
   thumbs?: Record<string, string>;
   // True on the public page, where a client may ask for a file. The owner's preview shows the page without it.
   canAsk?: boolean;
@@ -102,7 +107,9 @@ export function ClientView({
   return (
     <article className={styles.page}>
       <header className={styles.top}>
-        <p className={styles.from}>From {senderName}</p>
+        <ClientBrand brand={brand} />
+        {/* The studio name already leads the page; without one, the person's name says who sent it. */}
+        {!brand.name && <p className={styles.from}>From {senderName}</p>}
         <h1 className={styles.title}>{delivery.title}</h1>
         {delivery.clientName && <p className={styles.for}>For {delivery.clientName}</p>}
         {delivery.message && <p className={styles.message}>{delivery.message}</p>}

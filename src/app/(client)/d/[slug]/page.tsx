@@ -15,13 +15,15 @@ async function Delivery({ params }: Pick<PageProps<"/d/[slug]">, "params">) {
   const { slug } = await params;
   const link = await getLinkBySlug(slug);
   if (!link) notFound();
-  if (link.expired) return <LinkExpired senderName={link.senderName} />;
-  if (!(await passesPassword(link.id, link.passwordHash))) return <PasswordGate slug={slug} senderName={link.senderName} />;
+  if (link.expired) return <LinkExpired senderName={link.senderName} brand={link.brand} />;
+  if (!(await passesPassword(link.id, link.passwordHash))) return <PasswordGate slug={slug} senderName={link.senderName} brand={link.brand} />;
   const delivery = await getPublishedBySlug(slug);
   if (!delivery) notFound();
   return (
     <>
-      <ClientView delivery={delivery} senderName={delivery.senderName} thumbs={clientThumbnailPaths(delivery)} canAsk />
+      <ClientView delivery={delivery} senderName={delivery.senderName}
+        brand={delivery.brand}
+        thumbs={clientThumbnailPaths(delivery)} canAsk />
       <OpenBeacon slug={delivery.slug} />
     </>
   );

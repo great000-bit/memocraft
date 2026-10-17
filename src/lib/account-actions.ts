@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth, pool } from "./auth";
 import { avatarKey } from "./profile";
+import { studioLogoKey } from "./studio";
 import { requireUser } from "./session";
 import { deleteObjects, removeStored, type PendingUpload } from "./storage";
 
@@ -72,7 +73,7 @@ export async function deleteAccount(_previous: AccountResult | null, formData: F
     ...files.rows,
     ...versions.rows.map((version) => ({ storageKey: version.storageKey, thumbKey: version.thumbKey, pending: null })),
   ]);
-  await deleteObjects([avatarKey(user.id)]);
+  await deleteObjects([avatarKey(user.id), studioLogoKey(user.id)]);
 
   // The session row is already gone; this clears the cookie so the browser stops sending it.
   try {

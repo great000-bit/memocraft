@@ -121,7 +121,7 @@ export function NameForm({ name }: { name: string }) {
           autoComplete="name"
           required
         />
-        <p className={styles.hint}>Shown in your workspace and, later, to clients on their delivery pages.</p>
+        <p className={styles.hint}>Shown in your workspace, and to clients when you have not set a studio name.</p>
       </div>
       {state && !state.ok && (
         <p role="alert" className={styles.error}>
