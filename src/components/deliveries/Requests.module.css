@@ -6,7 +6,7 @@
   padding: 0;
   list-style: none;
   background: var(--neu-face);
-  border: 1px solid rgb(255 255 255 / 0.7);
+  border: 1px solid var(--neu-edge);
   border-radius: 28px;
   box-shadow: var(--neu-raised-sm);
   overflow: hidden;
@@ -56,7 +56,7 @@
 }
 
 .meta a {
-  color: var(--fixer);
+  color: var(--fixer-ink, var(--fixer));
   font-weight: 600;
   text-decoration: none;
 }

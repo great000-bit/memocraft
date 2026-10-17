@@ -30,8 +30,8 @@
   gap: 12px;
   padding: 40px 28px 28px;
   border-radius: 32px;
-  background: linear-gradient(160deg, #fbfcfb, #f1f4f2);
-  border: 1px solid rgb(255 255 255 / 0.9);
+  background: var(--modal-face);
+  border: 1px solid var(--neu-edge);
   box-shadow:
     0 40px 80px -30px rgb(23 26 25 / 0.45),
     0 2px 6px rgb(23 26 25 / 0.06);

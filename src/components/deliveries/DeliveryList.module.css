@@ -5,13 +5,13 @@
   padding: 0;
   overflow: hidden;
   background: var(--neu-face);
-  border: 1px solid rgb(255 255 255 / 0.7);
+  border: 1px solid var(--neu-edge);
   border-radius: 28px;
   box-shadow: var(--neu-raised);
 }
 
 .list li + li {
-  border-top: 1px solid rgb(137 154 146 / 0.2);
+  border-top: 1px solid var(--line);
 }
 
 .row {
@@ -37,7 +37,7 @@
   place-items: center;
   border-radius: 14px;
   background: var(--bg);
-  color: var(--fixer);
+  color: var(--fixer-ink, var(--fixer));
   box-shadow: var(--neu-inset-sm);
 }
 
@@ -95,7 +95,7 @@
 
 .pill[data-status="live"] {
   background: var(--fixer-tint);
-  color: var(--fixer);
+  color: var(--fixer-ink, var(--fixer));
 }
 
 .pill[data-status="paused"] {
@@ -104,8 +104,8 @@
 }
 
 .pill[data-status="expired"] {
-  background: #fdeeea;
-  color: #8f2a1a;
+  background: var(--error-tint);
+  color: var(--error-text);
 }
 
 /* On a narrow phone the pills drop under the text so the title keeps its room. */

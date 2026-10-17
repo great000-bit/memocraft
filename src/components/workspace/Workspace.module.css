@@ -163,7 +163,7 @@
 .navItem[aria-current="page"] {
   background: var(--bg);
   box-shadow: var(--neu-inset-sm);
-  color: var(--fixer);
+  color: var(--fixer-ink, var(--fixer));
 }
 
 .navItem:not([aria-disabled="true"]):not([aria-current="page"]):hover {
@@ -361,7 +361,7 @@
 .sectionLink {
   font-size: 15px;
   font-weight: 600;
-  color: var(--fixer);
+  color: var(--fixer-ink, var(--fixer));
   text-decoration: none;
 }
 
@@ -449,7 +449,7 @@
   padding: var(--space-12) var(--space-6);
   text-align: center;
   background: var(--neu-face);
-  border: 1px solid rgb(255 255 255 / 0.7);
+  border: 1px solid var(--neu-edge);
   border-radius: 28px;
   box-shadow: var(--neu-raised);
 }
@@ -461,7 +461,7 @@
   place-items: center;
   border-radius: 20px;
   background: var(--bg);
-  color: var(--fixer);
+  color: var(--fixer-ink, var(--fixer));
   box-shadow: var(--neu-inset);
 }
 
@@ -609,7 +609,7 @@
     padding: 6px 12px;
     border-radius: 10px;
     background: var(--text);
-    color: #ffffff;
+    color: var(--bg);
     font-size: 14px;
     font-weight: 600;
     line-height: 20px;
@@ -684,7 +684,7 @@
   display: block;
   height: 140px;
   border-radius: 28px;
-  background: linear-gradient(100deg, #eef1ef 40%, #f8faf9 50%, #eef1ef 60%) 0 0 / 300% 100%;
+  background: linear-gradient(100deg, var(--skeleton-lo) 40%, var(--skeleton-hi) 50%, var(--skeleton-lo) 60%) 0 0 / 300% 100%;
   box-shadow: var(--neu-raised-xs);
   animation: shimmer 1.4s ease-in-out infinite;
 }

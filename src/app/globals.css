@@ -20,6 +20,25 @@
   --error: #b93a26;
   --info: #2b63a8;
   --logo-ink: #171a19;
+  --error-text: #8f2a1a;
+  --error-tint: #fdeeea;
+  --error-line: #f1c3b9;
+  --error-solid: #b93a26;
+  --error-hover: #9c2f1d;
+  --success-tint: #e3f4ea;
+  --input-hover: #e9edeb;
+  --field-focus: rgb(11 107 93 / 0.55);
+  --waiting: #cfd6d2;
+  --skeleton-lo: #eef1ef;
+  --skeleton-hi: #f9fbfa;
+  --glass: rgb(255 255 255 / 0.9);
+  --modal-face: linear-gradient(160deg, #fbfcfb, #f1f4f2);
+  --section-wash: rgb(255 255 255 / 0.35);
+  --drop-wash: rgb(234 246 244 / 0.55);
+  --drop-wash-hover: rgb(234 246 244 / 0.95);
+  --glow-teal: rgb(11 107 93 / 0.55);
+  --glow-halo: rgb(11 107 93 / 0.22);
+  --neu-edge: rgb(255 255 255 / 0.7);
 
   --space-1: 4px;
   --space-2: 8px;
@@ -108,7 +127,7 @@ a {
   min-height: 100dvh;
 }
 
-/* The signed-in workspace is always light: a soft grey canvas with white cards, whatever the device theme.
+/* The signed-in workspace opens dark (see the dark block below) and can be switched to light: a soft grey canvas with white cards.
    The landing page shares its soft "neumorphic" canvas (.neu-scope) so the product feels the same from the first page. */
 .app-scope,
 .neu-scope {
@@ -130,6 +149,63 @@ a {
   background: var(--bg);
   color: var(--text);
   min-height: 100dvh;
+}
+
+/* The signed-in workspace in dark: the same soft raised and pressed surfaces on a deep sage canvas. Lifted faces catch a
+   faint light on the top left and fall into a deep shadow on the bottom right. Text colours are checked against the
+   canvas and the card faces (all at least 4.5:1). Teal and amber text use lighter tints of the brand colours; teal
+   buttons keep white text. */
+.app-scope:not([data-theme="light"]) {
+  --bg: #1a1f1e;
+  --surface: #232a28;
+  --sunken: #151918;
+  --line: #2f3734;
+  --control-border: #6f7974;
+  --text: #e6eae8;
+  --text-muted: #a9b3ae;
+  --text-subtle: #8d9792;
+  --fixer: #0e7565;
+  --fixer-hover: #0f7d6c;
+  --fixer-ink: #5fcfbb;
+  --fixer-tint: rgb(63 190 168 / 0.14);
+  --proof-text: #f0b660;
+  --proof-tint: rgb(232 163 61 / 0.14);
+  --focus-ring: #f0b660;
+  --success: #62c98d;
+  --error: #f08068;
+  --info: #86b4ee;
+  --logo-ink: #e6eae8;
+  --error-text: #f4a090;
+  --error-tint: rgb(224 100 77 / 0.16);
+  --error-line: rgb(224 100 77 / 0.4);
+  --error-solid: #b93a26;
+  --error-hover: #a83420;
+  --success-tint: rgb(98 201 141 / 0.14);
+  --input-hover: #121615;
+  --field-focus: rgb(95 207 187 / 0.6);
+  --waiting: #3a4441;
+  --skeleton-lo: #1f2523;
+  --skeleton-hi: #283130;
+  --glass: rgb(36 43 41 / 0.88);
+  --modal-face: linear-gradient(160deg, #262d2b, #1c2120);
+  --section-wash: rgb(0 0 0 / 0.14);
+  --drop-wash: rgb(63 190 168 / 0.06);
+  --drop-wash-hover: rgb(63 190 168 / 0.13);
+  --glow-teal: rgb(95 207 187 / 0.7);
+  --glow-halo: rgb(63 190 168 / 0.2);
+  --neu-edge: rgb(255 255 255 / 0.05);
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 32px -16px rgb(0 0 0 / 0.6);
+  --neu-dark: rgb(0 0 0 / 0.55);
+  --neu-light: rgb(255 255 255 / 0.045);
+  --neu-face: linear-gradient(145deg, #232a28, #1b201f);
+  color-scheme: dark;
+}
+
+/* The page behind the workspace (seen when a phone overscrolls) matches it. */
+html:has(.app-scope:not([data-theme="light"])),
+html:has(.app-scope:not([data-theme="light"])) body {
+  background: #1a1f1e;
+  color-scheme: dark;
 }
 
 /* On phones the raised surfaces use shorter shadows: the same look at that size, with far less to paint while scrolling. */

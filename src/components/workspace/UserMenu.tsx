@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/session";
 import { Avatar } from "./Avatar";
 import { SignOutButton } from "./SignOutButton";
+import { ThemeToggle } from "./ThemeToggle";
 import styles from "./Workspace.module.css";
 
 // Reads the session, so it always sits behind <Suspense>.
@@ -16,6 +17,7 @@ export async function UserMenu() {
           <span className={styles.userEmail}>{user.email}</span>
         </span>
       </Link>
+      <ThemeToggle />
       <SignOutButton />
     </div>
   );
