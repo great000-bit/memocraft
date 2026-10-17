@@ -2,7 +2,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
   min-height: 44px;
   padding: 0 var(--space-6);
   border-radius: var(--radius-md);
@@ -14,11 +14,19 @@
   transition:
     background-color 150ms ease,
     border-color 150ms ease,
+    color 150ms ease,
     transform 150ms ease;
 }
 
 .button:active {
   transform: scale(0.97);
+}
+
+.lg {
+  min-height: 60px;
+  padding: 0 var(--space-8);
+  font-size: 19px;
+  border-radius: 10px;
 }
 
 .primary {
@@ -40,29 +48,55 @@
   border-color: var(--text);
 }
 
+.outline {
+  color: var(--text);
+  border: 2px solid currentColor;
+  border-radius: 12px;
+}
+
+.outline:hover {
+  background: var(--text);
+  color: var(--bg);
+}
+
+.link {
+  color: var(--text);
+  padding: 0;
+  min-height: 0;
+  gap: var(--space-2);
+}
+
+.link .label {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 2px;
+}
+
 .quiet {
   color: var(--text);
   padding: 0 var(--space-3);
+  font-weight: 500;
 }
 
 .quiet:hover {
   text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 .arrow {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   transition: transform 200ms ease;
 }
 
 .button:hover .arrow {
-  transform: translateX(3px);
+  transform: translateX(4px);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .button,
   .arrow {
-    transition: background-color 150ms ease, border-color 150ms ease;
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
   }
 
   .button:active,

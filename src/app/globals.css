@@ -34,7 +34,7 @@
   --radius-lg: 12px;
   --radius-pill: 999px;
 
-  --font-display: var(--font-schibsted), "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-archivo), "Helvetica Neue", Arial, sans-serif;
   --font-body: var(--font-instrument), "Segoe UI", Arial, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, Menlo, monospace;
 
@@ -89,6 +89,7 @@ h1,
 h2,
 h3 {
   font-family: var(--font-display);
+  font-stretch: 118%;
   margin: 0;
   text-wrap: balance;
 }
@@ -104,4 +105,28 @@ a {
 :focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
+}
+
+/* Marketing pages always render light, on white, whatever the device theme. */
+.light-scope {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --sunken: #f5f4f1;
+  --line: #e4e2dd;
+  --control-border: #848c88;
+  --text: #1e1919;
+  --text-muted: #5c5856;
+  --text-subtle: #7a7674;
+  --fixer: #0b6b5d;
+  --fixer-hover: #09564b;
+  --fixer-tint: #eaf6f4;
+  --on-fixer: #ffffff;
+  --proof-text: #8a5208;
+  --proof-tint: #fcefd9;
+  --focus-ring: #8a5208;
+  --success: #1d7a3a;
+  --logo-ink: #1e1919;
+  color-scheme: light;
+  background: var(--bg);
+  color: var(--text);
 }

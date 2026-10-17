@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Instrument_Sans, JetBrains_Mono, Schibsted_Grotesk } from "next/font/google";
+import { Archivo, Instrument_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const schibsted = Schibsted_Grotesk({
-  variable: "--font-schibsted",
+// Archivo's width axis gives the wide grotesk headings of the Dropbox-style layout.
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
-  weight: ["700", "800"],
+  axes: ["wdth"],
 });
 
 const instrument = Instrument_Sans({
@@ -26,8 +27,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${schibsted.variable} ${instrument.variable} ${jetbrains.variable}`}>
-      <body>{children}</body>
+    <html lang="en" className={`${archivo.variable} ${instrument.variable} ${jetbrains.variable}`}>
+      <body className="light-scope">{children}</body>
     </html>
   );
 }

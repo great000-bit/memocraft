@@ -1,182 +1,243 @@
-import Link from "next/link";
 import { Button } from "@/components/Button";
+import { FeatureTabs } from "@/components/FeatureTabs";
 import { Logo, LogoMark } from "@/components/Logo";
+import { DeliveryMock } from "@/components/Mockups";
+import { Phone } from "@/components/Phone";
+import { Reveal } from "@/components/Reveal";
+import { SiteNav } from "@/components/SiteNav";
 import styles from "./page.module.css";
 
-const features = [
-  {
-    title: "Files that explain themselves",
-    body: "Group files into sections and add a short note to each, like “For print” or “For Instagram”. Your client knows which file is which without asking you.",
-  },
-  {
-    title: "One link that stays current",
-    body: "Replace a file and the same link shows the new version, marked Updated. You see when your client opened it and what they downloaded.",
-  },
-  {
-    title: "Made for your client’s phone",
-    body: "Clients save straight to their camera roll, pick favourites and ask for a missing file. No account, no app, no zip they cannot open.",
-  },
-];
-
-const steps = [
-  { title: "Drop your files", body: "Drag in the finished work and give the delivery a name." },
-  { title: "Copy the link", body: "Send it by email or WhatsApp. Your client opens it, no sign-up needed." },
-];
-
 const audiences = ["Photographers", "Designers", "Filmmakers", "Brand studios", "Illustrators", "Videographers"];
+
+const extras = [
+  { title: "Passwords and expiry", body: "Lock a delivery with a password, or let it close on a date you choose." },
+  { title: "Your brand on every page", body: "Your logo and studio name lead, so clients see you first." },
+  { title: "File requests", body: "Clients ask for a missing file, and it lands on your to-do list." },
+  { title: "Version history", body: "Every replaced file is kept, so nothing is ever lost." },
+  { title: "Big files, no fuss", body: "Uploads pause and resume on a weak connection." },
+  { title: "Collaborators", body: "Invite a second shooter or editor to help on a delivery." },
+];
+
+const footer = [
+  { head: "Products", links: ["Deliveries", "Client links", "File requests", "Proof of delivery"] },
+  { head: "Solutions", links: ["Photographers", "Designers", "Filmmakers", "Brand studios"] },
+  { head: "Company", links: ["About", "Pricing", "Contact", "Privacy"] },
+];
 
 export default function Home() {
   return (
     <>
-      <header className={styles.header}>
-        <div className={styles.headerInner}>
-          <Link href="/" className={styles.brand} aria-label="Memocraft home">
-            <Logo className={styles.logo} />
-          </Link>
-          <nav className={styles.nav} aria-label="Main">
-            <Button href="#example" variant="quiet">
-              See an example
-            </Button>
-            <Button href="/login" variant="quiet">
-              Log in
-            </Button>
-            <Button href="/signup">Start free</Button>
-          </nav>
-        </div>
-      </header>
+      <SiteNav />
 
       <main>
         <section className={styles.hero}>
-          <div className={styles.heroText}>
-            <p className={styles.eyebrow}>For creatives who deliver to clients</p>
-            <h1 className={styles.headline}>Deliver work your clients understand.</h1>
+          <Reveal className={styles.heroText}>
+            <h1 className={styles.display}>Deliver work, with a lot less back-and-forth</h1>
             <p className={styles.lede}>
-              Memocraft turns a folder of finished files into one clean page your client can open on any phone. Every file is
-              labelled, the link stays current, and you know the moment they download.
+              Send one link with every finished file in it. Your client gets a clean page on any phone, and you see when
+              they open it and download.
             </p>
             <div className={styles.ctas}>
-              <Button href="/signup">Start free</Button>
-              <Button href="#example" variant="secondary">
-                See an example delivery
+              <Button href="/signup" size="lg">
+                Try Memocraft free
               </Button>
             </div>
-            <p className={styles.small}>Your clients never need an account.</p>
-          </div>
-
-          <div className={styles.compare} id="example">
-            <figure className={`${styles.panel} ${styles.before}`}>
-              <figcaption className={styles.panelLabel}>Before</figcaption>
-              <ul className={styles.mess}>
-                <li>
-                  <span className={styles.mono}>final_v3_FINAL(2).zip</span>
-                  <span className={styles.expired}>Link expired</span>
-                </li>
-                <li>
-                  <span className={styles.mono}>IMG_4471.CR3</span>
-                  <span className={styles.muted}>Can&rsquo;t open on phone</span>
-                </li>
-                <li className={styles.bubble}>&ldquo;Which one is for print??&rdquo;</li>
-                <li className={styles.bubble}>&ldquo;Did you get the files?&rdquo;</li>
-              </ul>
-            </figure>
-
-            <figure className={`${styles.panel} ${styles.after}`}>
-              <figcaption className={styles.panelLabel}>With Memocraft</figcaption>
-              <div className={styles.delivery}>
-                <div className={styles.deliveryHead}>
-                  <div>
-                    <p className={styles.deliveryTitle}>Adaeze &amp; Tobi, wedding</p>
-                    <p className={styles.muted}>From Lumen Studio &middot; 48 files</p>
+            <p className={styles.fine}>Free to start. No card needed. Your clients never need an account.</p>
+          </Reveal>
+          <Reveal effect="scale" delay={150} className={styles.heroMedia}>
+            <div id="example" className={styles.heroStack}>
+              <DeliveryMock />
+              <Phone label="A delivery on an iPhone with Save to phone" className={styles.heroPhone}>
+                <div className={styles.phoneInner}>
+                  <p className={styles.phoneStudio}>Lumen Studio</p>
+                  <p className={styles.phoneTitle}>Adaeze &amp; Tobi</p>
+                  <div className={styles.phoneGrid}>
+                    {[0, 1, 2, 3].map((n) => (
+                      <i key={n} className={styles[`tone${n}`]} />
+                    ))}
                   </div>
-                  <span className={styles.status}>
-                    <span className={styles.dot} aria-hidden="true" /> Downloaded
-                  </span>
+                  <span className={styles.phoneSave}>Save to phone</span>
                 </div>
-                <ul className={styles.sections}>
-                  <li>
-                    <span className={styles.thumbs} aria-hidden="true">
-                      <i />
-                      <i />
-                      <i />
-                    </span>
-                    <span>
-                      <b>Ceremony</b>
-                      <span className={styles.note}>Full resolution, for print</span>
-                    </span>
-                  </li>
-                  <li>
-                    <span className={styles.thumbs} aria-hidden="true">
-                      <i />
-                      <i />
-                      <i />
-                    </span>
-                    <span>
-                      <b>For Instagram</b>
-                      <span className={styles.note}>Cropped 4:5, ready to post</span>
-                    </span>
-                    <span className={styles.updated}>Updated</span>
-                  </li>
-                </ul>
-                <span className={styles.save}>Save to phone</span>
-              </div>
-            </figure>
-          </div>
+              </Phone>
+            </div>
+          </Reveal>
         </section>
 
-        <section className={styles.section} aria-labelledby="features">
-          <h2 id="features" className={styles.h2}>
-            Better than a shared folder
-          </h2>
-          <div className={styles.features}>
-            {features.map((f, i) => (
-              <article key={f.title} className={styles.feature}>
-                <span className={styles.num}>0{i + 1}</span>
-                <h3 className={styles.h3}>{f.title}</h3>
-                <p className={styles.body}>{f.body}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className={styles.section} aria-labelledby="how">
-          <h2 id="how" className={styles.h2}>
-            Two steps to send
-          </h2>
-          <ol className={styles.steps}>
-            {steps.map((s, i) => (
-              <li key={s.title} className={styles.step}>
-                <span className={styles.stepNum}>{i + 1}</span>
-                <div>
-                  <h3 className={styles.h3}>{s.title}</h3>
-                  <p className={styles.body}>{s.body}</p>
-                </div>
+        <section className={styles.strip} aria-label="Who uses Memocraft">
+          <ul className={styles.marquee}>
+            {[...audiences, ...audiences].map((a, i) => (
+              <li key={`${a}-${i}`} aria-hidden={i >= audiences.length}>
+                {a}
               </li>
-            ))}
-          </ol>
-          <p className={styles.small}>Notes, passwords, expiry dates and your own branding are there when you want them.</p>
-        </section>
-
-        <section className={styles.section} aria-labelledby="who">
-          <h2 id="who" className={styles.h2}>
-            Made for every kind of creative
-          </h2>
-          <ul className={styles.tags}>
-            {audiences.map((a) => (
-              <li key={a}>{a}</li>
             ))}
           </ul>
         </section>
 
-        <section className={styles.final}>
-          <LogoMark className={styles.finalMark} />
-          <h2 className={styles.h2}>Your next delivery, done properly.</h2>
-          <Button href="/signup">Start free</Button>
+        <section className={styles.section} id="features">
+          <Reveal className={styles.sectionHead}>
+            <p className={styles.kicker}>Features</p>
+            <h2 className={styles.h2}>Everything a shared folder forgets</h2>
+          </Reveal>
+          <Reveal delay={100}>
+            <FeatureTabs />
+          </Reveal>
+        </section>
+
+        <section className={styles.section} id="proof">
+          <div className={styles.split}>
+            <Reveal className={styles.splitText}>
+              <p className={styles.kicker}>Proof of delivery</p>
+              <h2 className={styles.h2}>Know they got it, and when</h2>
+              <p className={styles.body}>
+                Every delivery shows whether it has been opened, and which files were downloaded. Fix a file later and
+                the same link updates, marked Updated.
+              </p>
+              <Button href="/signup" variant="outline">
+                Start free
+              </Button>
+            </Reveal>
+            <Reveal effect="scale" delay={120} className={styles.splitMedia}>
+              <div className={styles.statusCard}>
+                <div className={styles.statusHead}>
+                  <p className={styles.statusTitle}>Brand launch film</p>
+                  <span className={styles.statusBadge}>Downloaded</span>
+                </div>
+                {[
+                  ["Sent", "Kemi at Orbit Foods", "Mon 09:12"],
+                  ["Opened", "From Lagos, on iPhone", "Mon 09:40"],
+                  ["Downloaded", "launch-film-4k.mp4", "Mon 09:44"],
+                  ["Updated", "Subtitles fixed, same link", "Tue 14:03"],
+                ].map(([what, detail, when]) => (
+                  <div key={what} className={styles.statusRow}>
+                    <span className={styles.statusDot} data-kind={what} aria-hidden="true" />
+                    <div>
+                      <p className={styles.statusWhat}>{what}</p>
+                      <p className={styles.statusDetail}>{detail}</p>
+                    </div>
+                    <span className={styles.statusWhen}>{when}</span>
+                  </div>
+                ))}
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        <section className={styles.dark} id="privacy">
+          <div className={styles.darkInner}>
+            <Reveal className={styles.darkHead}>
+              <p className={styles.kickerLight}>Privacy</p>
+              <h2 className={styles.h2Light}>Private by default</h2>
+              <p className={styles.bodyLight}>
+                Lock a delivery with a password, set when it closes, and pause any link in one tap. Clients who are
+                turned away get a way to ask you for access, never a dead page.
+              </p>
+            </Reveal>
+            <Reveal delay={120} className={styles.darkMedia}>
+              <div className={styles.lockCard}>
+                <p className={styles.lockTitle}>Link settings</p>
+                <div className={styles.lockRow}>
+                  <span>Password</span>
+                  <span className={styles.toggleOn} aria-label="On" />
+                </div>
+                <div className={styles.lockRow}>
+                  <span>Closes</span>
+                  <span className={styles.lockValue}>31 Dec 2026</span>
+                </div>
+                <div className={styles.lockRow}>
+                  <span>Downloads</span>
+                  <span className={styles.lockValue}>Allowed</span>
+                </div>
+                <div className={styles.lockRow}>
+                  <span>Link</span>
+                  <span className={styles.toggleOn} aria-label="On" />
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <Reveal className={styles.sectionHead}>
+            <p className={styles.kicker}>More</p>
+            <h2 className={styles.h2}>There when you need it</h2>
+          </Reveal>
+          <ul className={styles.extras}>
+            {extras.map((e, i) => (
+              <Reveal as="li" key={e.title} delay={(i % 3) * 100} className={styles.extra}>
+                <h3 className={styles.h3}>{e.title}</h3>
+                <p className={styles.body}>{e.body}</p>
+              </Reveal>
+            ))}
+          </ul>
+        </section>
+
+        <section className={styles.section} id="how">
+          <Reveal className={styles.sectionHead}>
+            <p className={styles.kicker}>How it works</p>
+            <h2 className={styles.h2}>Two steps to send</h2>
+          </Reveal>
+          <ol className={styles.steps}>
+            {[
+              ["Drop your files", "Drag in the finished work and give the delivery a name."],
+              ["Copy the link", "Send it by email or WhatsApp. Your client opens it with no sign-up."],
+            ].map(([title, body], i) => (
+              <Reveal as="li" key={title} delay={i * 120} className={styles.step}>
+                <span className={styles.stepNum}>{i + 1}</span>
+                <h3 className={styles.h3}>{title}</h3>
+                <p className={styles.body}>{body}</p>
+              </Reveal>
+            ))}
+          </ol>
+        </section>
+
+        <section className={styles.section} id="who">
+          <Reveal className={styles.sectionHead}>
+            <p className={styles.kicker}>Solutions</p>
+            <h2 className={styles.h2}>Made for every kind of creative</h2>
+            <p className={styles.lede}>Wedding photographers, brand designers, filmmakers and studios use the same simple flow.</p>
+          </Reveal>
+          <Reveal delay={100}>
+            <ul className={styles.tags}>
+              {audiences.map((a) => (
+                <li key={a}>{a}</li>
+              ))}
+            </ul>
+          </Reveal>
+        </section>
+
+        <section className={styles.final} id="pricing">
+          <Reveal className={styles.finalInner}>
+            <LogoMark className={styles.finalMark} />
+            <h2 className={styles.finalTitle}>Your next delivery, done properly</h2>
+            <div className={styles.ctas}>
+              <Button href="/signup" size="lg">
+                Try Memocraft free
+              </Button>
+            </div>
+          </Reveal>
         </section>
       </main>
 
       <footer className={styles.footer}>
-        <Logo className={styles.footerLogo} />
-        <p className={styles.small}>&copy; 2026 Memocraft</p>
+        <div className={styles.footerInner}>
+          <div className={styles.footerBrand}>
+            <Logo className={styles.footerLogo} />
+            <p className={styles.small}>Deliver work your clients understand.</p>
+          </div>
+          {footer.map((col) => (
+            <div key={col.head} className={styles.footerCol}>
+              <p className={styles.footerHead}>{col.head}</p>
+              <ul>
+                {col.links.map((l) => (
+                  <li key={l}>
+                    <a href="#">{l}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <p className={`${styles.small} ${styles.copy}`}>&copy; 2026 Memocraft</p>
       </footer>
     </>
   );
