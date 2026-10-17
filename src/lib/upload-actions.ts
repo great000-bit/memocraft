@@ -71,6 +71,32 @@ function partSizes(size: number): number[] {
   return sizes;
 }
 
+// Minutes until this account may start another upload of this size, or null when it may start one now. When it
+// may, the start is recorded. Two starts at the same moment can both pass the check; that overshoot is a few files.
+async function hourlyLimitWait(userId: string, size: number): Promise<number | null> {
+  await pool.query(`delete from "uploadStart" where "userId" = $1 and "at" < now() - interval '1 hour'`, [userId]);
+  const { rows } = await pool.query<{ at: Date; sizeBytes: string }>(
+    `select "at", "sizeBytes" from "uploadStart" where "userId" = $1 order by "at"`,
+    [userId],
+  );
+  // Starts drop out of the window oldest first; find how many must go before this one fits.
+  let count = rows.length;
+  let bytes = rows.reduce((sum, row) => sum + Number(row.sizeBytes), 0);
+  let index = 0;
+  while (count + 1 > storageLimits.startsPerHour || bytes + size > storageLimits.startedBytesPerHour) {
+    if (index >= rows.length) return 60;
+    count -= 1;
+    bytes -= Number(rows[index].sizeBytes);
+    index += 1;
+  }
+  if (index > 0) {
+    const freesAt = rows[index - 1].at.getTime() + 60 * 60 * 1000;
+    return Math.max(1, Math.ceil((freesAt - Date.now()) / 60_000));
+  }
+  await pool.query(`insert into "uploadStart" ("userId", "sizeBytes") values ($1, $2)`, [userId, size]);
+  return null;
+}
+
 export async function beginUpload(input: BeginUploadInput): Promise<BeginUploadResult> {
   const user = await requireUser();
   if (!storageConfigured()) return fail("File storage is not connected yet.");
@@ -117,6 +143,11 @@ export async function beginUpload(input: BeginUploadInput): Promise<BeginUploadR
   );
   if (Number(usage.rows[0].used) + size > storageLimits.accountBytes) {
     return fail(`This would pass your ${formatSize(storageLimits.accountBytes)} of storage. Remove a file or upload less.`);
+  }
+
+  const wait = await hourlyLimitWait(user.id, size);
+  if (wait !== null) {
+    return fail(`You have started a lot of uploads in the last hour. Try again in ${wait === 1 ? "a minute" : `${wait} minutes`}.`);
   }
 
   const fileId = input.fileId ?? randomUUID();

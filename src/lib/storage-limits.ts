@@ -12,6 +12,10 @@ export const storageLimits = {
   maxParts: 10_000,
   // A thumbnail is a small JPEG made in the browser; anything bigger is refused.
   thumbMaxBytes: 256 * 1024,
+  // Uploads one account may start in an hour, by count and by size. A photographer sending a whole wedding stays well
+  // under both; a script asking for upload links without end does not.
+  startsPerHour: 1000,
+  startedBytesPerHour: 20 * GB,
 } as const;
 
 export function partSizeFor(size: number): number {
