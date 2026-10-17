@@ -137,20 +137,18 @@
   display: none;
 }
 
-/* On a phone the header holds the logo, Get started and the menu button, so Get started drops its arrow. */
+/* On a phone the header holds only the logo and the menu button; signing up is in the menu and the hero. */
 @media (max-width: 719px) {
   .logo {
     height: 21px;
   }
 
-  .actions a {
-    min-height: 40px;
-    padding: 0 var(--space-4);
-    font-size: 15px;
+  .actions {
+    display: none;
   }
 
-  .actions svg {
-    display: none;
+  .mobile {
+    margin-left: auto;
   }
 }
 

@@ -24,6 +24,7 @@ const mobileLinks = [
   { label: "Pricing", href: "#pricing" },
   { label: "Example", href: "#example" },
   { label: "Log in", href: "/login" },
+  { label: "Get started", href: "/signup" },
 ];
 
 // Top navigation. Dropdowns are native <details> elements, so they work without JavaScript.
