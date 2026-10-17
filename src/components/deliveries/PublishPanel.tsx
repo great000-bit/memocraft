@@ -62,9 +62,16 @@ export function PublishPanel({ deliveryId, slug, state }: PublishPanelProps) {
   return (
     <section className={styles.share} aria-labelledby="share-title">
       <div className={styles.shareMain}>
-        <h2 id="share-title" className={styles.shareTitle}>
-          {state === "expired" ? "This link has expired" : "Shared with anyone who has the link"}
-        </h2>
+        <div className={styles.shareHead}>
+          {state !== "expired" && (
+            <span className={styles.shareTick} aria-hidden="true">
+              ✓
+            </span>
+          )}
+          <h2 id="share-title" className={styles.shareTitle}>
+            {state === "expired" ? "This link has expired" : "Your link is live"}
+          </h2>
+        </div>
         <div className={styles.linkRow}>
           <input
             className={styles.linkInput}
@@ -73,14 +80,14 @@ export function PublishPanel({ deliveryId, slug, state }: PublishPanelProps) {
             aria-label="Client link"
             onFocus={(event) => event.currentTarget.select()}
           />
-          <button type="button" className={`${styles.button} ${styles.primary}`} onClick={copy}>
+          <button type="button" className={`${styles.button} ${styles.primary} ${copied ? styles.copied : ""}`} onClick={copy}>
             {copied ? "Copied" : "Copy link"}
           </button>
         </div>
         <p className={styles.shareText}>
           {state === "expired"
             ? "Your client sees that it has expired. Pick a new date under Link settings, or remove the date, to switch it back on."
-            : "Pausing switches the link off straight away. Resume turns the same link back on."}
+            : "Anyone with the link can open it, no account needed. Pausing switches it off straight away."}
         </p>
       </div>
       <ActionButton key="pause" action={() => setPublished(deliveryId, false)} variant="secondary">

@@ -352,7 +352,7 @@ export async function DeliveryEditor({
         </>
       )}
 
-      <section className={styles.danger} aria-labelledby="delete-title">
+      <section className={styles.dangerZone} aria-labelledby="delete-title">
         <div className={styles.dangerText}>
           <h2 id="delete-title" className={styles.dangerTitle}>
             Delete this delivery
