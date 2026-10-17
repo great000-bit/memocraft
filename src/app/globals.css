@@ -130,4 +130,5 @@ a {
   color-scheme: light;
   background: var(--bg);
   color: var(--text);
+  min-height: 100dvh;
 }

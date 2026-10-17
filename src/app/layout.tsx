@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${archivo.variable} ${instrument.variable} ${jetbrains.variable}`}>
-      <body className="light-scope">{children}</body>
+      <body>{children}</body>
     </html>
   );
 }
