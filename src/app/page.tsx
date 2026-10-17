@@ -32,10 +32,10 @@ export default function Home() {
       <main>
         <section className={styles.hero}>
           <Reveal className={styles.heroText}>
-            <h1 className={styles.display}>Deliver work, with a lot less back-and-forth</h1>
+            <h1 className={styles.display}>Deliver work your clients understand</h1>
             <p className={styles.lede}>
-              Send one link with every finished file in it. Your client gets a clean page on any phone, and you see when
-              they open it and download.
+              One link with every finished file in it. Your client opens a clean page on any phone, and you see the
+              moment they download.
             </p>
             <div className={styles.ctas}>
               <Button href="/signup" size="lg">
