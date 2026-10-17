@@ -7,36 +7,74 @@
   background: var(--bg);
 }
 
+/* While the phone menu is open the page behind it stays still. */
+.shell[data-drawer="open"] {
+  overflow: hidden;
+  height: 100dvh;
+}
+
 /* The sidebar is the same grey as the canvas and sits on it with a soft shadow, like the cards. */
-/* On a phone the logo has the first row to itself (the account chip floats at its right) and the second row holds
-   the open and close button with the menu strip beside it. */
+/* On a phone it is a slim bar at the top, the menu button then the logo, and the pages slide in from the left. */
 .sidebar {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  grid-template-areas:
-    "brand brand"
-    "toggle menu";
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
   align-items: center;
-  gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
   background: var(--bg);
   box-shadow: 0 12px 24px -16px var(--neu-dark);
 }
 
-.sidebar > nav {
-  grid-area: menu;
+.brandRow {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-2);
   min-width: 0;
 }
 
-.brandRow {
-  display: contents;
+/* The pages and the account, as a panel off the left edge of a phone screen until the menu button brings it in. */
+.drawer {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 31;
+  width: min(300px, 84vw);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-6);
+  padding: var(--space-6) var(--space-4);
+  overflow-y: auto;
+  background: var(--bg);
+  box-shadow: 18px 0 36px -14px var(--neu-dark);
+  transform: translateX(-105%);
+  visibility: hidden;
+  transition:
+    transform 240ms ease,
+    visibility 0s linear 240ms;
+}
+
+.shell[data-drawer="open"] .drawer {
+  transform: none;
+  visibility: visible;
+  transition: transform 240ms ease;
+}
+
+.scrim {
+  display: none;
+}
+
+.shell[data-drawer="open"] .scrim {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgb(23 26 25 / 0.28);
 }
 
 .brand {
-  grid-area: brand;
-  justify-self: start;
   display: flex;
   align-items: center;
   padding: var(--space-2) var(--space-3);
@@ -57,7 +95,6 @@
 }
 
 .toggle {
-  grid-area: toggle;
   flex: none;
   width: 44px;
   height: 44px;
@@ -91,15 +128,10 @@
 .nav {
   list-style: none;
   margin: 0;
-  padding: 6px 4px 10px;
+  padding: 4px;
   display: flex;
+  flex-direction: column;
   gap: var(--space-2);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.nav::-webkit-scrollbar {
-  display: none;
 }
 
 .navItem {
@@ -115,6 +147,7 @@
   color: var(--text-muted);
   text-decoration: none;
   white-space: nowrap;
+  width: 100%;
   transition:
     box-shadow 150ms ease,
     color 150ms ease;
@@ -155,39 +188,25 @@
   line-height: 16px;
 }
 
-/* Closed on a phone: just the logo row, the menu strip folds away. */
-.shell[data-collapsed="true"] .nav {
-  display: none;
-}
-
 .body {
   min-width: 0;
   display: flex;
   flex-direction: column;
 }
 
-/* On a phone the account chip sits at the right of the logo row, above the menu strip. */
-.topbar {
-  position: absolute;
-  top: 10px;
-  right: var(--space-4);
-  z-index: 2;
-  display: flex;
-  justify-content: flex-end;
-}
-
+/* Your account at the foot of the sidebar: who is signed in, and the way out. */
 .user {
-  min-height: 52px;
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 4px 4px 4px 4px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  padding: 6px;
   background: var(--neu-face);
-  border-radius: var(--radius-pill);
+  border-radius: 22px;
   box-shadow: var(--neu-raised-sm);
 }
 
 .userLink {
+  min-width: 0;
   min-height: 44px;
   display: flex;
   align-items: center;
@@ -224,7 +243,8 @@
 }
 
 .userText {
-  display: none;
+  display: block;
+  flex: 1;
   min-width: 0;
 }
 
@@ -240,7 +260,7 @@
 }
 
 .userEmail {
-  max-width: 220px;
+  max-width: 100%;
   font-size: 13px;
   line-height: 18px;
   color: var(--text-muted);
@@ -250,10 +270,15 @@
 }
 
 .signOut {
+  position: relative;
   min-height: 44px;
-  padding: 0 var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-3);
   border: 0;
-  border-radius: var(--radius-pill);
+  border-radius: 14px;
+  text-align: left;
   background: transparent;
   color: var(--text);
   font: inherit;
@@ -261,6 +286,13 @@
   font-weight: 600;
   cursor: pointer;
   transition: box-shadow 150ms ease;
+}
+
+.signOut svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--text-muted);
 }
 
 .signOut:hover:not(:disabled) {
@@ -464,40 +496,35 @@
   }
 
   .sidebar {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: none;
+    flex-direction: column;
     align-items: stretch;
-    align-content: start;
     gap: var(--space-8);
-    padding: var(--space-8) var(--space-4);
+    padding: var(--space-8) var(--space-4) var(--space-6);
     box-shadow: 12px 0 24px -16px var(--neu-dark);
-    position: sticky;
-    top: 0;
     height: 100dvh;
   }
 
-  .sidebar > nav,
-  .brand,
-  .toggle {
-    grid-area: auto;
+  .drawer {
+    position: static;
+    flex: 1;
+    width: auto;
+    padding: 0;
+    overflow: visible;
+    background: none;
+    box-shadow: none;
+    transform: none;
+    visibility: visible;
+    transition: none;
+  }
+
+  .scrim,
+  .shell[data-drawer="open"] .scrim {
+    display: none;
   }
 
   .brandRow {
-    display: flex;
-    align-items: center;
+    flex-direction: row;
     justify-content: space-between;
-    gap: var(--space-2);
-    min-width: 0;
-  }
-
-  .nav {
-    flex-direction: column;
-    overflow: visible;
-    padding: 4px;
-  }
-
-  .navItem {
-    width: 100%;
   }
 
   .navSoon .soon {
@@ -542,8 +569,26 @@
     min-height: 52px;
   }
 
+  /* Closed: the account shrinks to its picture and a log-out icon, stacked. */
+  .shell[data-collapsed="true"] .user {
+    justify-items: center;
+    padding: 6px 4px;
+  }
+
+  .shell[data-collapsed="true"] .userLink {
+    padding: 4px;
+  }
+
+  .shell[data-collapsed="true"] .signOut {
+    justify-content: center;
+    width: 44px;
+    padding: 0;
+  }
+
   .shell[data-collapsed="true"] .navLabel,
-  .shell[data-collapsed="true"] .soon {
+  .shell[data-collapsed="true"] .soon,
+  .shell[data-collapsed="true"] .userText,
+  .shell[data-collapsed="true"] .signOutLabel {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -552,7 +597,8 @@
     white-space: nowrap;
   }
 
-  .shell[data-collapsed="true"] .navItem::after {
+  .shell[data-collapsed="true"] .navItem::after,
+  .shell[data-collapsed="true"] .signOut::after {
     content: attr(data-label);
     /* The tip is for sighted pointer users; the link already has its name, so it gets an empty spoken alternative. */
     content: attr(data-label) / "";
@@ -577,25 +623,11 @@
   }
 
   .shell[data-collapsed="true"] .navItem:hover::after,
-  .shell[data-collapsed="true"] .navItem:focus-visible::after {
+  .shell[data-collapsed="true"] .navItem:focus-visible::after,
+  .shell[data-collapsed="true"] .signOut:hover::after,
+  .shell[data-collapsed="true"] .signOut:focus-visible::after {
     opacity: 1;
     transform: translate(0, -50%);
-  }
-
-  .topbar {
-    position: static;
-    width: 100%;
-    max-width: 1200px;
-    margin-inline: auto;
-    padding: var(--space-6) var(--space-8) 0;
-  }
-
-  .user {
-    min-height: 56px;
-  }
-
-  .userText {
-    display: block;
   }
 
   .main {
@@ -604,7 +636,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .shell[data-animate="true"] {
+  .shell[data-animate="true"],
+  .drawer,
+  .shell[data-drawer="open"] .drawer {
     transition: none;
   }
 }
