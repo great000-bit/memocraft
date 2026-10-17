@@ -15,11 +15,17 @@ type SuccessModalProps = {
 // so focus stays inside, Escape closes it and the page behind cannot be clicked.
 export function SuccessModal({ open, onClose, title, children, actions }: SuccessModalProps) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const card = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const node = dialog.current;
     if (!node) return;
-    if (open && !node.open) node.showModal();
+    if (open && !node.open) {
+      node.showModal();
+      // The browser focuses the first button, which paints a focus ring on Copy before anyone has touched it.
+      // Start on the card instead; Tab still goes straight to the buttons.
+      card.current?.focus({ preventScroll: true });
+    }
     if (!open && node.open) node.close();
   }, [open]);
 
@@ -34,7 +40,7 @@ export function SuccessModal({ open, onClose, title, children, actions }: Succes
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className={styles.card}>
+      <div ref={card} className={styles.card} tabIndex={-1}>
         <span className={styles.burst} aria-hidden="true">
           {Array.from({ length: 10 }, (_, i) => (
             <i key={i} style={{ "--i": i } as React.CSSProperties} />

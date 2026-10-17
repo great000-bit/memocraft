@@ -132,6 +132,15 @@ a {
   min-height: 100dvh;
 }
 
+/* On phones the raised surfaces use shorter shadows: the same look at that size, with far less to paint while scrolling. */
+@media (max-width: 719px) {
+  .app-scope,
+  .neu-scope {
+    --neu-raised: 5px 5px 12px var(--neu-dark), -5px -5px 12px var(--neu-light);
+    --neu-raised-sm: 3px 3px 8px var(--neu-dark), -3px -3px 8px var(--neu-light);
+  }
+}
+
 /* Anchor links glide instead of jumping. Lenis (landing page, mouse and trackpad) takes over scrolling while it runs. */
 @media (prefers-reduced-motion: no-preference) {
   html {
