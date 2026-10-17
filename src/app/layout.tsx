@@ -20,9 +20,9 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Memocraft: deliver creative work your clients understand",
+  title: "Memocraft: did they get the files? Now you\u2019ll know",
   description:
-    "One link for every delivery. Files that explain themselves, proof your client got them, and downloads made for their phone.",
+    "Send one link for every delivery. Files that explain themselves, proof your client opened and saved them, and downloads made for their phone. Free to start."
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

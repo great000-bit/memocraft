@@ -9,17 +9,17 @@ const DURATION = 6000;
 const tabs = [
   {
     title: "Files that explain themselves",
-    body: "Group files into sections and add a short note to each. Your client knows which file is for print and which is for Instagram without asking you.",
+    body: "Group files into sections and put a note on each. Your client sees \u201cFor print\u201d and \u201cFor Instagram\u201d and knows which to use, without messaging you.",
     visual: <SectionsMock />,
   },
   {
     title: "One link that stays current",
-    body: "Replace a file and the same link shows the new version, marked Updated. See when your client opened it and what they downloaded.",
+    body: "Fix a file and the same link shows the new version, marked Updated. No \u201cfinal_v3_REAL\u201d zip in anyone\u2019s inbox, and you see when it was opened.",
     visual: <ActivityMock />,
   },
   {
     title: "Made for your client’s phone",
-    body: "Clients save straight to their camera roll and ask for a missing file in one tap. No account, no app, no zip they cannot open.",
+    body: "Most clients open your link on their phone. They save photos straight to the camera roll and ask for a missing file in one tap. No account, no app, no zip they cannot open.",
     visual: <PhoneMock className={styles.phone} />,
   },
 ];
