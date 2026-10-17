@@ -1,0 +1,68 @@
+/* Only one hook is shown: the first by default, or the one the page picked on arrival. */
+.hook {
+  display: none;
+}
+
+.hooks:not([data-pick]) > .hook:first-of-type {
+  display: inline;
+}
+
+.hooks[data-pick="0"] > .hook:nth-of-type(1) {
+  display: inline;
+}
+
+.hooks[data-pick="1"] > .hook:nth-of-type(2) {
+  display: inline;
+}
+
+.hooks[data-pick="2"] > .hook:nth-of-type(3) {
+  display: inline;
+}
+
+.hooks[data-pick="3"] > .hook:nth-of-type(4) {
+  display: inline;
+}
+
+.hooks[data-pick="4"] > .hook:nth-of-type(5) {
+  display: inline;
+}
+
+.hooks[data-pick="5"] > .hook:nth-of-type(6) {
+  display: inline;
+}
+
+.hooks[data-pick="6"] > .hook:nth-of-type(7) {
+  display: inline;
+}
+
+.hooks[data-pick="7"] > .hook:nth-of-type(8) {
+  display: inline;
+}
+
+.hooks[data-pick="8"] > .hook:nth-of-type(9) {
+  display: inline;
+}
+
+.hooks[data-pick="9"] > .hook:nth-of-type(10) {
+  display: inline;
+}
+
+.hooks[data-pick="10"] > .hook:nth-of-type(11) {
+  display: inline;
+}
+
+.hooks[data-pick="11"] > .hook:nth-of-type(12) {
+  display: inline;
+}
+
+.hooks[data-pick="12"] > .hook:nth-of-type(13) {
+  display: inline;
+}
+
+.hooks[data-pick="13"] > .hook:nth-of-type(14) {
+  display: inline;
+}
+
+.hooks[data-pick="14"] > .hook:nth-of-type(15) {
+  display: inline;
+}
