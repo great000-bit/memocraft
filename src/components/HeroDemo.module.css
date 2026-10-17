@@ -1,0 +1,854 @@
+/* Sizes are in cqi: the phone frame is the container, so the film scales with the phone. The screen's content area is
+   about 93cqi wide and 186cqi tall. Cursor targets sit at fixed percentages of that area (see film() in HeroDemo.tsx). */
+
+.film {
+  --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-move: cubic-bezier(0.65, 0, 0.35, 1);
+  position: relative;
+  height: 100%;
+  background: #f3f5f4;
+  color: #171a19;
+  overflow: hidden;
+  transition: opacity 0.6s ease;
+  user-select: none;
+}
+
+.fading {
+  opacity: 0;
+}
+
+/* Story-style progress: one segment per scene, the current one fills. */
+.progress {
+  position: absolute;
+  z-index: 5;
+  top: 1.6cqi;
+  left: 6cqi;
+  right: 6cqi;
+  display: flex;
+  gap: 1.4cqi;
+}
+
+.progress i {
+  flex: 1;
+  height: 0.9cqi;
+  border-radius: 99px;
+  background: rgb(23 26 25 / 0.1);
+  overflow: hidden;
+}
+
+.progress i::after {
+  content: "";
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: var(--fixer, #0b6b5d);
+  transition: width 0.5s var(--ease-out);
+}
+
+.progress i[data-state="done"]::after {
+  width: 100%;
+}
+
+.progress i[data-state="now"]::after {
+  width: 45%;
+}
+
+/* Scenes push in from the right and leave to the left. */
+.scene {
+  position: absolute;
+  inset: 0;
+  padding: 7cqi 6cqi 0;
+  opacity: 0;
+  translate: 30% 0;
+  transition:
+    opacity 0.45s var(--ease-out),
+    translate 0.55s var(--ease-out),
+    filter 0.45s var(--ease-out);
+  filter: blur(1.5px);
+  pointer-events: none;
+}
+
+.scene[data-past="true"] {
+  translate: -30% 0;
+}
+
+.scene[data-shown="true"] {
+  opacity: 1;
+  translate: 0 0;
+  filter: none;
+}
+
+/* ——— 1. Workspace ——— */
+.topRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 10cqi;
+}
+
+.mark {
+  height: 6.5cqi;
+  width: auto;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 8.5cqi;
+  height: 8.5cqi;
+  border-radius: 50%;
+  background: var(--fixer, #0b6b5d);
+  color: #fff;
+  font-size: 3cqi;
+  font-weight: 600;
+  box-shadow: 2px 2px 5px rgb(137 154 146 / 0.45), -2px -2px 5px #fff;
+}
+
+.hello {
+  margin: 6cqi 0 0;
+  font-family: var(--font-display, inherit);
+  font-size: 7cqi;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.muted {
+  margin: 1.2cqi 0 0;
+  font-size: 3.6cqi;
+  color: #5b6662;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4cqi;
+  margin-top: 6cqi;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 2cqi;
+  padding: 4.5cqi;
+  border-radius: 5cqi;
+  background: linear-gradient(145deg, #f9fbfa, #eef1ef);
+  box-shadow: 3px 3px 8px rgb(137 154 146 / 0.4), -3px -3px 8px #fff;
+  font-size: 3.3cqi;
+  color: #5b6662;
+}
+
+.card b {
+  font-family: var(--font-display, inherit);
+  font-size: 8cqi;
+  line-height: 1;
+  color: #171a19;
+}
+
+.cardTeal {
+  background: linear-gradient(145deg, #0e7a6a, #0b6b5d);
+  color: rgb(255 255 255 / 0.78);
+}
+
+.cardTeal b {
+  color: #fff;
+}
+
+/* Main buttons. Each one sits where the cursor is sent; `translate` centres it so `scale` stays free for the press. */
+.cta {
+  position: absolute;
+  left: 50%;
+  top: 61%;
+  translate: -50% -50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2cqi;
+  width: calc(100% - 12cqi);
+  height: 13cqi;
+  border-radius: 99px;
+  background: var(--fixer, #0b6b5d);
+  color: #fff;
+  font-size: 4cqi;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow:
+    0 1.5cqi 4cqi -1cqi rgb(11 107 93 / 0.55),
+    inset 0 1px 0 rgb(255 255 255 / 0.18);
+  transition:
+    scale 0.17s ease,
+    background-color 0.3s ease,
+    opacity 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.cta::after {
+  /* a slow sheen, so the button reads as the thing to press */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.28) 50%, transparent 65%) -150% 0 / 250% 100%
+    no-repeat;
+  animation: sheen 2.8s ease-in-out infinite;
+}
+
+@keyframes sheen {
+  0%,
+  45% {
+    background-position: -150% 0;
+  }
+  100% {
+    background-position: 250% 0;
+  }
+}
+
+.pressed {
+  scale: 0.95;
+  filter: brightness(0.92);
+}
+
+.cta.pressed {
+  box-shadow: 0 0.5cqi 1.5cqi -0.5cqi rgb(11 107 93 / 0.6);
+}
+
+.hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 69%;
+  text-align: center;
+  font-size: 3.3cqi;
+  color: #5b6662;
+}
+
+/* An empty list, so the button reads as the first step. */
+.empty {
+  display: grid;
+  gap: 2.4cqi;
+  margin-top: 6cqi;
+  padding: 4cqi;
+  border-radius: 5cqi;
+  border: 0.4cqi dashed rgb(91 102 98 / 0.28);
+  text-align: center;
+  font-size: 3.2cqi;
+  color: #8b9692;
+}
+
+.empty i {
+  height: 3cqi;
+  border-radius: 99px;
+  background: #e4e9e7;
+}
+
+.empty i + i {
+  width: 60%;
+}
+
+/* ——— 2. New delivery ——— */
+.heading {
+  margin: 4cqi 0 0;
+  font-family: var(--font-display, inherit);
+  font-size: 6.4cqi;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: 2cqi;
+  margin-top: 5cqi;
+  font-size: 3.5cqi;
+  font-weight: 600;
+}
+
+.label span {
+  display: grid;
+  place-items: center;
+  width: 5cqi;
+  height: 5cqi;
+  border-radius: 50%;
+  background: #dde4e1;
+  font-size: 2.8cqi;
+}
+
+.field {
+  position: absolute;
+  left: 6cqi;
+  right: 6cqi;
+  top: 21%;
+  translate: 0 -50%;
+  display: flex;
+  align-items: center;
+  height: 11cqi;
+  padding: 0 4cqi;
+  border-radius: 3.5cqi;
+  background: #eef1ef;
+  box-shadow: inset 2px 2px 5px rgb(137 154 146 / 0.42), inset -2px -2px 5px #fff;
+  font-size: 3.9cqi;
+  outline: 0.5cqi solid transparent;
+  transition:
+    outline-color 0.25s ease,
+    scale 0.17s ease;
+}
+
+.field em {
+  font-style: normal;
+  color: #8b9692;
+}
+
+.focused {
+  outline-color: rgb(11 107 93 / 0.55);
+}
+
+.caret {
+  display: inline-block;
+  width: 0.45cqi;
+  height: 5cqi;
+  margin-left: 0.4cqi;
+  background: var(--fixer, #0b6b5d);
+  animation: blink 1s steps(1) infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* The second label sits under the field, which is placed absolutely. */
+.field + .label {
+  position: absolute;
+  top: 29%;
+  left: 6cqi;
+  margin: 0;
+}
+
+.drop {
+  position: absolute;
+  left: 6cqi;
+  right: 6cqi;
+  top: 50%;
+  translate: 0 -50%;
+  height: 50cqi;
+  display: grid;
+  place-items: center;
+  border-radius: 5cqi;
+  border: 0.5cqi dashed rgb(11 107 93 / 0.35);
+  background: rgb(234 246 244 / 0.6);
+  text-align: center;
+  font-size: 3.5cqi;
+  color: #5b6662;
+  transition:
+    scale 0.17s ease,
+    border-color 0.3s ease,
+    background-color 0.3s ease;
+}
+
+.drop b {
+  color: #0b6b5d;
+  font-size: 4cqi;
+}
+
+.dropFull {
+  border-color: transparent;
+  background: #eef1ef;
+  box-shadow: inset 2px 2px 5px rgb(137 154 146 / 0.35), inset -2px -2px 5px #fff;
+}
+
+.thumbs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.4cqi;
+  width: 100%;
+  padding: 3.5cqi;
+}
+
+.thumbs i {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 2.6cqi;
+  overflow: hidden;
+  background: #dde4e1;
+  animation: pop 0.45s var(--ease-out) both;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    scale: 0.6;
+    translate: 0 4cqi;
+  }
+}
+
+/* An upload bar along the bottom of each tile, then a tick when it is done. */
+.bar {
+  position: absolute;
+  left: 1.6cqi;
+  right: 1.6cqi;
+  bottom: 1.6cqi;
+  height: 1.1cqi;
+  border-radius: 99px;
+  background: rgb(255 255 255 / 0.55);
+  overflow: hidden;
+  transition: opacity 0.3s ease;
+}
+
+.bar::after {
+  content: "";
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #fff;
+  animation: fill 1.1s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes fill {
+  from {
+    width: 8%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.thumbs i::after {
+  content: "✓";
+  position: absolute;
+  top: 1.4cqi;
+  right: 1.4cqi;
+  display: grid;
+  place-items: center;
+  width: 5cqi;
+  height: 5cqi;
+  border-radius: 50%;
+  background: var(--fixer, #0b6b5d);
+  color: #fff;
+  font-size: 2.8cqi;
+  font-weight: 700;
+  opacity: 0;
+  scale: 0.4;
+  transition:
+    opacity 0.25s ease,
+    scale 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.done .bar {
+  opacity: 0;
+}
+
+.done::after {
+  opacity: 1;
+  scale: 1;
+}
+
+.count {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 76%;
+  margin: 0;
+  text-align: center;
+  font-size: 3.4cqi;
+  color: #5b6662;
+}
+
+.publish {
+  top: 87%;
+}
+
+.off {
+  background: #b9c5c1;
+  box-shadow: none;
+}
+
+.off::after {
+  animation: none;
+}
+
+/* ——— 3. Link ready ——— */
+.dim {
+  opacity: 0.35;
+  filter: blur(1px);
+}
+
+.sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 62%;
+  padding: 7cqi 6cqi 0;
+  border-radius: 7cqi 7cqi 0 0;
+  background: #f9fbfa;
+  box-shadow: 0 -3cqi 9cqi -3cqi rgb(23 26 25 / 0.22);
+  text-align: center;
+  translate: 0 100%;
+  transition: translate 0.6s var(--ease-out) 0.15s;
+}
+
+.scene[data-shown="true"] .sheet {
+  translate: 0 0;
+}
+
+.tick {
+  display: inline-grid;
+  place-items: center;
+  width: 13cqi;
+  height: 13cqi;
+  border-radius: 50%;
+  background: var(--fixer, #0b6b5d);
+  color: #fff;
+  font-size: 6cqi;
+  font-weight: 700;
+  box-shadow: 0 0 0 2.5cqi rgb(11 107 93 / 0.12);
+  scale: 0.3;
+  opacity: 0;
+  transition:
+    scale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.45s,
+    opacity 0.3s ease 0.45s;
+}
+
+.scene[data-shown="true"] .tick {
+  scale: 1;
+  opacity: 1;
+}
+
+.sheetTitle {
+  margin: 4cqi 0 0;
+  font-family: var(--font-display, inherit);
+  font-size: 6cqi;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* The link row's Copy button is the cursor's target at 77% across, 60% down. */
+.linkRow {
+  position: absolute;
+  left: 6cqi;
+  right: 6cqi;
+  top: 34.5%;
+  translate: 0 -50%;
+  display: flex;
+  align-items: center;
+  gap: 2cqi;
+  height: 12cqi;
+  padding: 0 1.6cqi 0 3.5cqi;
+  border-radius: 99px;
+  background: #eef1ef;
+  box-shadow: inset 2px 2px 5px rgb(137 154 146 / 0.4), inset -2px -2px 5px #fff;
+  text-align: left;
+}
+
+.url {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 2.9cqi;
+  color: #3c4542;
+}
+
+.copy {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20cqi;
+  height: 9cqi;
+  border-radius: 99px;
+  background: var(--fixer, #0b6b5d);
+  color: #fff;
+  font-size: 3.5cqi;
+  font-weight: 600;
+  transition:
+    scale 0.17s ease,
+    background-color 0.3s ease;
+}
+
+.copied {
+  background: #e8a33d;
+  color: #2b1d05;
+}
+
+/* ——— 4. Client page ——— */
+.client {
+  background: #fff;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 2cqi;
+  height: 10cqi;
+  font-size: 3.6cqi;
+  font-weight: 600;
+}
+
+.studioMark {
+  display: grid;
+  place-items: center;
+  width: 7cqi;
+  height: 7cqi;
+  border-radius: 2cqi;
+  background: #171a19;
+  color: #e8a33d;
+  font-family: var(--font-display, inherit);
+  font-size: 4cqi;
+}
+
+.client .heading {
+  margin-top: 3cqi;
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.4cqi;
+  margin-top: 4cqi;
+}
+
+.gallery i {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 2.6cqi;
+  overflow: hidden;
+  background: #dde4e1;
+  opacity: 0;
+  translate: 0 4cqi;
+  transition:
+    opacity 0.5s ease,
+    translate 0.6s var(--ease-out);
+}
+
+.scene[data-shown="true"] .gallery i {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.gallery i:nth-child(2) {
+  transition-delay: 0.08s;
+}
+.gallery i:nth-child(3) {
+  transition-delay: 0.16s;
+}
+.gallery i:nth-child(4) {
+  transition-delay: 0.24s;
+}
+.gallery i:nth-child(5) {
+  transition-delay: 0.32s;
+}
+.gallery i:nth-child(6) {
+  transition-delay: 0.4s;
+}
+
+.save {
+  top: 88%;
+}
+
+.spinner {
+  width: 5cqi;
+  height: 5cqi;
+  border-radius: 50%;
+  border: 0.7cqi solid rgb(255 255 255 / 0.35);
+  border-top-color: #fff;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    rotate: 1turn;
+  }
+}
+
+/* ——— 5. Proof ——— */
+.toast {
+  position: absolute;
+  z-index: 4;
+  left: 4cqi;
+  right: 4cqi;
+  top: 5cqi;
+  display: flex;
+  align-items: center;
+  gap: 3cqi;
+  padding: 3.2cqi 4cqi;
+  border-radius: 5cqi;
+  background: rgb(255 255 255 / 0.92);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2.5cqi 8cqi -2cqi rgb(23 26 25 / 0.28);
+  font-size: 3.2cqi;
+  line-height: 1.3;
+  color: #5b6662;
+  opacity: 0;
+  translate: 0 -150%;
+  transition:
+    translate 0.6s cubic-bezier(0.34, 1.4, 0.64, 1),
+    opacity 0.3s ease;
+}
+
+.toast b {
+  color: #171a19;
+  font-size: 3.5cqi;
+}
+
+.toastIn {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.toastMark {
+  flex: none;
+  width: 9cqi;
+  height: 9cqi;
+  padding: 1.6cqi;
+  border-radius: 2.4cqi;
+  background: #171a19;
+}
+
+.scene:has(.toast) .heading {
+  margin-top: 26cqi;
+}
+
+.badge {
+  display: inline-block;
+  margin-top: 2cqi;
+  padding: 1cqi 3cqi;
+  border-radius: 99px;
+  background: #fcefd9;
+  color: #8a5208;
+  font-size: 3.2cqi;
+  font-weight: 600;
+}
+
+.timeline {
+  list-style: none;
+  margin: 5cqi 0 0;
+  padding: 0;
+  display: grid;
+  gap: 3cqi;
+}
+
+.timeline li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 3cqi;
+  padding: 3.5cqi 4cqi;
+  border-radius: 4.5cqi;
+  background: linear-gradient(145deg, #f9fbfa, #eef1ef);
+  box-shadow: 3px 3px 8px rgb(137 154 146 / 0.38), -3px -3px 8px #fff;
+  font-size: 3.2cqi;
+  line-height: 1.3;
+  color: #5b6662;
+  opacity: 0;
+  translate: -6cqi 0;
+  transition:
+    opacity 0.4s ease,
+    translate 0.5s var(--ease-out);
+}
+
+.timeline li[data-on="true"] {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.timeline b {
+  color: #171a19;
+  font-size: 3.7cqi;
+}
+
+.timeline li > i {
+  flex: none;
+  width: 3.4cqi;
+  height: 3.4cqi;
+  border-radius: 50%;
+  background: var(--fixer, #0b6b5d);
+  box-shadow: 0 0 0 1.4cqi rgb(11 107 93 / 0.14);
+}
+
+.timeline li:last-child > i {
+  background: #e8a33d;
+  box-shadow: 0 0 0 1.4cqi rgb(232 163 61 / 0.2);
+}
+
+.timeline span {
+  flex: 1;
+}
+
+.timeline time {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 2.9cqi;
+}
+
+/* ——— Cursor ——— */
+.cursor {
+  position: absolute;
+  z-index: 10;
+  width: 8cqi;
+  height: 8cqi;
+  /* put the arrow's tip, not the box corner, on the target point */
+  margin: -1.1cqi 0 0 -1.7cqi;
+  transition:
+    left 0.85s var(--ease-move),
+    top 0.85s var(--ease-move),
+    opacity 0.35s ease;
+  pointer-events: none;
+}
+
+.cursor svg {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: #fff;
+  stroke: #171a19;
+  stroke-width: 1.3;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 1.2cqi 1.4cqi rgb(23 26 25 / 0.35));
+  transform-origin: 20% 13%;
+  transition: scale 0.15s ease;
+}
+
+.cursorHidden {
+  opacity: 0;
+}
+
+.cursorDown svg {
+  scale: 0.84;
+}
+
+.ripple {
+  position: absolute;
+  left: 1.7cqi;
+  top: 1.1cqi;
+  width: 12cqi;
+  height: 12cqi;
+  margin: -6cqi 0 0 -6cqi;
+  border-radius: 50%;
+  border: 0.6cqi solid rgb(11 107 93 / 0.7);
+  background: rgb(11 107 93 / 0.12);
+  animation: ripple 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+@keyframes ripple {
+  from {
+    scale: 0.2;
+    opacity: 1;
+  }
+  to {
+    scale: 1.4;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene,
+  .cta::after {
+    transition: none;
+    animation: none;
+  }
+}
