@@ -115,6 +115,15 @@ a {
   --sunken: #edf0ee;
   --line: #e3e8e5;
   --shadow-card: 0 1px 2px rgb(16 24 20 / 0.04), 0 12px 32px -16px rgb(16 24 20 / 0.12);
+  /* Soft "neumorphic" surfaces: the same grey as the canvas, lifted or pressed in by a light and a dark shadow. */
+  --neu-dark: rgb(137 154 146 / 0.38);
+  --neu-light: rgb(255 255 255 / 0.95);
+  --neu-raised: 9px 9px 22px var(--neu-dark), -9px -9px 22px var(--neu-light);
+  --neu-raised-sm: 5px 5px 12px var(--neu-dark), -5px -5px 12px var(--neu-light);
+  --neu-raised-xs: 3px 3px 7px var(--neu-dark), -3px -3px 7px var(--neu-light);
+  --neu-inset: inset 5px 5px 11px var(--neu-dark), inset -5px -5px 11px var(--neu-light);
+  --neu-inset-sm: inset 3px 3px 7px var(--neu-dark), inset -3px -3px 7px var(--neu-light);
+  --neu-face: linear-gradient(145deg, #f9fbfa, #eef1ef);
   color-scheme: light;
   background: var(--bg);
   color: var(--text);

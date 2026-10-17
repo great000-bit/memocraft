@@ -1,24 +1,21 @@
+import Link from "next/link";
 import { requireUser } from "@/lib/session";
+import { Avatar } from "./Avatar";
 import { SignOutButton } from "./SignOutButton";
 import styles from "./Workspace.module.css";
-
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? (parts[parts.length - 1][0] ?? "") : "")).toUpperCase() || "M";
-}
 
 // Reads the session, so it always sits behind <Suspense>.
 export async function UserMenu() {
   const user = await requireUser();
   return (
     <div className={styles.user}>
-      <span className={styles.avatar} aria-hidden="true">
-        {initials(user.name)}
-      </span>
-      <div className={styles.userText}>
-        <p className={styles.userName}>{user.name}</p>
-        <p className={styles.userEmail}>{user.email}</p>
-      </div>
+      <Link href="/profile" className={styles.userLink} aria-label={`Your profile, ${user.name}`}>
+        <Avatar name={user.name} image={user.image} size={36} />
+        <span className={styles.userText}>
+          <span className={styles.userName}>{user.name}</span>
+          <span className={styles.userEmail}>{user.email}</span>
+        </span>
+      </Link>
       <SignOutButton />
     </div>
   );

@@ -16,7 +16,8 @@ export default function PrivacyPage() {
         <li>
           <strong>Your account.</strong> Your name and email, and a password if you sign up with email. If you choose
           Continue with Google, we receive your name, email address and profile picture from Google. We do not get
-          your Google password, and we do not read your Gmail, Drive or any other Google data.
+          your Google password, and we do not read your Gmail, Drive or any other Google data. You can also upload a
+          profile picture of your own.
         </li>
         <li>
           <strong>Your deliveries.</strong> The files, notes and settings you add to a delivery, and the link options
@@ -49,8 +50,10 @@ export default function PrivacyPage() {
 
       <h2>Keeping and deleting data</h2>
       <p>
-        You can delete a delivery or a file at any time. To delete your account and the data tied to it, email us and
-        we will remove it.
+        You can delete a delivery or a file at any time. You can delete your whole account from Settings: your
+        deliveries, files, notes, requests, proof of delivery history, profile and sign-in are removed straight away
+        and cannot be brought back. Before you do, Settings lets you download a copy of your data. Copies kept by our
+        database provider for recovery age out on their own schedule.
       </p>
 
       <h2>Cookies</h2>

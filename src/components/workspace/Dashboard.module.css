@@ -1,4 +1,5 @@
-/* Dashboard cards: white, softly shadowed and generously rounded, with one teal feature card. */
+/* Dashboard cards: soft "neumorphic" surfaces that rise out of the canvas, with one teal feature card. Text keeps
+   the full-strength colours, so contrast does not depend on the shadows. */
 .cardsWrap {
   container-type: inline-size;
   margin-top: var(--space-6);
@@ -23,10 +24,10 @@
   gap: var(--space-4);
   min-width: 0;
   padding: var(--space-6);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  box-shadow: var(--shadow-card);
+  background: var(--neu-face);
+  border: 1px solid rgb(255 255 255 / 0.7);
+  border-radius: 28px;
+  box-shadow: var(--neu-raised);
 }
 
 .cardHead {
@@ -41,9 +42,10 @@
   height: 40px;
   display: grid;
   place-items: center;
-  border-radius: 12px;
-  background: var(--fixer-tint);
+  border-radius: 14px;
+  background: var(--bg);
   color: var(--fixer);
+  box-shadow: var(--neu-inset-sm);
 }
 
 .bubble svg {
@@ -95,6 +97,7 @@
   background: #e3f4ea;
   color: var(--success);
   font-weight: 700;
+  box-shadow: var(--neu-raised-xs);
 }
 
 /* The storage card is the one that catches the eye, like the balance card in a finance app. */
@@ -104,7 +107,9 @@
   background:
     radial-gradient(120% 90% at 100% 0%, rgb(255 255 255 / 0.2), transparent 55%),
     linear-gradient(145deg, #0f7d6c 0%, #0b6b5d 50%, #064b41 100%);
-  box-shadow: 0 24px 40px -24px rgb(11 107 93 / 0.7);
+  box-shadow:
+    10px 14px 28px rgb(11 107 93 / 0.34),
+    -9px -9px 22px var(--neu-light);
 }
 
 .featured .label,
@@ -114,15 +119,21 @@
 }
 
 .featured .bubble {
-  background: rgb(255 255 255 / 0.16);
+  background: rgb(255 255 255 / 0.14);
   color: #fff;
+  box-shadow:
+    inset 3px 3px 7px rgb(0 0 0 / 0.22),
+    inset -3px -3px 7px rgb(255 255 255 / 0.16);
 }
 
 .meter {
   height: 10px;
   overflow: hidden;
   border-radius: var(--radius-pill);
-  background: rgb(255 255 255 / 0.22);
+  background: rgb(0 0 0 / 0.14);
+  box-shadow:
+    inset 2px 2px 5px rgb(0 0 0 / 0.28),
+    inset -2px -2px 4px rgb(255 255 255 / 0.14);
 }
 
 .meterFill {
@@ -135,12 +146,15 @@
 .segments {
   display: flex;
   gap: 4px;
-  height: 10px;
+  height: 14px;
+  padding: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--bg);
+  box-shadow: var(--neu-inset-sm);
 }
 
 .segments[data-empty] {
-  border-radius: var(--radius-pill);
-  background: var(--sunken);
+  background: var(--bg);
 }
 
 .segments span {
@@ -195,7 +209,7 @@
 
 .skeleton {
   min-height: 184px;
-  background: linear-gradient(90deg, var(--surface) 0%, var(--sunken) 50%, var(--surface) 100%);
+  background: linear-gradient(90deg, #f9fbfa 0%, var(--sunken) 50%, #f9fbfa 100%);
   background-size: 200% 100%;
   animation: shimmer 1.6s ease-in-out infinite;
 }
