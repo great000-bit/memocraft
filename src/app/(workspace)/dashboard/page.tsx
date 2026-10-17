@@ -1,5 +1,8 @@
 import { Suspense } from "react";
+import { Button } from "@/components/Button";
 import { FeatureIcon } from "@/components/FeatureIcons";
+import { DeliveryList } from "@/components/deliveries/DeliveryList";
+import { listDeliveries } from "@/lib/deliveries";
 import { requireUser } from "@/lib/session";
 import styles from "@/components/workspace/Workspace.module.css";
 
@@ -9,14 +12,12 @@ async function Greeting() {
   return <h1 className={styles.heading}>Welcome, {first}</h1>;
 }
 
-export default function DashboardPage() {
-  return (
-    <>
-      <Suspense fallback={<h1 className={styles.heading}>Welcome</h1>}>
-        <Greeting />
-      </Suspense>
-      <p className={styles.sub}>Your deliveries live here. Each one is a single link your clients open on any phone.</p>
+async function Recent() {
+  const user = await requireUser();
+  const deliveries = await listDeliveries(user.id, 6);
 
+  if (deliveries.length === 0) {
+    return (
       <section className={styles.empty} aria-labelledby="empty-title">
         <span className={styles.emptyIcon}>
           <FeatureIcon name="upload" />
@@ -25,13 +26,37 @@ export default function DashboardPage() {
           Your first delivery starts here
         </h2>
         <p className={styles.emptyBody}>
-          Upload finished files, add a short note to each, and share one link. You will see when your client opens it
-          and what they download.
+          Name it, add a note to each file so your client knows what it is for, and share one link. No account needed on
+          their side.
         </p>
-        <span className={styles.emptyAction} aria-disabled="true">
-          New delivery <span className={styles.soon}>Coming next</span>
-        </span>
+        <div className={styles.emptyAction}>
+          <Button href="/deliveries/new">New delivery</Button>
+        </div>
       </section>
+    );
+  }
+
+  return (
+    <>
+      <h2 className={styles.sectionLabel}>Recent deliveries</h2>
+      <DeliveryList deliveries={deliveries} />
+    </>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <>
+      <div className={styles.headRow}>
+        <Suspense fallback={<h1 className={styles.heading}>Welcome</h1>}>
+          <Greeting />
+        </Suspense>
+        <Button href="/deliveries/new">New delivery</Button>
+      </div>
+      <p className={styles.sub}>Your deliveries live here. Each one is a single link your clients open on any phone.</p>
+      <Suspense fallback={null}>
+        <Recent />
+      </Suspense>
     </>
   );
 }
