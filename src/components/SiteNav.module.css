@@ -14,10 +14,10 @@
   max-width: 1680px;
   margin-inline: auto;
   padding: 0 clamp(var(--space-4), 5.5vw, 110px);
-  height: 80px;
+  height: 68px;
   display: flex;
   align-items: center;
-  gap: var(--space-6);
+  gap: var(--space-3);
 }
 
 .brand {
@@ -137,6 +137,23 @@
   display: none;
 }
 
+/* On a phone the header holds the logo, Get started and the menu button, so Get started drops its arrow. */
+@media (max-width: 719px) {
+  .logo {
+    height: 21px;
+  }
+
+  .actions a {
+    min-height: 40px;
+    padding: 0 var(--space-4);
+    font-size: 15px;
+  }
+
+  .actions svg {
+    display: none;
+  }
+}
+
 @keyframes drop {
   from {
     opacity: 0;
@@ -145,6 +162,11 @@
 }
 
 @media (min-width: 960px) {
+  .inner {
+    height: 80px;
+    gap: var(--space-6);
+  }
+
   .nav {
     display: flex;
   }
@@ -155,19 +177,26 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .panel {
+  .panel,
+  .mobilePanel {
     animation: none;
   }
 }
 
+/* On a phone the menu is a button beside Get started, and its list drops from under the header. */
 .mobile {
-  border-top: 1px solid var(--line);
+  flex: none;
 }
 
 .mobile summary {
   list-style: none;
-  padding: var(--space-4);
-  font-weight: 600;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--text);
   cursor: pointer;
 }
 
@@ -175,18 +204,49 @@
   display: none;
 }
 
+.mobile summary:hover {
+  background: var(--sunken);
+}
+
+.burger,
+.close {
+  width: 22px;
+  height: 22px;
+}
+
+.close,
+.mobile[open] .burger {
+  display: none;
+}
+
+.mobile[open] .close {
+  display: block;
+}
+
 .mobilePanel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
   display: grid;
-  padding: 0 var(--space-4) var(--space-6);
+  padding: var(--space-2) var(--space-4) var(--space-6);
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 24px 32px -24px rgb(0 0 0 / 0.2);
+  animation: drop 200ms ease both;
 }
 
 .mobilePanel a {
-  padding: var(--space-3) 0;
+  padding: var(--space-4) 0;
   border-bottom: 1px solid var(--line);
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--text);
   text-decoration: none;
+}
+
+.mobilePanel a:last-child {
+  border-bottom: 0;
 }
 
 @media (min-width: 960px) {

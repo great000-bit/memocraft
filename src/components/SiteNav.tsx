@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "./Button";
 import { Logo } from "./Logo";
+import { MobileMenu } from "./MobileMenu";
 import styles from "./SiteNav.module.css";
 
 const products = [
@@ -15,6 +16,14 @@ const solutions = [
   { label: "Designers", href: "#who" },
   { label: "Filmmakers", href: "#who" },
   { label: "Brand studios", href: "#who" },
+];
+
+const mobileLinks = [
+  ...products.map(({ label, href }) => ({ label, href })),
+  { label: "Solutions", href: "#who" },
+  { label: "Pricing", href: "#pricing" },
+  { label: "Example", href: "#example" },
+  { label: "Log in", href: "/login" },
 ];
 
 // Top navigation. Dropdowns are native <details> elements, so they work without JavaScript.
@@ -72,21 +81,8 @@ export function SiteNav() {
             Get started
           </Button>
         </div>
+        <MobileMenu links={mobileLinks} />
       </div>
-      <details className={styles.mobile}>
-        <summary>Menu</summary>
-        <nav className={styles.mobilePanel} aria-label="Mobile">
-          {products.map((p) => (
-            <a key={p.label} href={p.href}>
-              {p.label}
-            </a>
-          ))}
-          <a href="#who">Solutions</a>
-          <a href="#pricing">Pricing</a>
-          <a href="#example">Example</a>
-          <a href="/login">Log in</a>
-        </nav>
-      </details>
     </header>
   );
 }
