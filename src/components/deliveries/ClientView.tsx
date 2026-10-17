@@ -1,18 +1,18 @@
 import Link from "next/link";
 import { FeatureIcon } from "../FeatureIcons";
 import type { Delivery } from "@/lib/deliveries";
+import { formatSize } from "@/lib/storage-limits";
 import styles from "./ClientView.module.css";
 
 const dateFormat = new Intl.DateTimeFormat("en", { dateStyle: "long", timeZone: "UTC" });
 
-function formatSize(bytes: number) {
-  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(bytes < 10 * 1024 * 1024 ? 1 : 0)} MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-}
-
 // What the client sees. Used for the public link and for the owner's preview, so both always match.
 export function ClientView({ delivery, senderName }: { delivery: Delivery; senderName: string }) {
+  const live = delivery.status === "published";
+  // Files that are not in storage yet, and sections left with none, are not shown to the client.
+  const sections = delivery.sections
+    .map((section) => ({ ...section, files: section.files.filter((file) => file.attached) }))
+    .filter((section) => section.files.length > 0);
   return (
     <article className={styles.page}>
       <header className={styles.top}>
@@ -23,32 +23,41 @@ export function ClientView({ delivery, senderName }: { delivery: Delivery; sende
         <p className={styles.updated}>Updated {dateFormat.format(delivery.updatedAt)}</p>
       </header>
 
-      {delivery.sections.map((section) => (
+      {sections.length === 0 && <p className={styles.none}>No files have been added yet.</p>}
+
+      {sections.map((section) => (
         <section key={section.id} className={styles.section} aria-labelledby={`s-${section.id}`}>
           <h2 id={`s-${section.id}`} className={styles.sectionTitle}>
             {section.title}
           </h2>
           {section.note && <p className={styles.sectionNote}>{section.note}</p>}
-          {section.files.length === 0 ? (
-            <p className={styles.none}>Nothing in this section yet.</p>
-          ) : (
-            <ul className={styles.files}>
-              {section.files.map((file) => (
-                <li key={file.id} className={styles.file}>
-                  <span className={styles.fileIcon}>
-                    <FeatureIcon name="file" />
+          <ul className={styles.files}>
+            {section.files.map((file) => (
+              <li key={file.id} className={styles.file}>
+                <span className={styles.fileIcon}>
+                  <FeatureIcon name="file" />
+                </span>
+                <div className={styles.fileBody}>
+                  <p className={styles.fileName}>{file.name}</p>
+                  {file.note && <p className={styles.fileNote}>{file.note}</p>}
+                  <p className={styles.fileMeta}>
+                    {file.sizeBytes ? formatSize(file.sizeBytes) : "Ready"}
+                    {file.ext ? ` · ${file.ext.toUpperCase()}` : ""}
+                  </p>
+                </div>
+                {live ? (
+                  <a href={`/d/${delivery.slug}/files/${file.id}`} className={styles.download}>
+                    Download
+                    <span className={styles.srOnly}> {file.name}</span>
+                  </a>
+                ) : (
+                  <span className={`${styles.download} ${styles.downloadOff}`} aria-disabled="true">
+                    Download
                   </span>
-                  <div className={styles.fileBody}>
-                    <p className={styles.fileName}>{file.name}</p>
-                    {file.note && <p className={styles.fileNote}>{file.note}</p>}
-                    <p className={styles.fileMeta}>
-                      {file.storageKey ? (file.sizeBytes ? formatSize(file.sizeBytes) : "Ready") : "Not attached yet"}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+                )}
+              </li>
+            ))}
+          </ul>
         </section>
       ))}
 

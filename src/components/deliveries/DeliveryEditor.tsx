@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { FeatureIcon } from "../FeatureIcons";
 import {
-  addFile,
   addSection,
   deleteFile,
   deleteSection,
@@ -10,15 +9,27 @@ import {
   saveSectionField,
 } from "@/lib/delivery-actions";
 import { limits } from "@/lib/delivery-limits";
-import type { Delivery } from "@/lib/deliveries";
+import type { Delivery, DeliveryFile } from "@/lib/deliveries";
+import { storageConfigured } from "@/lib/storage";
+import { formatSize } from "@/lib/storage-limits";
 import { ActionButton } from "./ActionButton";
 import { EditableField } from "./EditableField";
 import { PublishPanel } from "./PublishPanel";
+import { FileFooter, SectionUploader } from "./Uploader";
 import styles from "./Editor.module.css";
+
+function fileStatus(file: DeliveryFile): string {
+  if (file.attached) {
+    const size = file.sizeBytes ? formatSize(file.sizeBytes) : "Attached";
+    return file.ext ? `${size} · ${file.ext.toUpperCase()}` : size;
+  }
+  return file.uploading ? "Upload not finished" : "No file attached";
+}
 
 // Bound actions are passed to client components, which call them when a field loses focus.
 export function DeliveryEditor({ delivery }: { delivery: Delivery }) {
   const published = delivery.status === "published";
+  const storageReady = storageConfigured();
   return (
     <>
       <Link href="/dashboard" className={styles.back}>
@@ -100,9 +111,7 @@ export function DeliveryEditor({ delivery }: { delivery: Delivery }) {
               save={saveSectionField.bind(null, section.id, "note")}
             />
 
-            {section.files.length === 0 ? (
-              <p className={styles.empty}>No files here yet. Add a file and say what it is for.</p>
-            ) : (
+            {section.files.length > 0 && (
               <ul className={styles.fileList}>
                 {section.files.map((file) => (
                   <li key={file.id} className={styles.file}>
@@ -128,8 +137,13 @@ export function DeliveryEditor({ delivery }: { delivery: Delivery }) {
                         placeholder="What is it for? For example: use this one for print."
                         save={saveFileField.bind(null, file.id, "note")}
                       />
-                      <div className={styles.fileFoot}>
-                        <span className={styles.fileMeta}>{file.storageKey ? "Uploaded" : "Upload comes with file storage"}</span>
+                      <FileFooter
+                        sectionId={section.id}
+                        fileId={file.id}
+                        attached={file.attached}
+                        storageReady={storageReady}
+                        status={fileStatus(file)}
+                      >
                         <ActionButton
                           action={deleteFile.bind(null, file.id)}
                           variant="secondary"
@@ -138,16 +152,14 @@ export function DeliveryEditor({ delivery }: { delivery: Delivery }) {
                         >
                           Remove
                         </ActionButton>
-                      </div>
+                      </FileFooter>
                     </div>
                   </li>
                 ))}
               </ul>
             )}
 
-            <ActionButton action={addFile.bind(null, section.id)} variant="add">
-              + Add file
-            </ActionButton>
+            <SectionUploader sectionId={section.id} storageReady={storageReady} />
           </li>
         ))}
       </ul>
