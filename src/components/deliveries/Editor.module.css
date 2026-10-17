@@ -645,7 +645,12 @@ textarea.heading {
   border-width: 1px;
 }
 
-.drop:hover,
+.drop[data-off] {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.drop:hover:not([data-off]),
 .drop[data-over] {
   border-color: var(--fixer);
   background: var(--fixer-tint);
