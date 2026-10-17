@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { ClientView } from "@/components/deliveries/ClientView";
 import { OpenBeacon } from "@/components/deliveries/OpenBeacon";
 import { getPublishedBySlug } from "@/lib/deliveries";
+import { clientThumbnailPaths } from "@/lib/thumbnails";
 
 export const metadata: Metadata = { title: "Your delivery" };
 
@@ -13,7 +14,7 @@ async function Delivery({ params }: Pick<PageProps<"/d/[slug]">, "params">) {
   if (!delivery) notFound();
   return (
     <>
-      <ClientView delivery={delivery} senderName={delivery.senderName} />
+      <ClientView delivery={delivery} senderName={delivery.senderName} thumbs={clientThumbnailPaths(delivery)} />
       <OpenBeacon slug={delivery.slug} />
     </>
   );
