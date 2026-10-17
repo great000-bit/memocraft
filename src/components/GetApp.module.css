@@ -1,0 +1,149 @@
+/* "Get the app" on the landing page: the button, and the sheet with the taps it takes to add Memocraft to a phone.
+   On a phone the sheet rises from the bottom edge; on a computer it sits in the middle. */
+.trigger {
+  cursor: pointer;
+}
+
+.buttonIcon {
+  width: 24px;
+  height: 24px;
+  flex: none;
+}
+
+.sheet {
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 28px;
+  background: var(--neu-face, #ffffff);
+  color: var(--text);
+  box-shadow: 0 40px 80px -30px rgb(23 26 25 / 0.45), 0 2px 6px rgb(23 26 25 / 0.06);
+}
+
+.sheet::backdrop {
+  background: rgb(23 26 25 / 0.36);
+  backdrop-filter: blur(3px);
+}
+
+.sheet[open] {
+  animation: rise 360ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+.inner {
+  display: grid;
+  text-align: left;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-6) var(--space-6);
+}
+
+.appIcon {
+  display: block;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  box-shadow: 0 10px 22px -10px rgb(15 18 17 / 0.6);
+}
+
+.title {
+  font-size: 24px;
+  line-height: 30px;
+  letter-spacing: -0.01em;
+}
+
+.lede,
+.where {
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--text-muted);
+}
+
+.where b {
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.platform {
+  margin-top: var(--space-2);
+  font-family: var(--font-body);
+  font-stretch: 100%;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-3);
+  counter-reset: step;
+}
+
+.steps li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 16px;
+  line-height: 22px;
+}
+
+.stepIcon {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--fixer);
+  box-shadow: var(--neu-inset-sm, inset 0 0 0 1px var(--line));
+}
+
+.stepIcon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.done {
+  margin-top: var(--space-2);
+  width: 100%;
+  min-height: 52px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+@media (max-width: 599px) {
+  .sheet {
+    width: 100vw;
+    max-width: 100vw;
+    margin: auto 0 0;
+    border-radius: 28px 28px 0 0;
+  }
+
+  .inner {
+    padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet[open] {
+    animation: none;
+  }
+}
