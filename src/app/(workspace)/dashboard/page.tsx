@@ -55,7 +55,7 @@ async function Recent() {
           their side.
         </p>
         <div className={styles.emptyAction}>
-          <Button href="/deliveries/new">New delivery</Button>
+          <Button href="/deliveries/new">Send your first delivery</Button>
         </div>
       </section>
     );
