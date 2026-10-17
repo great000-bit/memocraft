@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FeatureIcon } from "../FeatureIcons";
 import { abortUpload, beginUpload, completeUpload } from "@/lib/upload-actions";
+import { CHECK_EDGE, grayFrom, photoNotes, sharpness } from "@/lib/photo-check";
 import { formatSize, storageLimits } from "@/lib/storage-limits";
 import styles from "./Editor.module.css";
 
@@ -21,6 +22,11 @@ type Job = {
   waiting: boolean;
 };
 
+// What the quality check said about a picture that has been dropped, kept after its upload card has gone.
+type Note = { id: string; name: string; notes: string[] };
+
+type Picture = { thumb: Blob | null; notes: string[] };
+
 class UploadError extends Error {}
 
 const FILES_AT_ONCE = 3;
@@ -33,11 +39,34 @@ const THUMB_SOURCE_MAX_BYTES = 80 * 1024 * 1024;
 
 let thumbQueue: Promise<unknown> = Promise.resolve();
 
-// Never rejects: a picture the browser cannot decode simply has no preview.
-async function renderThumbnail(file: File): Promise<Blob | null> {
-  if (!file.type.startsWith("image/") || file.type === "image/svg+xml" || file.size > THUMB_SOURCE_MAX_BYTES) return null;
+// Measures the picture at check size. A picture that cannot be read is simply not judged.
+function checkPicture(bitmap: ImageBitmap, type: string): string[] {
+  try {
+    const scale = Math.min(1, CHECK_EDGE / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) return [];
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, width, height);
+    context.drawImage(bitmap, 0, 0, width, height);
+    const gray = grayFrom(context.getImageData(0, 0, width, height).data, width, height);
+    return photoNotes(type, bitmap.width, bitmap.height, sharpness(gray, width, height));
+  } catch {
+    return [];
+  }
+}
+
+// Never rejects: a picture the browser cannot decode simply has no preview and no notes.
+async function renderThumbnail(file: File): Promise<Picture> {
+  const none: Picture = { thumb: null, notes: [] };
+  if (!file.type.startsWith("image/") || file.type === "image/svg+xml" || file.size > THUMB_SOURCE_MAX_BYTES) return none;
   try {
     const bitmap = await createImageBitmap(file);
+    const notes = checkPicture(bitmap, file.type);
     const scale = Math.min(1, THUMB_EDGE / Math.max(bitmap.width, bitmap.height));
     const canvas = document.createElement("canvas");
     canvas.width = Math.max(1, Math.round(bitmap.width * scale));
@@ -45,7 +74,7 @@ async function renderThumbnail(file: File): Promise<Blob | null> {
     const context = canvas.getContext("2d");
     if (!context) {
       bitmap.close();
-      return null;
+      return { thumb: null, notes };
     }
     context.fillStyle = "#ffffff";
     context.fillRect(0, 0, canvas.width, canvas.height);
@@ -53,16 +82,16 @@ async function renderThumbnail(file: File): Promise<Blob | null> {
     bitmap.close();
     for (const quality of [0.8, 0.6, 0.4]) {
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
-      if (blob && blob.size <= storageLimits.thumbMaxBytes) return blob;
+      if (blob && blob.size <= storageLimits.thumbMaxBytes) return { thumb: blob, notes };
     }
-    return null;
+    return { thumb: null, notes };
   } catch {
-    return null;
+    return none;
   }
 }
 
 // One picture is decoded at a time, so dropping hundreds does not hold hundreds of decoded images in memory.
-function makeThumbnail(file: File): Promise<Blob | null> {
+function makeThumbnail(file: File): Promise<Picture> {
   const next = thumbQueue.then(() => renderThumbnail(file));
   thumbQueue = next;
   return next;
@@ -136,9 +165,9 @@ async function uploadFile(
   target: Target,
   signal: AbortSignal,
   onProgress: (loaded: number) => void,
-  preview: Promise<Blob | null>,
+  preview: Promise<Picture>,
 ) {
-  const thumbnail = await preview;
+  const thumbnail = (await preview).thumb;
   if (signal.aborted) throw new DOMException("Cancelled", "AbortError");
   const begin = await beginUpload({
     sectionId: target.sectionId,
@@ -170,6 +199,7 @@ async function uploadFile(
 
 function useUploads() {
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
   const running = useRef(0);
   const waiting = useRef<(() => void)[]>([]);
   const previews = useRef(new Map<string, string>());
@@ -228,9 +258,11 @@ function useUploads() {
         // Pictures are made for every dropped file straight away, one at a time, so the cards fill with
         // what is being uploaded even while most of them wait for a free slot.
         const picture = makeThumbnail(file);
-        void picture.then((blob) => {
-          if (!blob || !alive.current.has(job.id)) return;
-          const url = URL.createObjectURL(blob);
+        void picture.then(({ thumb, notes: found }) => {
+          if (!alive.current.has(job.id)) return;
+          if (found.length > 0) setNotes((current) => [...current, { id: job.id, name: file.name, notes: found }]);
+          if (!thumb) return;
+          const url = URL.createObjectURL(thumb);
           previews.current.set(job.id, url);
           patch(job.id, { preview: url });
         });
@@ -256,7 +288,42 @@ function useUploads() {
     [patch, remove],
   );
 
-  return { jobs, start, remove };
+  const dismissNote = useCallback((id: string) => {
+    setNotes((current) => current.filter((note) => note.id !== id));
+  }, []);
+
+  return { jobs, start, remove, notes, dismissNote };
+}
+
+// What the quality check found, shown to the creative only. It stays after the upload finishes, until dismissed,
+// because the file uploads either way: it is a nudge to check, never a block.
+function QualityNotes({ notes, onDismiss }: { notes: Note[]; onDismiss: (id: string) => void }) {
+  if (notes.length === 0) return null;
+  return (
+    <div className={styles.checkNotes} role="status">
+      <p className={styles.checkTitle}>
+        {notes.length === 1 ? "1 picture to check" : `${notes.length} pictures to check`}
+        <span className={styles.checkHint}> Only you see this.</span>
+      </p>
+      <ul className={styles.checkList}>
+        {notes.map((note) => (
+          <li key={note.id} className={styles.checkItem}>
+            <div className={styles.checkBody}>
+              <span className={styles.jobName}>{note.name}</span>
+              {note.notes.map((line) => (
+                <span key={line} className={styles.checkLine}>
+                  {line}
+                </span>
+              ))}
+            </div>
+            <button type="button" className={styles.jobButton} onClick={() => onDismiss(note.id)}>
+              OK
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 function Thumb({ src }: { src: string | null }) {
@@ -343,7 +410,7 @@ export function UploadArea({
   hasFiles: boolean;
   children: React.ReactNode;
 }) {
-  const { jobs, start, remove } = useUploads();
+  const { jobs, start, remove, notes, dismissNote } = useUploads();
   const [over, setOver] = useState(false);
   const compact = hasFiles || jobs.length > 0;
 
@@ -403,6 +470,7 @@ export function UploadArea({
           </span>
         </div>
       )}
+      <QualityNotes notes={notes} onDismiss={dismissNote} />
       {children}
       <JobCards jobs={jobs} onDismiss={remove} />
     </div>
@@ -426,7 +494,7 @@ export function FileFooter({
   status: string;
   children: React.ReactNode;
 }) {
-  const { jobs, start, remove } = useUploads();
+  const { jobs, start, remove, notes, dismissNote } = useUploads();
   const input = useRef<HTMLInputElement>(null);
   const busy = jobs.some((job) => !job.error);
   return (
@@ -459,6 +527,7 @@ export function FileFooter({
         </div>
       </div>
       <JobCards jobs={jobs} onDismiss={remove} inline />
+      <QualityNotes notes={notes} onDismiss={dismissNote} />
     </>
   );
 }
