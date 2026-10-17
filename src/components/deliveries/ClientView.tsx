@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { preconnect } from "react-dom";
 import { FeatureIcon } from "../FeatureIcons";
 import { noBrand, type Brand } from "@/lib/brand";
 import { downloadName, type Delivery, type DeliveryFile } from "@/lib/deliveries";
@@ -120,6 +121,17 @@ export function ClientView({
   const totalBytes = files.reduce((sum, file) => sum + (file.sizeBytes ?? 0), 0);
   // Up to three of the pictures lead the page as a collage; on a narrow screen it is left out, as the pictures follow right away.
   const lead = files.filter((file) => thumbs[file.id]).slice(0, 3);
+  // The first pictures are on screen when the page opens, so they load at once instead of waiting for the layout
+  // to decide they are visible. The first row (two across on a phone) goes first. The rest load as the client scrolls.
+  const pictures = files.filter((file) => thumbs[file.id]).map((file) => file.id);
+  const loadNow = (fileId: string) => {
+    const index = pictures.indexOf(fileId);
+    if (index < 0 || index >= 6) return { loading: "lazy", decoding: "async" } as const;
+    return { loading: "eager", decoding: "async", fetchPriority: index < 2 ? "high" : "auto" } as const;
+  };
+  // Open the connection to storage while the page is still arriving.
+  const storageOrigin = lead[0] && /^https?:/.test(thumbs[lead[0].id]) ? new URL(thumbs[lead[0].id]).origin : null;
+  if (storageOrigin) preconnect(storageOrigin);
   const eyebrow = [delivery.clientName && `For ${delivery.clientName}`, !brand.name && `From ${senderName}`].filter(Boolean).join(" \u00b7 ");
 
   return (
@@ -154,7 +166,7 @@ export function ClientView({
               {lead.map((file) => (
                 <div key={file.id} className={styles.collageCard}>
                   {/* eslint-disable-next-line @next/next/no-img-element -- a signed storage link, not a site asset */}
-                  <img src={thumbs[file.id]} alt="" loading="lazy" decoding="async" />
+                  <img src={thumbs[file.id]} alt="" {...loadNow(file.id)} fetchPriority="auto" referrerPolicy="no-referrer" />
                 </div>
               ))}
             </div>
@@ -217,7 +229,7 @@ export function ClientView({
                       <div className={styles.tileCard}>
                         <div className={styles.photo}>
                           {/* eslint-disable-next-line @next/next/no-img-element -- a signed storage link, not a site asset */}
-                          <img src={thumbs[file.id]} alt={file.name} loading="lazy" decoding="async" />
+                          <img src={thumbs[file.id]} alt={file.name} {...loadNow(file.id)} referrerPolicy="no-referrer" />
                           {mark(file, true)}
                           {askable && <AskAbout fileId={file.id} name={file.name} compact />}
                         </div>

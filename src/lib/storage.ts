@@ -55,7 +55,16 @@ const DOWNLOAD_URL_SECONDS = 60 * 10;
 // again after each save. A client's thumbnails are short-lived like downloads, so unpublishing cuts them off quickly.
 const THUMB_URL_SECONDS = 2 * 60 * 60;
 const THUMB_SIGNING_STEP_MS = 30 * 60 * 1000;
-const CLIENT_THUMB_URL_SECONDS = 60 * 10;
+// A client's links are signed from a rounded start time too, so a reload or a second visit within the step asks for
+// the same address and the browser shows the picture from its cache. A link stops working at most 15 minutes after
+// the page handed it out, the same as before.
+const CLIENT_THUMB_URL_SECONDS = 15 * 60;
+const CLIENT_THUMB_SIGNING_STEP_MS = 5 * 60 * 1000;
+// A thumbnail never changes under its key (a replacement gets a new key), so the browser may keep the bytes. Storage
+// sends no cache header of its own, which left reloads to guess.
+const THUMB_CACHE_CONTROL = "private, max-age=86400, immutable";
+
+const signedFrom = (stepMs: number) => new Date(Math.floor(Date.now() / stepMs) * stepMs);
 
 export function presignPut(key: string, type: string, size: number) {
   return getSignedUrl(
@@ -204,21 +213,18 @@ export function presignDownload(key: string, filename: string, type: string | nu
 export function presignThumb(key: string) {
   return getSignedUrl(
     s3(),
-    new GetObjectCommand({ Bucket: bucket(), Key: key, ResponseContentType: "image/jpeg" }),
-    {
-      expiresIn: THUMB_URL_SECONDS,
-      signingDate: new Date(Math.floor(Date.now() / THUMB_SIGNING_STEP_MS) * THUMB_SIGNING_STEP_MS),
-    },
+    new GetObjectCommand({ Bucket: bucket(), Key: key, ResponseContentType: "image/jpeg", ResponseCacheControl: THUMB_CACHE_CONTROL }),
+    { expiresIn: THUMB_URL_SECONDS, signingDate: signedFrom(THUMB_SIGNING_STEP_MS) },
   );
 }
 
-// A link to a thumbnail for a client who has the delivery link. Handed out by the preview route after it checks
-// that the delivery is published.
+// A link to a thumbnail for a client who has the delivery link. Signed straight into the client page once it has
+// checked that the delivery is published (and the password typed), and by the preview route for pages opened before.
 export function presignClientThumb(key: string) {
   return getSignedUrl(
     s3(),
-    new GetObjectCommand({ Bucket: bucket(), Key: key, ResponseContentType: "image/jpeg" }),
-    { expiresIn: CLIENT_THUMB_URL_SECONDS },
+    new GetObjectCommand({ Bucket: bucket(), Key: key, ResponseContentType: "image/jpeg", ResponseCacheControl: THUMB_CACHE_CONTROL }),
+    { expiresIn: CLIENT_THUMB_URL_SECONDS, signingDate: signedFrom(CLIENT_THUMB_SIGNING_STEP_MS) },
   );
 }
 
