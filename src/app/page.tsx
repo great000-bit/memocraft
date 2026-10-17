@@ -1,70 +1,64 @@
-import Link from "next/link";
 import { Button } from "@/components/Button";
 import { FeatureTabs } from "@/components/FeatureTabs";
 import { Logo, LogoMark } from "@/components/Logo";
 import { DeliveryMock } from "@/components/Mockups";
+import { Phone } from "@/components/Phone";
 import { Reveal } from "@/components/Reveal";
+import { SiteNav } from "@/components/SiteNav";
 import styles from "./page.module.css";
 
+const audiences = ["Photographers", "Designers", "Filmmakers", "Brand studios", "Illustrators", "Videographers"];
+
 const extras = [
-  { title: "Passwords and expiry", body: "Lock a delivery or let it close on a date you choose." },
-  { title: "Your brand on every page", body: "Your logo and studio name, so clients see you, not us." },
-  { title: "File requests", body: "Clients ask for a missing file and it lands on your to-do list." },
+  { title: "Passwords and expiry", body: "Lock a delivery with a password, or let it close on a date you choose." },
+  { title: "Your brand on every page", body: "Your logo and studio name lead, so clients see you first." },
+  { title: "File requests", body: "Clients ask for a missing file, and it lands on your to-do list." },
   { title: "Version history", body: "Every replaced file is kept, so nothing is ever lost." },
   { title: "Big files, no fuss", body: "Uploads pause and resume on a weak connection." },
   { title: "Collaborators", body: "Invite a second shooter or editor to help on a delivery." },
 ];
 
-const audiences = ["Photographers", "Designers", "Filmmakers", "Brand studios", "Illustrators", "Videographers"];
-
 const footer = [
-  { head: "Product", links: ["Features", "Example delivery", "Pricing"] },
-  { head: "For", links: ["Photographers", "Designers", "Filmmakers"] },
-  { head: "Company", links: ["About", "Contact", "Privacy"] },
+  { head: "Products", links: ["Deliveries", "Client links", "File requests", "Proof of delivery"] },
+  { head: "Solutions", links: ["Photographers", "Designers", "Filmmakers", "Brand studios"] },
+  { head: "Company", links: ["About", "Pricing", "Contact", "Privacy"] },
 ];
 
 export default function Home() {
   return (
     <>
-      <header className={styles.header}>
-        <div className={styles.headerInner}>
-          <Link href="/" className={styles.brand} aria-label="Memocraft home">
-            <Logo className={styles.logo} />
-          </Link>
-          <nav className={styles.links} aria-label="Main">
-            <a href="#features">Features</a>
-            <a href="#how">How it works</a>
-            <a href="#who">Who it&rsquo;s for</a>
-          </nav>
-          <div className={styles.actions}>
-            <Button href="/login" variant="quiet">
-              Log in
-            </Button>
-            <Button href="/signup">Start free</Button>
-          </div>
-        </div>
-      </header>
+      <SiteNav />
 
       <main>
         <section className={styles.hero}>
           <Reveal className={styles.heroText}>
-            <h1 className={styles.display}>Deliver work your clients understand</h1>
-          </Reveal>
-          <Reveal className={styles.heroSub} delay={120}>
+            <h1 className={styles.display}>Deliver work, with a lot less back-and-forth</h1>
             <p className={styles.lede}>
-              One clean link for every delivery. Labelled files, proof they arrived, and downloads made for your
-              client&rsquo;s phone.
+              Send one link with every finished file in it. Your client gets a clean page on any phone, and you see when
+              they open it and download.
             </p>
             <div className={styles.ctas}>
-              <Button href="/signup">Start free</Button>
-              <Button href="#example" variant="secondary">
-                See an example
+              <Button href="/signup" size="lg">
+                Try Memocraft free
               </Button>
             </div>
+            <p className={styles.fine}>Free to start. No card needed. Your clients never need an account.</p>
           </Reveal>
-          <Reveal effect="scale" delay={240} className={styles.heroMedia}>
-            <div id="example">
+          <Reveal effect="scale" delay={150} className={styles.heroMedia}>
+            <div id="example" className={styles.heroStack}>
               <DeliveryMock />
+              <Phone label="A delivery on an iPhone with Save to phone" className={styles.heroPhone}>
+                <div className={styles.phoneInner}>
+                  <p className={styles.phoneStudio}>Lumen Studio</p>
+                  <p className={styles.phoneTitle}>Adaeze &amp; Tobi</p>
+                  <div className={styles.phoneGrid}>
+                    {[0, 1, 2, 3].map((n) => (
+                      <i key={n} className={styles[`tone${n}`]} />
+                    ))}
+                  </div>
+                  <span className={styles.phoneSave}>Save to phone</span>
+                </div>
+              </Phone>
             </div>
           </Reveal>
         </section>
@@ -81,37 +75,105 @@ export default function Home() {
 
         <section className={styles.section} id="features">
           <Reveal className={styles.sectionHead}>
+            <p className={styles.kicker}>Features</p>
             <h2 className={styles.h2}>Everything a shared folder forgets</h2>
-            <p className={styles.lede}>Three things clients notice the first time they open a Memocraft link.</p>
           </Reveal>
           <Reveal delay={100}>
             <FeatureTabs />
           </Reveal>
         </section>
 
-        <section className={styles.band}>
-          <div className={styles.bandInner}>
-            <Reveal>
-              <p className={styles.bandKicker}>One link. Always current.</p>
+        <section className={styles.section} id="proof">
+          <div className={styles.split}>
+            <Reveal className={styles.splitText}>
+              <p className={styles.kicker}>Proof of delivery</p>
+              <h2 className={styles.h2}>Know they got it, and when</h2>
+              <p className={styles.body}>
+                Every delivery shows whether it has been opened, and which files were downloaded. Fix a file later and
+                the same link updates, marked Updated.
+              </p>
+              <Button href="/signup" variant="outline">
+                Start free
+              </Button>
             </Reveal>
-            <Reveal delay={100}>
-              <h2 className={styles.bandTitle}>
-                Fix a file after you send it. Your client&rsquo;s link updates, and you know they&rsquo;ve seen it.
-              </h2>
+            <Reveal effect="scale" delay={120} className={styles.splitMedia}>
+              <div className={styles.statusCard}>
+                <div className={styles.statusHead}>
+                  <p className={styles.statusTitle}>Brand launch film</p>
+                  <span className={styles.statusBadge}>Downloaded</span>
+                </div>
+                {[
+                  ["Sent", "Kemi at Orbit Foods", "Mon 09:12"],
+                  ["Opened", "From Lagos, on iPhone", "Mon 09:40"],
+                  ["Downloaded", "launch-film-4k.mp4", "Mon 09:44"],
+                  ["Updated", "Subtitles fixed, same link", "Tue 14:03"],
+                ].map(([what, detail, when]) => (
+                  <div key={what} className={styles.statusRow}>
+                    <span className={styles.statusDot} data-kind={what} aria-hidden="true" />
+                    <div>
+                      <p className={styles.statusWhat}>{what}</p>
+                      <p className={styles.statusDetail}>{detail}</p>
+                    </div>
+                    <span className={styles.statusWhen}>{when}</span>
+                  </div>
+                ))}
+              </div>
             </Reveal>
-            <div className={styles.stats}>
-              {["Not opened", "Opened", "Downloaded"].map((s, i) => (
-                <Reveal key={s} delay={200 + i * 120} className={styles.stat}>
-                  <span className={styles.statDot} data-step={i} aria-hidden="true" />
-                  <span>{s}</span>
-                </Reveal>
-              ))}
-            </div>
           </div>
+        </section>
+
+        <section className={styles.dark} id="privacy">
+          <div className={styles.darkInner}>
+            <Reveal className={styles.darkHead}>
+              <p className={styles.kickerLight}>Privacy</p>
+              <h2 className={styles.h2Light}>Private by default</h2>
+              <p className={styles.bodyLight}>
+                Lock a delivery with a password, set when it closes, and pause any link in one tap. Clients who are
+                turned away get a way to ask you for access, never a dead page.
+              </p>
+            </Reveal>
+            <Reveal delay={120} className={styles.darkMedia}>
+              <div className={styles.lockCard}>
+                <p className={styles.lockTitle}>Link settings</p>
+                <div className={styles.lockRow}>
+                  <span>Password</span>
+                  <span className={styles.toggleOn} aria-label="On" />
+                </div>
+                <div className={styles.lockRow}>
+                  <span>Closes</span>
+                  <span className={styles.lockValue}>31 Dec 2026</span>
+                </div>
+                <div className={styles.lockRow}>
+                  <span>Downloads</span>
+                  <span className={styles.lockValue}>Allowed</span>
+                </div>
+                <div className={styles.lockRow}>
+                  <span>Link</span>
+                  <span className={styles.toggleOn} aria-label="On" />
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <Reveal className={styles.sectionHead}>
+            <p className={styles.kicker}>More</p>
+            <h2 className={styles.h2}>There when you need it</h2>
+          </Reveal>
+          <ul className={styles.extras}>
+            {extras.map((e, i) => (
+              <Reveal as="li" key={e.title} delay={(i % 3) * 100} className={styles.extra}>
+                <h3 className={styles.h3}>{e.title}</h3>
+                <p className={styles.body}>{e.body}</p>
+              </Reveal>
+            ))}
+          </ul>
         </section>
 
         <section className={styles.section} id="how">
           <Reveal className={styles.sectionHead}>
+            <p className={styles.kicker}>How it works</p>
             <h2 className={styles.h2}>Two steps to send</h2>
           </Reveal>
           <ol className={styles.steps}>
@@ -128,26 +190,11 @@ export default function Home() {
           </ol>
         </section>
 
-        <section className={styles.section}>
-          <Reveal className={styles.sectionHead}>
-            <h2 className={styles.h2}>There when you need it</h2>
-          </Reveal>
-          <ul className={styles.extras}>
-            {extras.map((e, i) => (
-              <Reveal as="li" key={e.title} delay={(i % 3) * 100} className={styles.extra}>
-                <h3 className={styles.h3}>{e.title}</h3>
-                <p className={styles.body}>{e.body}</p>
-              </Reveal>
-            ))}
-          </ul>
-        </section>
-
         <section className={styles.section} id="who">
           <Reveal className={styles.sectionHead}>
+            <p className={styles.kicker}>Solutions</p>
             <h2 className={styles.h2}>Made for every kind of creative</h2>
-            <p className={styles.lede}>
-              Wedding photographers, brand designers, filmmakers and studios use the same simple flow.
-            </p>
+            <p className={styles.lede}>Wedding photographers, brand designers, filmmakers and studios use the same simple flow.</p>
           </Reveal>
           <Reveal delay={100}>
             <ul className={styles.tags}>
@@ -158,12 +205,15 @@ export default function Home() {
           </Reveal>
         </section>
 
-        <section className={styles.final}>
+        <section className={styles.final} id="pricing">
           <Reveal className={styles.finalInner}>
             <LogoMark className={styles.finalMark} />
             <h2 className={styles.finalTitle}>Your next delivery, done properly</h2>
-            <Button href="/signup">Start free</Button>
-            <p className={styles.finalNote}>Your clients never need an account.</p>
+            <div className={styles.ctas}>
+              <Button href="/signup" size="lg">
+                Try Memocraft free
+              </Button>
+            </div>
           </Reveal>
         </section>
       </main>

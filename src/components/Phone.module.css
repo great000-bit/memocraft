@@ -1,0 +1,115 @@
+.device {
+  --w: 300px;
+  position: relative;
+  width: var(--w);
+  aspect-ratio: 71.5 / 147.6;
+  border-radius: calc(var(--w) * 0.18);
+  padding: calc(var(--w) * 0.035);
+  background: linear-gradient(145deg, #8e8a85, #3c3a38 30%, #1b1a19 55%, #4a4744 85%, #9a958f);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.25),
+    0 2px 2px rgb(0 0 0 / 0.08),
+    0 40px 80px -30px rgb(30 25 25 / 0.45);
+  container-type: inline-size;
+}
+
+.screen {
+  position: relative;
+  height: 100%;
+  border-radius: calc(var(--w) * 0.148);
+  background: #fff;
+  color: #1e1919;
+  overflow: hidden;
+  box-shadow: 0 0 0 3px #0c0c0c;
+  display: flex;
+  flex-direction: column;
+}
+
+.status {
+  flex: none;
+  height: 13cqi;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8cqi;
+  position: relative;
+}
+
+.time {
+  font-weight: 600;
+  font-size: 5cqi;
+  letter-spacing: -0.01em;
+}
+
+.island {
+  position: absolute;
+  left: 50%;
+  top: 3.6cqi;
+  translate: -50% 0;
+  width: 31cqi;
+  height: 9cqi;
+  border-radius: 99px;
+  background: #000;
+}
+
+.icons {
+  display: flex;
+  align-items: center;
+  gap: 1.6cqi;
+}
+
+.icons svg {
+  height: 3.8cqi;
+  width: auto;
+  fill: currentColor;
+}
+
+.content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  font-size: 4.2cqi;
+  line-height: 1.35;
+}
+
+.home {
+  position: absolute;
+  bottom: 2.4cqi;
+  left: 50%;
+  translate: -50% 0;
+  width: 36cqi;
+  height: 1.4cqi;
+  border-radius: 99px;
+  background: #1e1919;
+}
+
+.button {
+  position: absolute;
+  width: 3px;
+  border-radius: 2px;
+  background: #5c5955;
+}
+
+.action {
+  left: -2px;
+  top: 17%;
+  height: 4.5%;
+}
+
+.volUp {
+  left: -2px;
+  top: 25%;
+  height: 8%;
+}
+
+.volDown {
+  left: -2px;
+  top: 35%;
+  height: 8%;
+}
+
+.power {
+  right: -2px;
+  top: 28%;
+  height: 12%;
+}

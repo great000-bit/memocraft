@@ -79,7 +79,8 @@
   min-height: 380px;
   padding: var(--space-6);
   border-radius: var(--radius-lg);
-  background: var(--fixer-tint);
+  background: var(--surface);
+  border: 1px solid var(--line);
 }
 
 .visual {
