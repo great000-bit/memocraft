@@ -6,7 +6,7 @@ import { FeatureIcon, type FeatureIconName } from "../FeatureIcons";
 import styles from "./Workspace.module.css";
 
 const items: { label: string; icon: FeatureIconName; href?: string }[] = [
-  { label: "Home", icon: "brand", href: "/dashboard" },
+  { label: "Home", icon: "home", href: "/dashboard" },
   { label: "Deliveries", icon: "upload", href: "/deliveries" },
   { label: "Requests", icon: "request" },
   { label: "Team", icon: "people" },

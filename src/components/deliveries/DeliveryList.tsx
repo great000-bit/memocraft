@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FeatureIcon } from "../FeatureIcons";
 import type { DeliverySummary } from "@/lib/deliveries";
 import styles from "./DeliveryList.module.css";
 
@@ -19,6 +20,9 @@ export function DeliveryList({ deliveries }: { deliveries: DeliverySummary[] }) 
         return (
           <li key={delivery.id}>
             <Link href={`/deliveries/${delivery.id}`} className={styles.row}>
+              <span className={styles.icon} aria-hidden="true">
+                <FeatureIcon name="file" />
+              </span>
               <span className={styles.main}>
                 <span className={styles.title}>{delivery.title}</span>
                 <span className={styles.meta}>
