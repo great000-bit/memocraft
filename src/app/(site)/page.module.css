@@ -76,6 +76,66 @@
   display: none;
 }
 
+/* On a phone the hero is one calm column: the headline, one line of reassurance, a full-width button, and the
+   real phone below it. The wide browser window is for larger screens. */
+@media (max-width: 959px) {
+  .hero {
+    gap: var(--space-8);
+    padding-block: var(--space-6) 56px;
+  }
+
+  .heroText {
+    gap: var(--space-4);
+  }
+
+  .heroStack > :first-child {
+    display: none;
+  }
+
+  .heroPhone {
+    display: block;
+    position: relative;
+    right: auto;
+    bottom: auto;
+    --w: min(240px, 62vw);
+  }
+
+  .heroStack::before {
+    content: "";
+    position: absolute;
+    inset: 4% -8% 0;
+    background: radial-gradient(closest-side, var(--fixer-tint), transparent);
+    opacity: 0.9;
+    z-index: -1;
+  }
+}
+
+@media (max-width: 719px) {
+  .display {
+    font-size: clamp(28px, 8.6vw, 40px);
+  }
+
+  .lede {
+    font-size: 17px;
+    line-height: 26px;
+  }
+
+  .ctas {
+    display: grid;
+  }
+
+  .ctas a {
+    min-height: 56px;
+    font-size: 17px;
+  }
+
+  .fine {
+    font-size: 13px;
+    line-height: 20px;
+    text-align: center;
+  }
+}
+
 /* Audience strip */
 .strip {
   overflow: hidden;
