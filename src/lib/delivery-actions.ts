@@ -6,6 +6,7 @@ import { pool } from "./auth";
 import { limits } from "./delivery-limits";
 import { createDeliveryRow, isUuid } from "./deliveries";
 import { requireUser } from "./session";
+import { removeStored, type PendingUpload } from "./storage";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -137,61 +138,46 @@ export async function addSection(deliveryId: string): Promise<ActionResult> {
   return done;
 }
 
-export async function addFile(sectionId: string): Promise<ActionResult> {
-  const user = await requireUser();
-  if (!isUuid(sectionId)) return fail("This section was not found.");
-  const result = await pool.query<{ deliveryId: string }>(
-    `with owned as (
-       select s."id", s."deliveryId" from "deliverySection" s
-         join "delivery" d on d."id" = s."deliveryId"
-        where s."id" = $1 and d."ownerId" = $2
-     ), added as (
-       insert into "deliveryFile" ("sectionId", "name", "position")
-       select o."id", 'Untitled file',
-              coalesce((select max("position") + 1 from "deliveryFile" where "sectionId" = o."id"), 0)
-         from owned o returning "sectionId"
-     ), touched as (
-       update "delivery" d set "updatedAt" = now() from owned where d."id" = owned."deliveryId" returning d."id"
-     )
-     select "id" as "deliveryId" from touched`,
-    [sectionId, user.id],
-  );
-  if (!result.rows[0]) return fail("This section was not found.");
-  refresh(result.rows[0].deliveryId);
-  return done;
-}
+type StoredFile = { storageKey: string | null; pending: PendingUpload | null };
 
 export async function deleteSection(sectionId: string): Promise<ActionResult> {
   const user = await requireUser();
   if (!isUuid(sectionId)) return fail("This section was not found.");
-  const result = await pool.query<{ deliveryId: string }>(
-    `with gone as (
-       delete from "deliverySection" s using "delivery" d
-        where s."id" = $1 and s."deliveryId" = d."id" and d."ownerId" = $2
-        returning s."deliveryId"
-     )
-     update "delivery" d set "updatedAt" = now() from gone where d."id" = gone."deliveryId" returning d."id" as "deliveryId"`,
+  const section = await pool.query<{ deliveryId: string }>(
+    `select s."deliveryId" from "deliverySection" s join "delivery" d on d."id" = s."deliveryId"
+      where s."id" = $1 and d."ownerId" = $2`,
     [sectionId, user.id],
   );
-  if (!result.rows[0]) return fail("This section was not found.");
-  refresh(result.rows[0].deliveryId);
+  const deliveryId = section.rows[0]?.deliveryId;
+  if (!deliveryId) return fail("This section was not found.");
+  const files = await pool.query<StoredFile>(
+    `select "storageKey", "pending" from "deliveryFile" where "sectionId" = $1`,
+    [sectionId],
+  );
+  await pool.query(`delete from "deliverySection" where "id" = $1`, [sectionId]);
+  await pool.query(`update "delivery" set "updatedAt" = now() where "id" = $1`, [deliveryId]);
+  await removeStored(files.rows);
+  refresh(deliveryId);
   return done;
 }
 
 export async function deleteFile(fileId: string): Promise<ActionResult> {
   const user = await requireUser();
   if (!isUuid(fileId)) return fail("This file was not found.");
-  const result = await pool.query<{ deliveryId: string }>(
-    `with gone as (
-       delete from "deliveryFile" f using "deliverySection" s, "delivery" d
-        where f."id" = $1 and f."sectionId" = s."id" and s."deliveryId" = d."id" and d."ownerId" = $2
-        returning s."deliveryId"
-     )
-     update "delivery" d set "updatedAt" = now() from gone where d."id" = gone."deliveryId" returning d."id" as "deliveryId"`,
+  const file = await pool.query<StoredFile & { deliveryId: string }>(
+    `select f."storageKey", f."pending", s."deliveryId"
+       from "deliveryFile" f
+       join "deliverySection" s on s."id" = f."sectionId"
+       join "delivery" d on d."id" = s."deliveryId"
+      where f."id" = $1 and d."ownerId" = $2`,
     [fileId, user.id],
   );
-  if (!result.rows[0]) return fail("This file was not found.");
-  refresh(result.rows[0].deliveryId);
+  const row = file.rows[0];
+  if (!row) return fail("This file was not found.");
+  await pool.query(`delete from "deliveryFile" where "id" = $1`, [fileId]);
+  await pool.query(`update "delivery" set "updatedAt" = now() where "id" = $1`, [row.deliveryId]);
+  await removeStored([row]);
+  refresh(row.deliveryId);
   return done;
 }
 

@@ -497,3 +497,125 @@ textarea.heading {
     transform: none;
   }
 }
+
+/* Uploads */
+.uploader {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.drop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px dashed var(--control-border);
+  border-radius: 12px;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.dropOver {
+  border-color: var(--fixer);
+  background: var(--fixer-tint);
+}
+
+.dropText {
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.jobs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.job {
+  display: grid;
+  gap: 6px;
+  padding: var(--space-3);
+  background: var(--sunken);
+  border-radius: 10px;
+}
+
+.jobTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.jobName {
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jobButton {
+  flex: none;
+  padding: 4px var(--space-2);
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.jobButton:hover {
+  color: var(--text);
+}
+
+.bar {
+  width: 100%;
+  height: 8px;
+  appearance: none;
+  border: 0;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--line);
+  accent-color: var(--fixer);
+}
+
+.bar::-webkit-progress-bar {
+  background: var(--line);
+}
+
+.bar::-webkit-progress-value {
+  background: var(--fixer);
+  border-radius: var(--radius-pill);
+}
+
+.bar::-moz-progress-bar {
+  background: var(--fixer);
+}
+
+.jobMeta {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--text-muted);
+}
+
+.jobError {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--error);
+}
+
+.fileActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}

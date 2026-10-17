@@ -7,7 +7,11 @@ export type DeliveryFile = {
   note: string | null;
   sizeBytes: number | null;
   mimeType: string | null;
-  storageKey: string | null;
+  ext: string | null;
+  // Attached means the file is in storage and checked. Unattached rows are never shown to clients.
+  attached: boolean;
+  // True while an upload for this row was started and not finished.
+  uploading: boolean;
 };
 
 export type DeliverySection = {
@@ -48,7 +52,7 @@ const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
 export function makeSlug(title: string): string {
   const words = title
     .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
@@ -71,18 +75,29 @@ type DeliveryRow = {
   publishedAt: Date | null;
 };
 
-async function loadSections(deliveryId: string): Promise<DeliverySection[]> {
+async function loadSections(deliveryId: string, onlyAttached: boolean): Promise<DeliverySection[]> {
   const sections = await pool.query<{ id: string; title: string; note: string | null }>(
     `select "id", "title", "note" from "deliverySection" where "deliveryId" = $1 order by "position", "id"`,
     [deliveryId],
   );
-  const files = await pool.query<DeliveryFile & { sectionId: string; sizeBytes: string | null }>(
-    `select f."id", f."sectionId", f."name", f."note", f."sizeBytes", f."mimeType", f."storageKey"
+  const files = await pool.query<{
+    id: string;
+    sectionId: string;
+    name: string;
+    note: string | null;
+    sizeBytes: string | null;
+    mimeType: string | null;
+    ext: string | null;
+    attached: boolean;
+    uploading: boolean;
+  }>(
+    `select f."id", f."sectionId", f."name", f."note", f."sizeBytes", f."mimeType", f."ext",
+            f."storageKey" is not null as "attached", f."pending" is not null as "uploading"
        from "deliveryFile" f
        join "deliverySection" s on s."id" = f."sectionId"
-      where s."deliveryId" = $1
+      where s."deliveryId" = $1 and ($2 = false or f."storageKey" is not null)
       order by f."position", f."createdAt", f."id"`,
-    [deliveryId],
+    [deliveryId, onlyAttached],
   );
   return sections.rows.map((section) => ({
     ...section,
@@ -94,7 +109,9 @@ async function loadSections(deliveryId: string): Promise<DeliverySection[]> {
         note: file.note,
         sizeBytes: file.sizeBytes === null ? null : Number(file.sizeBytes),
         mimeType: file.mimeType,
-        storageKey: file.storageKey,
+        ext: file.ext,
+        attached: file.attached,
+        uploading: file.uploading,
       })),
   }));
 }
@@ -121,7 +138,7 @@ export async function getDeliveryForOwner(id: string, ownerId: string): Promise<
     [id, ownerId],
   );
   if (!rows[0]) return null;
-  return { ...rows[0], sections: await loadSections(rows[0].id) };
+  return { ...rows[0], sections: await loadSections(rows[0].id, false) };
 }
 
 // What a client sees: only published deliveries, found by slug, with the sender's name.
@@ -135,7 +152,28 @@ export async function getPublishedBySlug(slug: string): Promise<(Delivery & { se
     [slug],
   );
   if (!rows[0]) return null;
-  return { ...rows[0], sections: await loadSections(rows[0].id) };
+  return { ...rows[0], sections: await loadSections(rows[0].id, true) };
+}
+
+// A file a client may download: attached, in a delivery that is published right now.
+export async function getPublishedFile(slug: string, fileId: string) {
+  if (!/^[a-z0-9-]{1,80}$/.test(slug) || !isUuid(fileId)) return null;
+  const { rows } = await pool.query<{ name: string; ext: string | null; mimeType: string | null; storageKey: string }>(
+    `select f."name", f."ext", f."mimeType", f."storageKey"
+       from "deliveryFile" f
+       join "deliverySection" s on s."id" = f."sectionId"
+       join "delivery" d on d."id" = s."deliveryId"
+      where f."id" = $1 and d."slug" = $2 and d."status" = 'published' and f."storageKey" is not null`,
+    [fileId, slug],
+  );
+  return rows[0] ?? null;
+}
+
+// The name a client's device saves the file under: the label the creative chose, with the original extension kept.
+export function downloadName(name: string, ext: string | null): string {
+  const base = name.trim().replace(/[\\/:*?"<>|\u0000-\u001f]+/g, "-") || "file";
+  if (!ext || base.toLowerCase().endsWith(`.${ext.toLowerCase()}`)) return base;
+  return `${base}.${ext}`;
 }
 
 export async function createDeliveryRow(ownerId: string, title: string, clientName: string | null) {
