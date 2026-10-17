@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { FeatureIcon } from "../FeatureIcons";
 import { abortUpload, beginUpload, completeUpload } from "@/lib/upload-actions";
 import { formatSize, storageLimits } from "@/lib/storage-limits";
 import styles from "./Editor.module.css";
@@ -14,6 +15,10 @@ type Job = {
   loaded: number;
   error: string | null;
   controller: AbortController;
+  // A small picture of the file, once it has been made, so the card shows what is being uploaded.
+  preview: string | null;
+  // True until one of the upload slots is free for this file.
+  waiting: boolean;
 };
 
 class UploadError extends Error {}
@@ -21,6 +26,47 @@ class UploadError extends Error {}
 const FILES_AT_ONCE = 3;
 const PARTS_AT_ONCE = 3;
 const PART_ATTEMPTS = 3;
+
+const THUMB_EDGE = 480;
+// Pictures bigger than this are not decoded just to make a preview.
+const THUMB_SOURCE_MAX_BYTES = 80 * 1024 * 1024;
+
+let thumbQueue: Promise<unknown> = Promise.resolve();
+
+// Never rejects: a picture the browser cannot decode simply has no preview.
+async function renderThumbnail(file: File): Promise<Blob | null> {
+  if (!file.type.startsWith("image/") || file.type === "image/svg+xml" || file.size > THUMB_SOURCE_MAX_BYTES) return null;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, THUMB_EDGE / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    const context = canvas.getContext("2d");
+    if (!context) {
+      bitmap.close();
+      return null;
+    }
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    for (const quality of [0.8, 0.6, 0.4]) {
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+      if (blob && blob.size <= storageLimits.thumbMaxBytes) return blob;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// One picture is decoded at a time, so dropping hundreds does not hold hundreds of decoded images in memory.
+function makeThumbnail(file: File): Promise<Blob | null> {
+  const next = thumbQueue.then(() => renderThumbnail(file));
+  thumbQueue = next;
+  return next;
+}
 
 function put(url: string, body: Blob, contentType: string | null, signal: AbortSignal, onProgress: (loaded: number) => void) {
   return new Promise<void>((resolve, reject) => {
@@ -85,16 +131,33 @@ async function uploadParts(
   await Promise.all(Array.from({ length: Math.min(PARTS_AT_ONCE, parts.length) }, worker));
 }
 
-async function uploadFile(file: File, target: Target, signal: AbortSignal, onProgress: (loaded: number) => void) {
+async function uploadFile(
+  file: File,
+  target: Target,
+  signal: AbortSignal,
+  onProgress: (loaded: number) => void,
+  preview: Promise<Blob | null>,
+) {
+  const thumbnail = await preview;
+  if (signal.aborted) throw new DOMException("Cancelled", "AbortError");
   const begin = await beginUpload({
     sectionId: target.sectionId,
     fileId: target.fileId,
     name: file.name,
     size: file.size,
     type: file.type || "application/octet-stream",
+    thumbSize: thumbnail?.size,
   });
   if (!begin.ok) throw new UploadError(begin.error);
   try {
+    if (thumbnail && begin.thumbUrl) {
+      try {
+        await put(begin.thumbUrl, thumbnail, "image/jpeg", signal, () => undefined);
+      } catch (error) {
+        // The preview is a bonus. Only a cancel stops the upload; the server drops a preview that did not arrive.
+        if (signal.aborted) throw error;
+      }
+    }
     if (begin.singleUrl) await put(begin.singleUrl, file, begin.contentType, signal, onProgress);
     else await uploadParts(file, begin.parts, signal, onProgress);
     const finished = await completeUpload(begin.fileId);
@@ -109,12 +172,33 @@ function useUploads() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const running = useRef(0);
   const waiting = useRef<(() => void)[]>([]);
+  const previews = useRef(new Map<string, string>());
+  // Jobs still on the page, so a picture that finishes after its card is gone is not kept.
+  const alive = useRef(new Set<string>());
+
+  useEffect(() => {
+    const urls = previews.current;
+    const live = alive.current;
+    return () => {
+      for (const url of urls.values()) URL.revokeObjectURL(url);
+      urls.clear();
+      live.clear();
+    };
+  }, []);
 
   const patch = useCallback((id: string, change: Partial<Job>) => {
     setJobs((current) => current.map((job) => (job.id === id ? { ...job, ...change } : job)));
   }, []);
 
-  const remove = useCallback((id: string) => setJobs((current) => current.filter((job) => job.id !== id)), []);
+  const remove = useCallback((id: string) => {
+    alive.current.delete(id);
+    const url = previews.current.get(id);
+    if (url) {
+      URL.revokeObjectURL(url);
+      previews.current.delete(id);
+    }
+    setJobs((current) => current.filter((job) => job.id !== id));
+  }, []);
 
   const start = useCallback(
     (files: File[], target: Target) => {
@@ -126,7 +210,10 @@ function useUploads() {
           loaded: 0,
           error: null,
           controller: new AbortController(),
+          preview: null,
+          waiting: true,
         };
+        alive.current.add(job.id);
         setJobs((current) => [...current, job]);
 
         if (file.size < 1) {
@@ -138,10 +225,21 @@ function useUploads() {
           continue;
         }
 
+        // Pictures are made for every dropped file straight away, one at a time, so the cards fill with
+        // what is being uploaded even while most of them wait for a free slot.
+        const picture = makeThumbnail(file);
+        void picture.then((blob) => {
+          if (!blob || !alive.current.has(job.id)) return;
+          const url = URL.createObjectURL(blob);
+          previews.current.set(job.id, url);
+          patch(job.id, { preview: url });
+        });
+
         const run = async () => {
           running.current++;
+          patch(job.id, { waiting: false });
           try {
-            await uploadFile(file, target, job.controller.signal, (loaded) => patch(job.id, { loaded }));
+            await uploadFile(file, target, job.controller.signal, (loaded) => patch(job.id, { loaded }), picture);
             remove(job.id);
           } catch (error) {
             if (job.controller.signal.aborted) remove(job.id);
@@ -161,89 +259,147 @@ function useUploads() {
   return { jobs, start, remove };
 }
 
-function JobList({ jobs, onDismiss }: { jobs: Job[]; onDismiss: (id: string) => void }) {
-  if (jobs.length === 0) return null;
+function Thumb({ src }: { src: string | null }) {
   return (
-    <ul className={styles.jobs} aria-label="Uploads">
-      {jobs.map((job) => (
-        <li key={job.id} className={styles.job}>
-          <div className={styles.jobTop}>
-            <span className={styles.jobName}>{job.name}</span>
-            {job.error ? (
-              <button type="button" className={styles.jobButton} onClick={() => onDismiss(job.id)}>
-                Dismiss
-              </button>
-            ) : (
-              <button type="button" className={styles.jobButton} onClick={() => job.controller.abort()}>
-                Cancel
-              </button>
-            )}
-          </div>
-          {job.error ? (
-            <p role="alert" className={styles.jobError}>
-              {job.error}
-            </p>
-          ) : (
-            <>
-              <progress className={styles.bar} value={job.loaded} max={job.size} aria-label={`Uploading ${job.name}`} />
-              <p className={styles.jobMeta}>
-                {formatSize(Math.min(job.loaded, job.size))} of {formatSize(job.size)}
-              </p>
-            </>
-          )}
-        </li>
-      ))}
-    </ul>
+    <span className={styles.thumb}>
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element -- a local preview or a signed storage link, not a site asset
+        <img src={src} alt="" />
+      ) : (
+        <FeatureIcon name="file" />
+      )}
+    </span>
   );
 }
 
-// Add files to a section: drop them on the box or choose them. Files go straight to storage from the browser.
-export function SectionUploader({ sectionId, storageReady }: { sectionId: string; storageReady: boolean }) {
-  const { jobs, start, remove } = useUploads();
-  const input = useRef<HTMLInputElement>(null);
-  const [over, setOver] = useState(false);
-
-  if (!storageReady) {
-    return <p className={styles.empty}>File uploads switch on as soon as file storage is connected.</p>;
-  }
-
+// In a card of its own for new files; "inline" is the slim version shown inside a file card while it is replaced.
+function JobCards({ jobs, onDismiss, inline }: { jobs: Job[]; onDismiss: (id: string) => void; inline?: boolean }) {
+  if (jobs.length === 0) return null;
+  const active = jobs.filter((job) => !job.error).length;
   return (
-    <div className={styles.uploader}>
-      <div
-        className={`${styles.drop} ${over ? styles.dropOver : ""}`}
-        onDragOver={(event) => {
-          event.preventDefault();
-          setOver(true);
-        }}
-        onDragLeave={() => setOver(false)}
-        onDrop={(event) => {
-          event.preventDefault();
-          setOver(false);
-          start(Array.from(event.dataTransfer.files), { sectionId });
-        }}
-      >
-        <p className={styles.dropText}>Drop files here</p>
-        <button type="button" className={`${styles.button} ${styles.add}`} onClick={() => input.current?.click()}>
-          + Add files
-        </button>
-        <input
-          ref={input}
-          type="file"
-          multiple
-          hidden
-          onChange={(event) => {
-            start(Array.from(event.currentTarget.files ?? []), { sectionId });
-            event.currentTarget.value = "";
-          }}
-        />
-      </div>
-      <JobList jobs={jobs} onDismiss={remove} />
+    <div className={styles.queue}>
+      {active > 0 && !inline && (
+        <p className={styles.queueTitle} aria-live="polite">
+          Uploading {active} {active === 1 ? "file" : "files"}…
+        </p>
+      )}
+      <ul className={inline ? styles.jobs : styles.fileList} aria-label="Uploads">
+        {jobs.map((job) => (
+          <li key={job.id} className={inline ? styles.job : `${styles.file} ${styles.fileBusy}`}>
+            {!inline && <Thumb src={job.preview} />}
+            <div className={styles.fileBody}>
+              <div className={styles.jobTop}>
+                <span className={styles.jobName}>{job.name}</span>
+                {job.error ? (
+                  <button type="button" className={styles.jobButton} onClick={() => onDismiss(job.id)}>
+                    Dismiss
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className={styles.jobButton}
+                    onClick={() => {
+                      job.controller.abort();
+                      // A file still waiting for a slot has nothing to stop, so its card goes now.
+                      if (job.waiting) onDismiss(job.id);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+              {job.error ? (
+                <p role="alert" className={styles.jobError}>
+                  {job.error}
+                </p>
+              ) : (
+                <>
+                  <progress className={styles.bar} value={job.loaded} max={job.size} aria-label={`Uploading ${job.name}`} />
+                  <p className={styles.jobMeta}>
+                    {job.waiting
+                      ? `Waiting · ${formatSize(job.size)}`
+                      : `${formatSize(Math.min(job.loaded, job.size))} of ${formatSize(job.size)}`}
+                  </p>
+                </>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
 
-// The foot of a file row: its status, then Replace or Attach, then whatever the server passes in (Remove).
-// Replacing keeps the row's name and note, and the old file stays live until the new one is checked.
+// The place files are added: a big box to drop on or click, then the files already here (passed in as children),
+// then the uploads in progress. Every dropped file becomes its own card. Files go straight to storage.
+export function UploadArea({
+  sectionId,
+  storageReady,
+  hasFiles,
+  children,
+}: {
+  sectionId: string;
+  storageReady: boolean;
+  hasFiles: boolean;
+  children: React.ReactNode;
+}) {
+  const { jobs, start, remove } = useUploads();
+  const [over, setOver] = useState(false);
+  const compact = hasFiles || jobs.length > 0;
+
+  return (
+    <div className={styles.area}>
+      {storageReady ? (
+        <label
+          className={styles.drop}
+          data-size={compact ? "small" : "big"}
+          data-over={over ? "true" : undefined}
+          onDragOver={(event) => {
+            event.preventDefault();
+            setOver(true);
+          }}
+          onDragLeave={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOver(false);
+          }}
+          onDrop={(event) => {
+            event.preventDefault();
+            setOver(false);
+            start(Array.from(event.dataTransfer.files), { sectionId });
+          }}
+        >
+          <input
+            type="file"
+            multiple
+            className={styles.dropInput}
+            onChange={(event) => {
+              start(Array.from(event.currentTarget.files ?? []), { sectionId });
+              event.currentTarget.value = "";
+            }}
+          />
+          <span className={styles.dropIcon} aria-hidden="true">
+            <FeatureIcon name="upload" />
+          </span>
+          <span className={styles.dropText}>
+            <span className={styles.dropTitle}>{compact ? "Add more files" : "Drop your photos and files here"}</span>
+            {!compact && (
+              <span className={styles.dropHint}>
+                Add as many as you like at once. Each one gets its own card, so you can name it.
+              </span>
+            )}
+          </span>
+          <span className={`${styles.button} ${styles.primary} ${styles.dropButton}`}>Choose files</span>
+        </label>
+      ) : (
+        <p className={styles.empty}>File uploads switch on as soon as file storage is connected.</p>
+      )}
+      {children}
+      <JobCards jobs={jobs} onDismiss={remove} />
+    </div>
+  );
+}
+
+// The foot of a file card: its details, then Replace or Attach, then whatever the server passes in (Remove).
+// Replacing keeps the card's name and note, and the old file stays live until the new one is checked.
 export function FileFooter({
   sectionId,
   fileId,
@@ -271,11 +427,11 @@ export function FileFooter({
             <>
               <button
                 type="button"
-                className={`${styles.button} ${styles.secondary}`}
+                className={`${styles.button} ${styles.ghost}`}
                 onClick={() => input.current?.click()}
                 disabled={busy}
               >
-                {attached ? "Replace file" : "Attach file"}
+                {attached ? "Replace" : "Attach file"}
               </button>
               <input
                 ref={input}
@@ -291,7 +447,7 @@ export function FileFooter({
           {children}
         </div>
       </div>
-      <JobList jobs={jobs} onDismiss={remove} />
+      <JobCards jobs={jobs} onDismiss={remove} inline />
     </>
   );
 }

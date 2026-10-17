@@ -8,6 +8,8 @@ export type DeliveryFile = {
   sizeBytes: number | null;
   mimeType: string | null;
   ext: string | null;
+  // Storage key of the preview image, when there is one. Only the owner's editor turns it into a link.
+  thumbKey: string | null;
   // Attached means the file is in storage and checked. Unattached rows are never shown to clients.
   attached: boolean;
   // True while an upload for this row was started and not finished.
@@ -92,11 +94,12 @@ async function loadSections(deliveryId: string, onlyAttached: boolean): Promise<
     sizeBytes: string | null;
     mimeType: string | null;
     ext: string | null;
+    thumbKey: string | null;
     attached: boolean;
     uploading: boolean;
     downloads: string;
   }>(
-    `select f."id", f."sectionId", f."name", f."note", f."sizeBytes", f."mimeType", f."ext",
+    `select f."id", f."sectionId", f."name", f."note", f."sizeBytes", f."mimeType", f."ext", f."thumbKey",
             f."storageKey" is not null as "attached", f."pending" is not null as "uploading",
             (select count(*) from "deliveryEvent" e where e."fileId" = f."id" and e."kind" = 'download') as "downloads"
        from "deliveryFile" f
@@ -116,6 +119,7 @@ async function loadSections(deliveryId: string, onlyAttached: boolean): Promise<
         sizeBytes: file.sizeBytes === null ? null : Number(file.sizeBytes),
         mimeType: file.mimeType,
         ext: file.ext,
+        thumbKey: file.thumbKey,
         attached: file.attached,
         uploading: file.uploading,
         downloads: Number(file.downloads),

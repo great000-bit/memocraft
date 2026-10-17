@@ -138,7 +138,7 @@ export async function addSection(deliveryId: string): Promise<ActionResult> {
   return done;
 }
 
-type StoredFile = { storageKey: string | null; pending: PendingUpload | null };
+type StoredFile = { storageKey: string | null; thumbKey: string | null; pending: PendingUpload | null };
 
 export async function deleteSection(sectionId: string): Promise<ActionResult> {
   const user = await requireUser();
@@ -151,7 +151,7 @@ export async function deleteSection(sectionId: string): Promise<ActionResult> {
   const deliveryId = section.rows[0]?.deliveryId;
   if (!deliveryId) return fail("This section was not found.");
   const files = await pool.query<StoredFile>(
-    `select "storageKey", "pending" from "deliveryFile" where "sectionId" = $1`,
+    `select "storageKey", "thumbKey", "pending" from "deliveryFile" where "sectionId" = $1`,
     [sectionId],
   );
   await pool.query(`delete from "deliverySection" where "id" = $1`, [sectionId]);
@@ -165,7 +165,7 @@ export async function deleteFile(fileId: string): Promise<ActionResult> {
   const user = await requireUser();
   if (!isUuid(fileId)) return fail("This file was not found.");
   const file = await pool.query<StoredFile & { deliveryId: string }>(
-    `select f."storageKey", f."pending", s."deliveryId"
+    `select f."storageKey", f."thumbKey", f."pending", s."deliveryId"
        from "deliveryFile" f
        join "deliverySection" s on s."id" = f."sectionId"
        join "delivery" d on d."id" = s."deliveryId"

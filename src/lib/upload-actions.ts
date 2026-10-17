@@ -20,7 +20,15 @@ import {
 } from "./storage";
 import { formatSize, partSizeFor, storageLimits } from "./storage-limits";
 
-export type BeginUploadInput = { sectionId: string; fileId?: string; name: string; size: number; type: string };
+export type BeginUploadInput = {
+  sectionId: string;
+  fileId?: string;
+  name: string;
+  size: number;
+  type: string;
+  // Size in bytes of the preview image the browser made, when the file is a picture.
+  thumbSize?: number;
+};
 
 export type BeginUploadResult =
   | { ok: false; error: string }
@@ -33,6 +41,8 @@ export type BeginUploadResult =
       singleUrl: string | null;
       // Set for larger files: one signed URL per part, in order.
       parts: { number: number; url: string; size: number }[];
+      // Set when a preview image was announced: send it with PUT and Content-Type image/jpeg.
+      thumbUrl: string | null;
     };
 
 type Result = { ok: true } | { ok: false; error: string };
@@ -110,11 +120,30 @@ export async function beginUpload(input: BeginUploadInput): Promise<BeginUploadR
   const fileId = input.fileId ?? randomUUID();
   const key = newObjectKey(deliveryId, fileId);
   const multipart = size > storageLimits.singleUploadMaxBytes;
+  const thumbSize =
+    typeof input.thumbSize === "number" &&
+    Number.isSafeInteger(input.thumbSize) &&
+    input.thumbSize > 0 &&
+    input.thumbSize <= storageLimits.thumbMaxBytes
+      ? input.thumbSize
+      : null;
+  const thumbKey = thumbSize ? `${key}-thumb` : undefined;
+  // A new row is named after the file without its extension, because the extension is shown beside it and added back on download.
+  const ext = extensionOf(name);
+  const label = ext && name.length > ext.length + 1 ? name.slice(0, -(ext.length + 1)) : name;
 
   let uploadId: string | null = null;
   try {
     if (multipart) uploadId = await startMultipart(key, type);
-    const pending: PendingUpload = { key, uploadId, size, type, ext: extensionOf(name), at: new Date().toISOString() };
+    const pending: PendingUpload = {
+      key,
+      uploadId,
+      size,
+      type,
+      ext,
+      at: new Date().toISOString(),
+      ...(thumbKey && thumbSize ? { thumbKey, thumbSize } : {}),
+    };
 
     if (input.fileId) {
       await pool.query(`update "deliveryFile" set "pending" = $1 where "id" = $2`, [JSON.stringify(pending), fileId]);
@@ -122,13 +151,14 @@ export async function beginUpload(input: BeginUploadInput): Promise<BeginUploadR
       await pool.query(
         `insert into "deliveryFile" ("id", "sectionId", "name", "position", "pending")
          values ($1, $2, $3, coalesce((select max("position") + 1 from "deliveryFile" where "sectionId" = $2), 0), $4)`,
-        [fileId, input.sectionId, name, JSON.stringify(pending)],
+        [fileId, input.sectionId, label, JSON.stringify(pending)],
       );
     }
     if (previousPending) await discardPending(previousPending);
 
+    const thumbUrl = thumbKey && thumbSize ? await presignPut(thumbKey, "image/jpeg", thumbSize) : null;
     if (!multipart) {
-      return { ok: true, fileId, contentType: type, singleUrl: await presignPut(key, type, size), parts: [] };
+      return { ok: true, fileId, contentType: type, singleUrl: await presignPut(key, type, size), parts: [], thumbUrl };
     }
     const sizes = partSizes(size);
     const parts = await Promise.all(
@@ -138,20 +168,20 @@ export async function beginUpload(input: BeginUploadInput): Promise<BeginUploadR
         url: await presignPart(key, uploadId as string, index + 1, partSize),
       })),
     );
-    return { ok: true, fileId, contentType: type, singleUrl: null, parts };
+    return { ok: true, fileId, contentType: type, singleUrl: null, parts, thumbUrl };
   } catch (error) {
     console.error("Could not start an upload", error);
-    if (uploadId) await discardPending({ key, uploadId, size, type, ext: null, at: "" });
+    if (uploadId) await discardPending({ key, uploadId, size, type, ext: null, at: "", thumbKey });
     return fail("Storage did not respond. Try again in a moment.");
   }
 }
 
-type PendingRow = { storageKey: string | null; pending: PendingUpload | null; deliveryId: string };
+type PendingRow = { storageKey: string | null; thumbKey: string | null; pending: PendingUpload | null; deliveryId: string };
 
 async function loadOwnedFile(fileId: string, ownerId: string): Promise<PendingRow | null> {
   if (!isUuid(fileId)) return null;
   const { rows } = await pool.query<PendingRow>(
-    `select f."storageKey", f."pending", s."deliveryId"
+    `select f."storageKey", f."thumbKey", f."pending", s."deliveryId"
        from "deliveryFile" f
        join "deliverySection" s on s."id" = f."sectionId"
        join "delivery" d on d."id" = s."deliveryId"
@@ -175,6 +205,7 @@ export async function completeUpload(fileId: string): Promise<Result> {
   const pending = row.pending;
   if (!pending) return fail("There is no upload in progress for this file.");
 
+  let thumbKey: string | null = null;
   try {
     if (pending.uploadId) {
       const joined = await completeMultipart(pending.key, pending.uploadId, partSizes(pending.size));
@@ -186,6 +217,12 @@ export async function completeUpload(fileId: string): Promise<Result> {
       await pool.query(`update "deliveryFile" set "pending" = null where "id" = $1`, [fileId]);
       return fail("The upload did not finish. Try again.");
     }
+    // The preview is a bonus: if it did not arrive intact the file is still attached, with an icon instead.
+    if (pending.thumbKey && pending.thumbSize) {
+      const thumb = await headObject(pending.thumbKey);
+      if (thumb && thumb.size === pending.thumbSize) thumbKey = pending.thumbKey;
+      else await deleteObjects([pending.thumbKey]);
+    }
   } catch (error) {
     console.error("Could not finish an upload", error);
     return fail("Storage did not respond. Try again in a moment.");
@@ -193,13 +230,16 @@ export async function completeUpload(fileId: string): Promise<Result> {
 
   const updated = await pool.query(
     `update "deliveryFile"
-        set "storageKey" = $1, "sizeBytes" = $2, "mimeType" = $3, "ext" = $4, "pending" = null
+        set "storageKey" = $1, "sizeBytes" = $2, "mimeType" = $3, "ext" = $4, "thumbKey" = $6, "pending" = null
       where "id" = $5 and "pending"->>'key' = $1`,
-    [pending.key, pending.size, pending.type, pending.ext, fileId],
+    [pending.key, pending.size, pending.type, pending.ext, fileId, thumbKey],
   );
   if (!updated.rowCount) return fail("This upload was replaced by a newer one.");
   await pool.query(`update "delivery" set "updatedAt" = now() where "id" = $1`, [row.deliveryId]);
-  if (row.storageKey && row.storageKey !== pending.key) await deleteObjects([row.storageKey]);
+  await deleteObjects([
+    ...(row.storageKey && row.storageKey !== pending.key ? [row.storageKey] : []),
+    ...(row.thumbKey && row.thumbKey !== thumbKey ? [row.thumbKey] : []),
+  ]);
   refresh(row.deliveryId);
   return { ok: true };
 }

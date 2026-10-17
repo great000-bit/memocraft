@@ -7,7 +7,7 @@ import styles from "./Editor.module.css";
 type ActionButtonProps = {
   action: () => Promise<ActionResult>;
   children: React.ReactNode;
-  variant?: "primary" | "secondary" | "add" | "danger";
+  variant?: "primary" | "secondary" | "add" | "danger" | "ghost";
   // Destructive buttons ask twice, inline, instead of using a browser dialog.
   confirmLabel?: string;
   label?: string;
