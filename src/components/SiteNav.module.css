@@ -11,10 +11,10 @@
 }
 
 .inner {
-  max-width: 1280px;
+  max-width: 1680px;
   margin-inline: auto;
-  padding: 0 var(--space-4);
-  height: 72px;
+  padding: 0 clamp(var(--space-4), 5.5vw, 110px);
+  height: 80px;
   display: flex;
   align-items: center;
   gap: var(--space-6);
