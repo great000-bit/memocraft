@@ -1,6 +1,7 @@
 .dialog {
   width: min(440px, calc(100vw - 32px));
   max-width: none;
+  box-sizing: border-box;
   padding: 0;
   border: 0;
   border-radius: 32px;
@@ -23,6 +24,8 @@
 .card {
   position: relative;
   display: grid;
+  /* One column that may shrink: without this a long link widens the card past a phone screen. */
+  grid-template-columns: minmax(0, 1fr);
   justify-items: center;
   gap: 12px;
   padding: 40px 28px 28px;
@@ -33,6 +36,7 @@
     0 40px 80px -30px rgb(23 26 25 / 0.45),
     0 2px 6px rgb(23 26 25 / 0.06);
   text-align: center;
+  outline: none;
 }
 
 .tick {
@@ -110,8 +114,10 @@
 
 .actions {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
   width: 100%;
+  min-width: 0;
   margin-top: 12px;
 }
 
@@ -121,6 +127,7 @@
   align-items: center;
   gap: 8px;
   width: 100%;
+  min-width: 0;
   margin-top: 8px;
   padding: 6px 6px 6px 18px;
   border-radius: 999px;
@@ -138,6 +145,17 @@
   font-size: 13px;
   text-align: left;
   color: var(--text);
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 34px 18px 20px;
+    border-radius: 28px;
+  }
+
+  .title {
+    font-size: 23px;
+  }
 }
 
 @keyframes fade {

@@ -106,8 +106,10 @@
   }
 }
 
-/* Still for people who ask for less motion: the edge light rests at the top corner and the halo stays soft. */
-@media (prefers-reduced-motion: reduce) {
+/* Still for people who ask for less motion, and on phones and tablets: the travelling light repaints the card on
+   every frame, which is cheap for a desktop but makes a phone stutter while scrolling. There the light rests at the
+   top corner and the halo stays soft. */
+@media (prefers-reduced-motion: reduce), (pointer: coarse), (max-width: 719px) {
   .card::before {
     --glow-angle: 40deg;
     animation: none;

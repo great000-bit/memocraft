@@ -1243,8 +1243,9 @@ textarea.heading {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.22) 50%, transparent 65%) -150% 0 / 250% 100%
-    no-repeat;
+  background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.22) 50%, transparent 65%);
+  transform: translateX(-100%);
+  will-change: transform;
   animation: sheen 3.2s ease-in-out infinite;
   pointer-events: none;
 }
@@ -1252,10 +1253,10 @@ textarea.heading {
 @keyframes sheen {
   0%,
   50% {
-    background-position: -150% 0;
+    transform: translateX(-100%);
   }
   100% {
-    background-position: 250% 0;
+    transform: translateX(100%);
   }
 }
 
