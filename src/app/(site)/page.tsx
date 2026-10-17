@@ -1,6 +1,7 @@
 import { Button } from "@/components/Button";
 import { FeatureIcon, type FeatureIconName } from "@/components/FeatureIcons";
 import { FeatureTabs } from "@/components/FeatureTabs";
+import { HeroHook } from "@/components/HeroHook";
 import { Logo, LogoMark } from "@/components/Logo";
 import { PhoneMock } from "@/components/Mockups";
 import { Photo } from "@/components/Photo";
@@ -42,13 +43,8 @@ export default function Home() {
         <section className={styles.hero}>
           <div className={styles.heroGrid} aria-hidden="true" />
           <Reveal className={styles.heroText}>
-            <h1 className={styles.display}>
-              Did they get the files? <span className={styles.displayAccent}>Now you&rsquo;ll know.</span>
-            </h1>
-            <p className={styles.lede}>
-              Send one link with every finished file, each labelled so your client knows what it is for. It opens on any
-              phone, and you see the moment they open it and download.
-            </p>
+            <HeroHook className={styles.display} accentClassName={styles.displayAccent} />
+            <p className={styles.heroLede}>Every finished file, labelled, in one link. You see when itOne link for every finished file. You see when it&rsquo;s opened.rsquo;s opened.</p>
             <div className={styles.ctas}>
               <Button href="/signup" size="lg">
                 Send your first delivery free
