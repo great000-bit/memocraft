@@ -133,8 +133,17 @@
 }
 
 .foot {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
   padding-top: var(--space-6);
   border-top: 1px solid var(--line);
+}
+
+.notice {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text-subtle);
 }
 
 .footLink {

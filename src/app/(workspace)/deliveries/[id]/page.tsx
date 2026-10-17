@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { DeliveryEditor } from "@/components/deliveries/DeliveryEditor";
 import { getDeliveryForOwner } from "@/lib/deliveries";
+import { getActivity } from "@/lib/delivery-events";
 import { requireUser } from "@/lib/session";
 import styles from "@/components/workspace/Workspace.module.css";
 
@@ -13,7 +14,8 @@ async function Editor({ params }: Pick<PageProps<"/deliveries/[id]">, "params">)
   const { id } = await params;
   const delivery = await getDeliveryForOwner(id, user.id);
   if (!delivery) notFound();
-  return <DeliveryEditor delivery={delivery} />;
+  const activity = await getActivity(delivery.id, user.id);
+  return <DeliveryEditor delivery={delivery} activity={activity} />;
 }
 
 export default function DeliveryPage({ params }: PageProps<"/deliveries/[id]">) {

@@ -62,6 +62,20 @@
   line-height: 18px;
 }
 
+.pills {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.pill[data-proof="opened"],
+.pill[data-proof="downloaded"] {
+  background: var(--proof-tint);
+  color: var(--proof-text);
+}
+
 .pill[data-status="published"] {
   background: var(--fixer-tint);
   color: var(--fixer);
