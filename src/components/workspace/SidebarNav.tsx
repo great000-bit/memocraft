@@ -20,7 +20,7 @@ export function NavList({ pathname }: { pathname: string | null }) {
   const isActive = (href: string) =>
     pathname !== null && (pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`)));
   return (
-    <nav id="workspace-nav" aria-label="Workspace">
+    <nav aria-label="Workspace">
       <ul className={styles.nav}>
         {items.map((item) => (
           <li key={item.label}>

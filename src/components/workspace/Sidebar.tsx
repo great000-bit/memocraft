@@ -3,8 +3,11 @@ import { Suspense } from "react";
 import { Logo, LogoMark } from "../Logo";
 import { NavList, SidebarNav } from "./SidebarNav";
 import { SidebarToggle } from "./SidebarToggle";
+import { UserMenu, UserMenuFallback } from "./UserMenu";
 import styles from "./Workspace.module.css";
 
+// Everything you move between lives on the left: the pages, then your account at the foot. On a wide screen it is a
+// column that closes to a rail; on a phone it slides in from the left when the menu button is pressed.
 export function Sidebar() {
   return (
     <aside className={styles.sidebar}>
@@ -15,9 +18,14 @@ export function Sidebar() {
         </Link>
         <SidebarToggle />
       </div>
-      <Suspense fallback={<NavList pathname={null} />}>
-        <SidebarNav />
-      </Suspense>
+      <div id="workspace-nav" className={styles.drawer}>
+        <Suspense fallback={<NavList pathname={null} />}>
+          <SidebarNav />
+        </Suspense>
+        <Suspense fallback={<UserMenuFallback />}>
+          <UserMenu />
+        </Suspense>
+      </div>
     </aside>
   );
 }

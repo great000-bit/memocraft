@@ -5,7 +5,6 @@ import { Sidebar } from "@/components/workspace/Sidebar";
 import { VerifyEmail } from "@/components/workspace/VerifyEmail";
 import { emailConfigured } from "@/lib/email";
 import { getSession } from "@/lib/session";
-import { UserMenu, UserMenuFallback } from "@/components/workspace/UserMenu";
 import styles from "@/components/workspace/Workspace.module.css";
 
 // The workspace is always light and stays out of search results.
@@ -29,11 +28,6 @@ export default function WorkspaceLayout({ children }: LayoutProps<"/">) {
       <InlineScript html={`try{if(localStorage.getItem("mc-sidebar")==="collapsed")document.currentScript.parentElement.setAttribute("data-collapsed","true")}catch(e){}`} />
       <Sidebar />
       <div className={styles.body}>
-        <header className={styles.topbar}>
-          <Suspense fallback={<UserMenuFallback />}>
-            <UserMenu />
-          </Suspense>
-        </header>
         <main className={styles.main}>
           <Suspense fallback={null}>
             <VerifyNotice />
