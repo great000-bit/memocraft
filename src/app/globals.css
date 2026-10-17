@@ -108,8 +108,10 @@ a {
   min-height: 100dvh;
 }
 
-/* The signed-in workspace is always light: a soft grey canvas with white cards, whatever the device theme. */
-.app-scope {
+/* The signed-in workspace is always light: a soft grey canvas with white cards, whatever the device theme.
+   The landing page shares its soft "neumorphic" canvas (.neu-scope) so the product feels the same from the first page. */
+.app-scope,
+.neu-scope {
   --bg: #f3f5f4;
   --surface: #ffffff;
   --sunken: #edf0ee;

@@ -21,7 +21,7 @@
   padding: var(--space-12) var(--space-4) 0;
   background:
     radial-gradient(60% 55% at 50% 100%, rgb(11 107 93 / 0.2), transparent 70%),
-    linear-gradient(180deg, #ffffff 0%, #f4f7f5 45%, #dcebe6 100%);
+    linear-gradient(180deg, var(--bg) 0%, var(--bg) 45%, #dcebe6 100%);
   isolation: isolate;
 }
 
@@ -45,36 +45,6 @@
   gap: 20px;
   max-width: 1120px;
   text-align: center;
-}
-
-.heroBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 16px 6px 6px;
-  border: 1px solid rgb(11 107 93 / 0.18);
-  border-radius: var(--radius-pill);
-  background: rgb(255 255 255 / 0.8);
-  box-shadow: 0 4px 14px -6px rgb(11 107 93 / 0.25);
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 20px;
-  color: var(--text);
-}
-
-.heroBadgeIcon {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--fixer);
-  color: #ffffff;
-}
-
-.heroBadgeIcon svg {
-  width: 16px;
-  height: 16px;
 }
 
 .display {
@@ -1310,4 +1280,103 @@
   .marquee li[aria-hidden="true"] {
     display: none;
   }
+}
+
+/* Neumorphism: the page sits on the workspace's soft grey, and its cards are made of the same material, lifted
+   out of it by a light and a dark shadow. Colour stays in the icons, numbers and buttons, so text keeps its
+   contrast whatever the shadows do. */
+.page {
+  background: var(--bg);
+  min-height: 100dvh;
+}
+
+.float,
+.floatPill {
+  border-color: rgb(255 255 255 / 0.7);
+  background: var(--neu-face);
+  box-shadow: var(--neu-raised);
+}
+
+.kicker {
+  justify-self: start;
+  width: fit-content;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--neu-face);
+  box-shadow: var(--neu-raised-xs);
+}
+
+.sectionHead .kicker {
+  margin-inline: inherit;
+}
+
+.strip {
+  border-block: 0;
+  box-shadow: var(--neu-inset);
+}
+
+.statusCard,
+.linkBox,
+.finalInner,
+.card,
+.stepCard,
+.card[data-tone],
+.stepCard[data-tone] {
+  border: 1px solid rgb(255 255 255 / 0.7);
+  background: var(--neu-face);
+  box-shadow: var(--neu-raised);
+}
+
+.cardIcon {
+  box-shadow: var(--neu-inset-sm);
+}
+
+.card[data-tone="mint"] .cardIcon {
+  background: var(--fixer-tint);
+}
+
+.card[data-tone="amber"] .cardIcon {
+  background: var(--proof-tint);
+}
+
+.card[data-tone="sand"] .cardIcon {
+  background: var(--bg);
+}
+
+.footer {
+  border-top: 0;
+  box-shadow: 0 -12px 24px -18px var(--neu-dark);
+}
+
+/* The privacy panel is part of the same soft surface now: lifted out of the page, not a black slab. */
+.panel {
+  --bg: #f3f5f4;
+  --surface: #ffffff;
+  --sunken: #edf0ee;
+  --line: #e3e8e5;
+  --control-border: #848c88;
+  --text: #1e1919;
+  --text-muted: #5c5856;
+  --fixer: #0b6b5d;
+  color-scheme: light;
+  border: 1px solid rgb(255 255 255 / 0.7);
+  background: var(--neu-face);
+  box-shadow: var(--neu-raised);
+}
+
+.panelIcon {
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--fixer);
+  box-shadow: var(--neu-inset-sm);
+}
+
+.cCard {
+  box-shadow: 0 -16px 40px -18px var(--neu-dark);
+}
+
+.tags li {
+  border-color: rgb(255 255 255 / 0.7);
+  background: var(--neu-face);
+  box-shadow: var(--neu-raised-sm);
 }
