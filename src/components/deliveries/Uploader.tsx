@@ -390,7 +390,18 @@ export function UploadArea({
           <span className={`${styles.button} ${styles.primary} ${styles.dropButton}`}>Choose files</span>
         </label>
       ) : (
-        <p className={styles.empty}>File uploads switch on as soon as file storage is connected.</p>
+        // The box is still drawn so the page looks the same; it just cannot take files until storage is connected.
+        <div className={styles.drop} data-size={hasFiles ? "small" : "big"} data-off="true" aria-disabled="true">
+          <span className={styles.dropIcon} aria-hidden="true">
+            <FeatureIcon name="upload" />
+          </span>
+          <span className={styles.dropText}>
+            <span className={styles.dropTitle}>File uploads switch on soon</span>
+            <span className={styles.dropHint}>
+              This box takes your photos and files as soon as file storage is connected.
+            </span>
+          </span>
+        </div>
       )}
       {children}
       <JobCards jobs={jobs} onDismiss={remove} />
