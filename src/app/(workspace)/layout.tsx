@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { InlineScript } from "@/components/InlineScript";
 import { Notifier } from "@/components/workspace/Notifier";
+import { ServiceWorker } from "@/components/workspace/ServiceWorker";
 import { Sidebar } from "@/components/workspace/Sidebar";
 import { VerifyEmail } from "@/components/workspace/VerifyEmail";
 import { emailConfigured } from "@/lib/email";
@@ -13,6 +14,9 @@ export const metadata: Metadata = {
   title: { default: "Dashboard", template: "%s | Memocraft" },
   robots: { index: false, follow: false },
 };
+
+// The phone's status bar and the installed app's frame match the dark workspace.
+export const viewport: Viewport = { themeColor: "#1a1f1e" };
 
 // Only shown when email can actually be sent, and only until the address is confirmed.
 async function VerifyNotice() {
@@ -30,6 +34,7 @@ export default function WorkspaceLayout({ children }: LayoutProps<"/">) {
       <InlineScript html={`try{var s=document.currentScript.parentElement;if(localStorage.getItem("mc-sidebar")==="collapsed")s.setAttribute("data-collapsed","true");if(localStorage.getItem("mc-theme")==="light")s.setAttribute("data-theme","light")}catch(e){}`} />
       <Sidebar />
       <Notifier />
+      <ServiceWorker />
       <div className={styles.body}>
         <main className={styles.main}>
           <Suspense fallback={null}>

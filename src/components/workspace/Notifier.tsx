@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { LogoMark } from "@/components/Logo";
+import { line } from "@/lib/notice-text";
 import styles from "./Notifier.module.css";
 
 // Live notes in the corner of the workspace when a client opens a delivery, saves files or asks for something,
@@ -24,23 +25,13 @@ type Notice = {
 
 type Toast = Notice & { leaving?: boolean };
 
+export const unreadEvent = "mc-unread";
 const cursorKey = "mc-notice-cursor";
 const seenKey = "mc-notice-seen";
 const every = 20_000;
 const overlap = 2 * 60_000; // ask a little further back each time, so a slow "Save all" is never cut in half
 const showFor = 8_000;
 const most = 3;
-
-function who(notice: Notice) {
-  return notice.clientName?.trim() || "Your client";
-}
-
-function line(notice: Notice) {
-  if (notice.kind === "open") return `${who(notice)} opened ${notice.title}`;
-  if (notice.kind === "request") return `${who(notice)} asked about ${notice.fileName ?? "a new file"}`;
-  if (notice.count > 1) return `${who(notice)} saved ${notice.count} files`;
-  return `${who(notice)} saved ${notice.fileName ?? "a file"}`;
-}
 
 function when(at: string) {
   const minutes = Math.round((Date.now() - new Date(at).getTime()) / 60_000);
@@ -108,8 +99,10 @@ export function Notifier() {
         const after = cursor ? new Date(new Date(cursor).getTime() - overlap).toISOString() : "";
         const response = await fetch(`/api/notifications?after=${encodeURIComponent(after)}`, { cache: "no-store" });
         if (!response.ok || stopped) return;
-        const { now, notices } = (await response.json()) as { now: string; notices: Notice[] };
+        const { now, notices, unread } = (await response.json()) as { now: string; notices: Notice[]; unread: number };
         write(cursorKey, now);
+        // The sidebar's Notifications link shows a dot while there is something new on that page.
+        window.dispatchEvent(new CustomEvent(unreadEvent, { detail: unread }));
         const fresh = notices.filter((notice) => !seen.includes(notice.id));
         if (fresh.length === 0) return;
         seen = [...fresh.map((notice) => notice.id), ...seen].slice(0, 200);

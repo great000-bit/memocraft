@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { notifyOwner } from "./push";
 import { pool } from "./auth";
 import { getPublishedRef, isUuid } from "./deliveries";
 import { limits } from "./delivery-limits";
@@ -63,6 +64,7 @@ export async function submitRequest(slug: string, formData: FormData): Promise<R
   revalidatePath("/requests");
   revalidatePath("/dashboard");
   revalidatePath(`/deliveries/${ref.id}`);
+  notifyOwner(ref.id, "request", fileName);
   if (emailConfigured()) await emailOwner(ref.id, fileName, message);
   return { ok: true };
 }

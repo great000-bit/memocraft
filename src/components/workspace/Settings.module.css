@@ -224,3 +224,17 @@
   width: 20px;
   height: 20px;
 }
+
+.steps {
+  margin: 0;
+  padding-left: 1.3em;
+  display: grid;
+  gap: 6px;
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--text-muted);
+}
+
+.steps b {
+  color: var(--text);
+}
