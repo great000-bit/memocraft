@@ -1,5 +1,4 @@
 /* White marketing canvas, wide grotesk headings, generous Dropbox-style spacing. */
-.hero,
 .section,
 .split,
 .final,
@@ -10,42 +9,97 @@
   padding-inline: var(--space-4);
 }
 
-/* Hero */
+/* Hero: one centred column, like a product launch page. A badge, the headline with its answer in teal, two buttons,
+   then the client's phone rising out of a soft teal band with proof of delivery floating round it. Light all the
+   way: white at the top into sage and a gentle teal glow, with a faint grid behind. */
 .hero {
+  position: relative;
+  overflow: hidden;
   display: grid;
-  gap: var(--space-12);
-  padding-block: var(--space-12) 96px;
+  justify-items: center;
+  gap: 40px;
+  padding: var(--space-12) var(--space-4) 0;
+  background:
+    radial-gradient(60% 55% at 50% 100%, rgb(11 107 93 / 0.2), transparent 70%),
+    linear-gradient(180deg, #ffffff 0%, #f4f7f5 45%, #dcebe6 100%);
+  isolation: isolate;
+}
+
+.heroGrid {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgb(11 107 93 / 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(11 107 93 / 0.07) 1px, transparent 1px);
+  background-size: 72px 72px;
+  background-position: center top;
+  -webkit-mask-image: radial-gradient(70% 60% at 50% 30%, #000 20%, transparent 75%);
+  mask-image: radial-gradient(70% 60% at 50% 30%, #000 20%, transparent 75%);
+  pointer-events: none;
 }
 
 .heroText {
   display: grid;
-  gap: var(--space-6);
-  align-content: center;
+  justify-items: center;
+  gap: 20px;
+  max-width: 1120px;
+  text-align: center;
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 16px 6px 6px;
+  border: 1px solid rgb(11 107 93 / 0.18);
+  border-radius: var(--radius-pill);
+  background: rgb(255 255 255 / 0.8);
+  box-shadow: 0 4px 14px -6px rgb(11 107 93 / 0.25);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--text);
+}
+
+.heroBadgeIcon {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--fixer);
+  color: #ffffff;
+}
+
+.heroBadgeIcon svg {
+  width: 16px;
+  height: 16px;
 }
 
 .display {
-  font-size: clamp(34px, 3vw, 46px);
-  line-height: 1.08;
+  font-size: clamp(34px, 4.2vw, 60px);
+  line-height: 1.06;
   font-weight: 600;
-  letter-spacing: -0.02em;
-  max-width: 14em;
+  letter-spacing: -0.025em;
 }
 
-/* The two halves of the headline sit on their own lines when there is room. */
-.display span {
-  display: block;
+.displayAccent {
+  color: var(--fixer);
+  white-space: nowrap;
 }
 
 .lede {
   font-size: 20px;
   line-height: 30px;
   color: var(--text-muted);
-  max-width: 24em;
+  max-width: 38em;
 }
 
 .ctas {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: var(--space-3);
 }
 
@@ -54,59 +108,239 @@
   color: var(--text-muted);
 }
 
-.heroMedia {
-  position: relative;
+.heroStage {
+  width: 100%;
+  max-width: 760px;
 }
 
-.heroStack {
+/* The phone is cut by the bottom of the band, so it reads as rising out of it. */
+.stage {
   position: relative;
+  height: 470px;
   display: grid;
   justify-items: center;
-}
-
-.heroStack > :first-child {
-  width: 100%;
+  align-items: start;
 }
 
 .heroPhone {
-  position: absolute;
-  right: 12px;
-  bottom: -88px;
-  --w: 210px;
-  display: none;
+  --w: 280px;
+  position: relative;
+  z-index: 2;
 }
 
-/* On a phone the hero is one calm column: the headline, one line of reassurance, a full-width button, and the
-   real phone below it. The wide browser window is for larger screens. */
-@media (max-width: 959px) {
+.float {
+  position: absolute;
+  z-index: 3;
+  background: #ffffff;
+  border: 1px solid rgb(255 255 255 / 0.9);
+  box-shadow: 0 18px 40px -16px rgb(11 107 93 / 0.38);
+}
+
+.floatPill {
+  top: 92px;
+  left: 4%;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  animation: hero-bob 6s ease-in-out infinite;
+}
+
+.floatDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--fixer);
+  box-shadow: 0 0 0 4px var(--fixer-tint);
+}
+
+.floatLeft,
+.floatRight {
+  display: grid;
+  gap: 2px;
+  padding: 16px 20px;
+  border-radius: 18px;
+}
+
+.floatLeft {
+  top: 230px;
+  left: 0;
+  transform: rotate(-8deg);
+  animation: hero-bob-left 7s ease-in-out infinite;
+}
+
+.floatRight {
+  top: 28px;
+  right: 2%;
+  transform: rotate(9deg);
+  animation: hero-bob-right 6.5s ease-in-out infinite;
+}
+
+.floatLabel {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.floatFigure {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 32px;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.floatNote {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.floatTick {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--proof);
+  color: #ffffff;
+  font-size: 11px;
+}
+
+/* A studio card tucked behind the phone, in teal, where the reference had its bank card. */
+.floatCard {
+  position: absolute;
+  z-index: 1;
+  top: 250px;
+  right: 9%;
+  width: 190px;
+  height: 230px;
+  display: grid;
+  align-content: end;
+  gap: 2px;
+  padding: 18px;
+  border-radius: 22px;
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgb(255 255 255 / 0.22), transparent 55%),
+    linear-gradient(150deg, #0f7d6c, #0b6b5d 55%, #064b41);
+  color: #ffffff;
+  box-shadow: 0 24px 48px -20px rgb(11 107 93 / 0.6);
+  transform: rotate(6deg);
+}
+
+.floatCardMark {
+  position: absolute;
+  top: 6px;
+  left: 4px;
+  width: 64px;
+  height: 64px;
+}
+
+.floatCardName {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.floatCardSub {
+  font-size: 13px;
+  color: rgb(255 255 255 / 0.8);
+}
+
+@keyframes hero-bob {
+  50% {
+    translate: 0 -8px;
+  }
+}
+
+@keyframes hero-bob-left {
+  50% {
+    translate: 0 -10px;
+  }
+}
+
+@keyframes hero-bob-right {
+  50% {
+    translate: 0 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floatPill,
+  .floatLeft,
+  .floatRight {
+    animation: none;
+  }
+}
+
+@media (min-width: 960px) {
+  .hero {
+    padding-top: 56px;
+  }
+}
+
+/* On a phone the column stays centred; the floating cards shrink and tuck in closer to the phone. */
+@media (max-width: 719px) {
   .hero {
     gap: var(--space-8);
-    padding-block: var(--space-6) 56px;
+    padding-top: var(--space-8);
   }
 
   .heroText {
     gap: var(--space-4);
   }
 
-  .heroStack > :first-child {
-    display: none;
+  .ctas {
+    width: 100%;
+  }
+
+  .stage {
+    height: 380px;
   }
 
   .heroPhone {
-    display: block;
-    position: relative;
-    right: auto;
-    bottom: auto;
-    --w: min(240px, 62vw);
+    --w: min(230px, 60vw);
   }
 
-  .heroStack::before {
-    content: "";
-    position: absolute;
-    inset: 4% -8% 0;
-    background: radial-gradient(closest-side, var(--fixer-tint), transparent);
-    opacity: 0.9;
-    z-index: -1;
+  /* No room beside a phone-width phone: the pill would cover the delivery's title. */
+  .floatPill {
+    display: none;
+  }
+
+  .floatLeft,
+  .floatRight {
+    padding: 10px 12px;
+    border-radius: 14px;
+  }
+
+  .floatLeft {
+    top: 200px;
+    left: -2px;
+  }
+
+  .floatRight {
+    top: 12px;
+    right: -2px;
+  }
+
+  .floatFigure {
+    font-size: 18px;
+    line-height: 22px;
+  }
+
+  .floatLabel,
+  .floatNote {
+    font-size: 11px;
+  }
+
+  .floatCard {
+    display: none;
   }
 }
 
@@ -1028,7 +1262,6 @@
 }
 
 @media (min-width: 720px) {
-  .hero,
   .section,
   .split,
   .final,
@@ -1056,21 +1289,6 @@
 }
 
 @media (min-width: 960px) {
-  .hero {
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-    align-items: center;
-    column-gap: 64px;
-    padding-block: 96px 112px;
-  }
-
-  .heroStack {
-    justify-items: stretch;
-  }
-
-  .heroPhone {
-    display: block;
-  }
-
   .split {
     grid-template-columns: 1fr 1fr;
   }
@@ -1080,12 +1298,6 @@
   }
 }
 
-@media (min-width: 1200px) {
-  .heroPhone {
-    --w: 236px;
-    right: -28px;
-  }
-}
 
 @media (prefers-reduced-motion: reduce) {
   .marquee {

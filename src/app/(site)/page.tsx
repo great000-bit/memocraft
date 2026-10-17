@@ -2,7 +2,7 @@ import { Button } from "@/components/Button";
 import { FeatureIcon, type FeatureIconName } from "@/components/FeatureIcons";
 import { FeatureTabs } from "@/components/FeatureTabs";
 import { Logo, LogoMark } from "@/components/Logo";
-import { DeliveryMock, PhoneMock } from "@/components/Mockups";
+import { PhoneMock } from "@/components/Mockups";
 import { Photo } from "@/components/Photo";
 import type { PhotoKey } from "@/components/photos";
 import { Reveal } from "@/components/Reveal";
@@ -40,9 +40,16 @@ export default function Home() {
 
       <main>
         <section className={styles.hero}>
+          <div className={styles.heroGrid} aria-hidden="true" />
           <Reveal className={styles.heroText}>
+            <p className={styles.heroBadge}>
+              <span className={styles.heroBadgeIcon} aria-hidden="true">
+                <FeatureIcon name="brand" />
+              </span>
+              New: your logo on every client page
+            </p>
             <h1 className={styles.display}>
-              <span>Did they get the files?</span> <span>Now you&rsquo;ll know.</span>
+              Did they get the files? <span className={styles.displayAccent}>Now you&rsquo;ll know.</span>
             </h1>
             <p className={styles.lede}>
               Send one link with every finished file, each labelled so your client knows what it is for. It opens on any
@@ -52,13 +59,37 @@ export default function Home() {
               <Button href="/signup" size="lg">
                 Send your first delivery free
               </Button>
+              <Button href="#how" variant="outline" size="lg" arrow={false}>
+                See how it works
+              </Button>
             </div>
             <p className={styles.fine}>No card. No zip files. Your clients never make an account.</p>
           </Reveal>
-          <Reveal effect="scale" delay={150} className={styles.heroMedia}>
-            <div id="example" className={styles.heroStack}>
-              <DeliveryMock />
-              <PhoneMock className={styles.heroPhone} />
+
+          {/* The client's phone in the middle, with the proof of delivery floating round it. */}
+          <Reveal effect="scale" delay={150} className={styles.heroStage}>
+            <div id="example" className={styles.stage}>
+              <PhoneMock className={styles.heroPhone} tilt={false} />
+              <div className={`${styles.float} ${styles.floatPill}`} aria-hidden="true">
+                <span className={styles.floatDot} />
+                Opened 2 min ago
+              </div>
+              <div className={`${styles.float} ${styles.floatLeft}`} aria-hidden="true">
+                <p className={styles.floatLabel}>Downloaded</p>
+                <p className={styles.floatFigure}>12 of 12</p>
+                <p className={styles.floatNote}>
+                  <span className={styles.floatTick}>✓</span> every file saved
+                </p>
+              </div>
+              <div className={`${styles.float} ${styles.floatRight}`} aria-hidden="true">
+                <p className={styles.floatLabel}>Delivered</p>
+                <p className={styles.floatFigure}>Mon 09:44</p>
+              </div>
+              <div className={styles.floatCard} aria-hidden="true">
+                <LogoMark className={styles.floatCardMark} />
+                <p className={styles.floatCardName}>Lumen Studio</p>
+                <p className={styles.floatCardSub}>Spring Lookbook</p>
+              </div>
             </div>
           </Reveal>
         </section>
