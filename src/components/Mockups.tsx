@@ -109,9 +109,9 @@ export function ActivityMock() {
 const phonePhotos: PhotoKey[] = ["printLaugh", "capFists", "faceSculpture", "purplePhone", "limePhone", "beretPhone"];
 
 // The client's view on an iPhone: the gallery scrolls under a Save to phone bar pinned to the bottom.
-export function PhoneMock({ className = "" }: { className?: string }) {
+export function PhoneMock({ className = "", tilt = true }: { className?: string; tilt?: boolean }) {
   return (
-    <Phone label="A delivery open on an iPhone with Save to phone and Ask for a file" className={className} tilt>
+    <Phone label="A delivery open on an iPhone with Save to phone and Ask for a file" className={className} tilt={tilt}>
       <div className={styles.phoneInner}>
         <p className={styles.phoneStudio}>Lumen Studio</p>
         <p className={styles.phoneTitle}>Spring Lookbook</p>
