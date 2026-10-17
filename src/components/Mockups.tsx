@@ -1,9 +1,26 @@
+import { Photo } from "./Photo";
+import type { PhotoKey } from "./photos";
 import styles from "./Mockups.module.css";
 
-// Drawn product previews used on the landing page. Thumbnails are colour blocks standing in for photos.
-function Thumb({ tone }: { tone: number }) {
-  return <i className={`${styles.thumb} ${styles[`tone${tone}`]}`} aria-hidden="true" />;
+// Drawn product previews used on the landing page.
+function Thumb({ photo, sizes }: { photo: PhotoKey; sizes: string }) {
+  return (
+    <i className={styles.thumb} aria-hidden="true">
+      <Photo name={photo} sizes={sizes} />
+    </i>
+  );
 }
+
+const lookbook: PhotoKey[] = [
+  "printLaugh",
+  "capFists",
+  "purplePhone",
+  "printSmile",
+  "beretPhone",
+  "limePhone",
+  "faceSculpture",
+  "headphones",
+];
 
 export function DeliveryMock() {
   return (
@@ -12,15 +29,15 @@ export function DeliveryMock() {
         <span />
         <span />
         <span />
-        <p className={styles.url}>memocraft.app/d/adaeze-tobi</p>
+        <p className={styles.url}>memocraft.app/d/spring-lookbook</p>
       </div>
       <div className={styles.deliveryBody}>
         <aside className={styles.side}>
           <p className={styles.studio}>Lumen Studio</p>
-          <p className={styles.title}>Adaeze &amp; Tobi</p>
-          <p className={styles.meta}>Wedding &middot; 48 files</p>
+          <p className={styles.title}>Spring Lookbook</p>
+          <p className={styles.meta}>Lookbook &middot; 48 files</p>
           <ul className={styles.toc}>
-            <li className={styles.active}>Ceremony</li>
+            <li className={styles.active}>Hero shots</li>
             <li>Portraits</li>
             <li>For Instagram</li>
             <li>Film</li>
@@ -29,12 +46,12 @@ export function DeliveryMock() {
         </aside>
         <div className={styles.main}>
           <div className={styles.sectionHead}>
-            <p className={styles.sectionTitle}>Ceremony</p>
+            <p className={styles.sectionTitle}>Hero shots</p>
             <p className={styles.note}>Full resolution. These are the ones for print.</p>
           </div>
           <div className={styles.grid}>
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-              <Thumb key={n} tone={(n % 4) + 1} />
+            {lookbook.map((photo) => (
+              <Thumb key={photo} photo={photo} sizes="(min-width: 720px) 120px, 22vw" />
             ))}
           </div>
         </div>
@@ -47,12 +64,12 @@ export function SectionsMock() {
   return (
     <div className={styles.card} role="img" aria-label="Files grouped into sections, each with a note">
       {[
-        { name: "Logo files", note: "SVG for web, EPS for your printer", tone: 1 },
-        { name: "Brand colours", note: "Hex and CMYK in one PDF", tone: 2 },
-        { name: "Social templates", note: "Edit in Canva, sized for Instagram", tone: 3 },
+        { name: "Hero shots", note: "Full resolution, for your printer", photo: "printLaugh" as PhotoKey },
+        { name: "Social crops", note: "Sized for Instagram, ready to post", photo: "purplePhone" as PhotoKey },
+        { name: "Campaign artwork", note: "Layered PSD and a flat PNG", photo: "headphones" as PhotoKey },
       ].map((s) => (
         <div key={s.name} className={styles.row}>
-          <Thumb tone={s.tone} />
+          <Thumb photo={s.photo} sizes="72px" />
           <div>
             <p className={styles.rowTitle}>{s.name}</p>
             <p className={styles.note}>{s.note}</p>
@@ -88,15 +105,17 @@ export function ActivityMock() {
   );
 }
 
+const phonePhotos: PhotoKey[] = ["limePhone", "beretPhone", "capFists", "printSmile", "purplePhone", "faceSculpture"];
+
 export function PhoneMock() {
   return (
     <div className={styles.phone} role="img" aria-label="A delivery open on a phone with a save to phone button">
       <div className={styles.notch} aria-hidden="true" />
       <p className={styles.studio}>Lumen Studio</p>
-      <p className={styles.title}>Adaeze &amp; Tobi</p>
+      <p className={styles.title}>Spring Lookbook</p>
       <div className={styles.phoneGrid}>
-        {[1, 2, 3, 4, 5, 6].map((n) => (
-          <Thumb key={n} tone={(n % 4) + 1} />
+        {phonePhotos.map((photo) => (
+          <Thumb key={photo} photo={photo} sizes="120px" />
         ))}
       </div>
       <span className={styles.save}>Save to phone</span>

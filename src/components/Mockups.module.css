@@ -107,6 +107,7 @@
 .sectionHead {
   display: grid;
   gap: 2px;
+  align-content: start;
 }
 
 .sectionTitle {
@@ -127,26 +128,13 @@
 }
 
 .thumb {
+  position: relative;
   display: block;
   aspect-ratio: 4 / 3;
   border-radius: var(--radius-sm);
   min-width: 40px;
-}
-
-.tone1 {
-  background: linear-gradient(135deg, #0b6b5d, #5fbbae);
-}
-
-.tone2 {
-  background: linear-gradient(135deg, #e8a33d, #f4d29a);
-}
-
-.tone3 {
-  background: linear-gradient(135deg, #2e3431, #848c88);
-}
-
-.tone4 {
-  background: linear-gradient(135deg, #9ad6cc, #eaf6f4);
+  overflow: hidden;
+  background: var(--sunken);
 }
 
 .card {
@@ -289,5 +277,18 @@
 
   .toc {
     display: grid;
+  }
+
+  /* The side column sets the window height, so the photo rows share whatever is left under the heading. */
+  .main {
+    grid-template-rows: auto 1fr;
+  }
+
+  .grid {
+    grid-template-rows: repeat(2, 1fr);
+  }
+
+  .grid .thumb {
+    aspect-ratio: auto;
   }
 }
