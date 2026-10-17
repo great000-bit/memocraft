@@ -56,7 +56,8 @@ export async function createDelivery(_previous: ActionResult | null, formData: F
   const client = clean(formData.get("clientName"), deliveryFields.clientName);
   if ("error" in client) return fail(client.error);
   const id = await createDeliveryRow(user.id, title.value as string, client.value);
-  redirect(`/deliveries/${id}`);
+  // The editor opens with a "Delivery created" pop-up; it drops the flag from the address once it has shown.
+  redirect(`/deliveries/${id}?created=1`);
 }
 
 // Every action below checks ownership in SQL: the row is only touched when it belongs to the signed-in user.

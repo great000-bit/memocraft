@@ -19,6 +19,7 @@ import { formatSize } from "@/lib/storage-limits";
 import { ActionButton } from "./ActionButton";
 import { ActivityPanel } from "./ActivityPanel";
 import { EditableField } from "./EditableField";
+import { CreatedModal } from "./CreatedModal";
 import { PublishPanel } from "./PublishPanel";
 import { LinkSettings } from "./LinkSettings";
 import { RequestList } from "./RequestList";
@@ -195,6 +196,7 @@ export async function DeliveryEditor({
 
   return (
     <>
+      <CreatedModal title={delivery.title} clientName={delivery.clientName} />
       <Link href="/dashboard" className={styles.back}>
         <span aria-hidden="true">←</span> All deliveries
       </Link>
@@ -222,7 +224,7 @@ export async function DeliveryEditor({
 
       {sent && (
         <>
-          <PublishPanel deliveryId={delivery.id} slug={delivery.slug} state={state} />
+          <PublishPanel deliveryId={delivery.id} slug={delivery.slug} state={state} clientName={delivery.clientName} />
           {requests.length > 0 && (
             <section className={styles.updatesCard} aria-labelledby="requests-title">
               <h2 id="requests-title" className={styles.shareTitle}>
@@ -348,7 +350,7 @@ export async function DeliveryEditor({
       {!sent && (
         <>
           {settings}
-          <PublishPanel deliveryId={delivery.id} slug={delivery.slug} state={state} />
+          <PublishPanel deliveryId={delivery.id} slug={delivery.slug} state={state} clientName={delivery.clientName} />
         </>
       )}
 

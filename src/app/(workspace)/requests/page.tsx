@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { PageSkeleton } from "@/components/workspace/PageSkeleton";
 import { RequestList } from "@/components/deliveries/RequestList";
 import requestStyles from "@/components/deliveries/Requests.module.css";
 import { listRequests } from "@/lib/requests";
@@ -28,7 +29,7 @@ export default function RequestsPage() {
         <h1 className={styles.heading}>Requests</h1>
       </div>
       <p className={styles.sub}>What your clients asked for from their links. Mark each one done when you have sent it.</p>
-      <Suspense fallback={null}>
+      <Suspense fallback={<PageSkeleton blocks={2} />}>
         <All />
       </Suspense>
     </>

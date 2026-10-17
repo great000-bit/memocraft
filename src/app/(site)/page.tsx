@@ -4,6 +4,7 @@ import { FeatureTabs } from "@/components/FeatureTabs";
 import { HeroHook } from "@/components/HeroHook";
 import { Logo, LogoMark } from "@/components/Logo";
 import { HeroDemo } from "@/components/HeroDemo";
+import { SmoothScroll } from "@/components/SmoothScroll";
 import { Photo } from "@/components/Photo";
 import type { PhotoKey } from "@/components/photos";
 import { Reveal } from "@/components/Reveal";
@@ -37,12 +38,13 @@ const legalLinks = [
 export default function Home() {
   return (
     <div className={`neu-scope ${styles.page}`}>
+      <SmoothScroll />
       <SiteNav />
 
       <main>
         <section className={styles.hero}>
           <div className={styles.heroGrid} aria-hidden="true" />
-          <Reveal className={styles.heroText}>
+          <Reveal immediate className={styles.heroText}>
             <HeroHook className={styles.display} accentClassName={styles.displayAccent} />
             <p className={styles.heroLede}>Every finished file, labelled, in one link. You see when it&rsquo;s opened.</p>
             <div className={styles.ctas}>
@@ -57,7 +59,7 @@ export default function Home() {
           </Reveal>
 
           {/* The client's phone in the middle, with the proof of delivery floating round it. */}
-          <Reveal effect="scale" delay={150} className={styles.heroStage}>
+          <Reveal immediate effect="scale" delay={150} className={styles.heroStage}>
             <div id="example" className={styles.stage}>
               <HeroDemo className={styles.heroPhone} />
               <div className={`${styles.float} ${styles.floatPill}`} aria-hidden="true">

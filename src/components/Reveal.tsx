@@ -9,16 +9,19 @@ type RevealProps = {
   effect?: "up" | "fade" | "scale";
   delay?: number;
   className?: string;
+  // Above the fold: plays straight away from CSS, without waiting for scripts, so the first thing people see is never
+  // held back by the page loading.
+  immediate?: boolean;
 };
 
 // Scroll-in animation: the element animates once, the first time it enters the viewport.
-export function Reveal({ children, as: Tag = "div", effect = "up", delay = 0, className = "" }: RevealProps) {
+export function Reveal({ children, as: Tag = "div", effect = "up", delay = 0, className = "", immediate = false }: RevealProps) {
   const ref = useRef<HTMLElement>(null);
   const [shown, setShown] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || immediate) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -30,7 +33,15 @@ export function Reveal({ children, as: Tag = "div", effect = "up", delay = 0, cl
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [immediate]);
+
+  if (immediate) {
+    return (
+      <Tag className={`${styles.now} ${styles[`${effect}In`]} ${className}`} style={{ animationDelay: `${delay}ms` }}>
+        {children}
+      </Tag>
+    );
+  }
 
   return (
     <Tag

@@ -1,20 +1,48 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { setPublished } from "@/lib/delivery-actions";
 import type { LinkState } from "@/lib/deliveries";
 import { ActionButton } from "./ActionButton";
+import { SuccessModal } from "./SuccessModal";
 import styles from "./Editor.module.css";
+import modal from "./SuccessModal.module.css";
+
+// Publishing re-renders the editor and this panel mounts again in its live form, so the "just published" moment is
+// handed across in sessionStorage and the live panel opens the success pop-up when it finds it.
+const justPublished = "mc-just-published";
+
+function mark(deliveryId: string) {
+  try {
+    sessionStorage.setItem(justPublished, deliveryId);
+  } catch {}
+}
+
+function take(deliveryId: string) {
+  try {
+    if (sessionStorage.getItem(justPublished) !== deliveryId) return false;
+    sessionStorage.removeItem(justPublished);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 const noopSubscribe = () => () => {};
 
-type PublishPanelProps = { deliveryId: string; slug: string; state: LinkState };
+type PublishPanelProps = { deliveryId: string; slug: string; state: LinkState; clientName?: string | null };
 
 // The link is built from the address the page was opened on, so it is right on every host.
-export function PublishPanel({ deliveryId, slug, state }: PublishPanelProps) {
+export function PublishPanel({ deliveryId, slug, state, clientName }: PublishPanelProps) {
   const origin = useSyncExternalStore(noopSubscribe, () => window.location.origin, () => "");
   const [copied, setCopied] = useState(false);
+  const [celebrate, setCelebrate] = useState(false);
   const url = `${origin}/d/${slug}`;
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- opens once, right after the publish re-render
+    if (state === "live" && take(deliveryId)) setCelebrate(true);
+  }, [state, deliveryId]);
 
   async function copy() {
     try {
@@ -35,7 +63,16 @@ export function PublishPanel({ deliveryId, slug, state }: PublishPanelProps) {
           </h2>
           <p className={styles.shareText}>Publish to switch on your client link. They open it on any phone, with no account.</p>
         </div>
-        <ActionButton key="publish" action={() => setPublished(deliveryId, true)} variant="primary">
+        <ActionButton
+          key="publish"
+          action={async () => {
+            mark(deliveryId);
+            const result = await setPublished(deliveryId, true);
+            if (!result.ok) take(deliveryId);
+            return result;
+          }}
+          variant="primary"
+        >
           Publish
         </ActionButton>
       </section>
@@ -93,6 +130,31 @@ export function PublishPanel({ deliveryId, slug, state }: PublishPanelProps) {
       <ActionButton key="pause" action={() => setPublished(deliveryId, false)} variant="secondary">
         Pause link
       </ActionButton>
+      <SuccessModal
+        open={celebrate}
+        onClose={() => setCelebrate(false)}
+        title="Your link is live"
+        actions={
+          <>
+            <button type="button" className={`${styles.button} ${styles.primary} ${copied ? styles.copied : ""}`} onClick={copy}>
+              {copied ? "Copied" : "Copy link"}
+            </button>
+            <a href={url} target="_blank" rel="noopener" className={`${styles.button} ${styles.secondary}`}>
+              Open it as your client
+            </a>
+            <button type="button" className={`${styles.button} ${styles.ghost}`} onClick={() => setCelebrate(false)}>
+              Done
+            </button>
+          </>
+        }
+      >
+        <p className={modal.text}>
+          Send it to {clientName?.trim() || "your client"} any way you like. They open it on any phone, no account needed.
+        </p>
+        <div className={modal.link}>
+          <span className={modal.url}>{url.replace(/^https?:\/\//, "")}</span>
+        </div>
+      </SuccessModal>
     </section>
   );
 }

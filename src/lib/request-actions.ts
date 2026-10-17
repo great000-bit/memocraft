@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { pool } from "./auth";
 import { getPublishedRef, isUuid } from "./deliveries";
 import { limits } from "./delivery-limits";
+import { emailConfigured, sendInBackground } from "./email";
+import { requestEmail } from "./email-templates";
 import { passesPassword } from "./link-access";
 import { requireUser } from "./session";
 
@@ -61,7 +63,31 @@ export async function submitRequest(slug: string, formData: FormData): Promise<R
   revalidatePath("/requests");
   revalidatePath("/dashboard");
   revalidatePath(`/deliveries/${ref.id}`);
+  if (emailConfigured()) await emailOwner(ref.id, fileName, message);
   return { ok: true };
+}
+
+// The creative hears about it by email too, sent after the client's answer so the client never waits on it.
+async function emailOwner(deliveryId: string, fileName: string | null, message: string) {
+  const { rows } = await pool.query<{ email: string; name: string; title: string; clientName: string | null }>(
+    `select u."email", u."name", d."title", d."clientName"
+       from "delivery" d join "user" u on u."id" = d."ownerId" where d."id" = $1`,
+    [deliveryId],
+  );
+  const owner = rows[0];
+  const base = process.env.BETTER_AUTH_URL;
+  if (!owner || !base) return;
+  sendInBackground(
+    requestEmail({
+      to: owner.email,
+      ownerName: owner.name,
+      clientName: owner.clientName,
+      deliveryTitle: owner.title,
+      fileName,
+      message,
+      url: new URL("/requests", base).toString(),
+    }),
+  );
 }
 
 // The creative marks a request handled, or opens it again.
