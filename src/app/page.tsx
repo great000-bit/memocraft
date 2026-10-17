@@ -183,16 +183,37 @@ export default function Home() {
             <h2 className={styles.h2}>Two steps to send</h2>
           </Reveal>
           <ol className={styles.steps}>
-            {[
-              ["Drop your files", "Drag in the finished work and give the delivery a name."],
-              ["Copy the link", "Send it by email or WhatsApp. Your client opens it with no sign-up."],
-            ].map(([title, body], i) => (
-              <Reveal as="li" key={title} delay={i * 120} className={styles.step}>
-                <span className={styles.stepNum}>{i + 1}</span>
-                <h3 className={styles.h3}>{title}</h3>
-                <p className={styles.body}>{body}</p>
-              </Reveal>
-            ))}
+            <li className={styles.stepCard} data-tone="mint">
+              <span className={styles.stepNum}>1</span>
+              <div className={styles.stepText}>
+                <h3 className={styles.stepTitle}>Drop your files</h3>
+                <p className={styles.stepBody}>Drag in the finished work and give the delivery a name.</p>
+              </div>
+              <div className={styles.drop} aria-hidden="true">
+                <span className={styles.dropIcon}>
+                  <FeatureIcon name="upload" />
+                </span>
+                <ul className={styles.chips}>
+                  <li>ceremony-001.jpg</li>
+                  <li>launch-film.mp4</li>
+                  <li>brand-guide.pdf</li>
+                </ul>
+              </div>
+            </li>
+            <li className={styles.stepCard} data-tone="amber">
+              <span className={styles.stepNum}>2</span>
+              <div className={styles.stepText}>
+                <h3 className={styles.stepTitle}>Copy the link</h3>
+                <p className={styles.stepBody}>Send it by email or WhatsApp. Your client opens it with no sign-up.</p>
+              </div>
+              <div className={styles.linkBox} aria-hidden="true">
+                <div className={styles.linkPill}>
+                  <span>memocraft.app/d/adaeze-tobi</span>
+                  <b>Copy</b>
+                </div>
+                <p className={styles.linkNote}>Opened on iPhone, Mon 09:40</p>
+              </div>
+            </li>
           </ol>
         </section>
 
