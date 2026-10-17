@@ -336,7 +336,8 @@ textarea.heading {
   padding: var(--space-4);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 24px;
+  box-shadow: var(--shadow-card);
 }
 
 .shareMain {
@@ -390,7 +391,7 @@ textarea.heading {
   padding: var(--space-4);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 20px;
 }
 
 .sectionTop {
@@ -564,7 +565,8 @@ textarea.heading {
   padding: var(--space-4);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 24px;
+  box-shadow: var(--shadow-card);
 }
 
 .stepHead {
@@ -863,5 +865,12 @@ textarea.heading {
 @media (prefers-reduced-motion: reduce) {
   .drop {
     transition: none;
+  }
+}
+
+@media (min-width: 600px) {
+  .share,
+  .step {
+    padding: var(--space-6);
   }
 }

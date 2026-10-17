@@ -36,6 +36,18 @@ const paths = {
       <path d="M14 3v5h5" />
     </>
   ),
+  proof: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="m8.5 12.3 2.3 2.3 4.7-5" />
+    </>
+  ),
+  home: (
+    <>
+      <path d="M4 11.5 12 4l8 7.5" />
+      <path d="M6 10.5V19a1 1 0 0 0 1 1h3.5v-5h3v5H17a1 1 0 0 0 1-1v-8.5" />
+    </>
+  ),
   people: (
     <>
       <circle cx="9" cy="9" r="3" />

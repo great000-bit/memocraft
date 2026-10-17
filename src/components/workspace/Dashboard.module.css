@@ -1,0 +1,217 @@
+/* Dashboard cards: white, softly shadowed and generously rounded, with one teal feature card. */
+.cardsWrap {
+  container-type: inline-size;
+  margin-top: var(--space-6);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+@container (min-width: 640px) {
+  .cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.card {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-6);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: var(--shadow-card);
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.bubble {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--fixer-tint);
+  color: var(--fixer);
+}
+
+.bubble svg {
+  width: 22px;
+  height: 22px;
+}
+
+.label {
+  font-family: var(--font-body);
+  font-stretch: 100%;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--text-muted);
+}
+
+.figure {
+  font-family: var(--font-display);
+  font-stretch: 106%;
+  font-size: clamp(34px, 4.4cqi, 44px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.unit {
+  display: block;
+  margin-top: 8px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+
+.note {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text-muted);
+}
+
+.chip {
+  display: inline-block;
+  padding: 1px 9px;
+  border-radius: var(--radius-pill);
+  background: #e3f4ea;
+  color: var(--success);
+  font-weight: 700;
+}
+
+/* The storage card is the one that catches the eye, like the balance card in a finance app. */
+.featured {
+  color: #fff;
+  border-color: transparent;
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgb(255 255 255 / 0.2), transparent 55%),
+    linear-gradient(145deg, #0f7d6c 0%, #0b6b5d 50%, #064b41 100%);
+  box-shadow: 0 24px 40px -24px rgb(11 107 93 / 0.7);
+}
+
+.featured .label,
+.featured .note,
+.featured .unit {
+  color: rgb(255 255 255 / 0.82);
+}
+
+.featured .bubble {
+  background: rgb(255 255 255 / 0.16);
+  color: #fff;
+}
+
+.meter {
+  height: 10px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: rgb(255 255 255 / 0.22);
+}
+
+.meterFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--proof);
+}
+
+.segments {
+  display: flex;
+  gap: 4px;
+  height: 10px;
+}
+
+.segments[data-empty] {
+  border-radius: var(--radius-pill);
+  background: var(--sunken);
+}
+
+.segments span {
+  min-width: 8px;
+  border-radius: var(--radius-pill);
+}
+
+.segments [data-kind="downloaded"],
+.legend [data-kind="downloaded"]::before {
+  background: var(--fixer);
+}
+
+.segments [data-kind="opened"],
+.legend [data-kind="opened"]::before {
+  background: var(--proof);
+}
+
+.segments [data-kind="waiting"],
+.legend [data-kind="waiting"]::before {
+  background: #cfd6d2;
+}
+
+.legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px var(--space-4);
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--text-muted);
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend li::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.legend b {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.skeleton {
+  min-height: 184px;
+  background: linear-gradient(90deg, var(--surface) 0%, var(--sunken) 50%, var(--surface) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background: var(--sunken);
+  }
+}

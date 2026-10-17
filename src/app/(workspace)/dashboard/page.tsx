@@ -1,15 +1,17 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { Button } from "@/components/Button";
 import { FeatureIcon } from "@/components/FeatureIcons";
 import { DeliveryList } from "@/components/deliveries/DeliveryList";
 import { listDeliveries } from "@/lib/deliveries";
 import { requireUser } from "@/lib/session";
+import { StatCards, StatCardsFallback } from "@/components/workspace/StatCards";
 import styles from "@/components/workspace/Workspace.module.css";
 
 async function Greeting() {
   const user = await requireUser();
   const first = user.name.trim().split(/\s+/)[0] || "there";
-  return <h1 className={styles.heading}>Welcome, {first}</h1>;
+  return <h1 className={styles.heading}>Welcome back, {first}</h1>;
 }
 
 async function Recent() {
@@ -38,7 +40,12 @@ async function Recent() {
 
   return (
     <>
-      <h2 className={styles.sectionLabel}>Recent deliveries</h2>
+      <div className={styles.sectionHead}>
+        <h2 className={styles.sectionLabel}>Recent deliveries</h2>
+        <Link href="/deliveries" className={styles.sectionLink}>
+          View all
+        </Link>
+      </div>
       <DeliveryList deliveries={deliveries} />
     </>
   );
@@ -54,6 +61,9 @@ export default function DashboardPage() {
         <Button href="/deliveries/new">New delivery</Button>
       </div>
       <p className={styles.sub}>Your deliveries live here. Each one is a single link your clients open on any phone.</p>
+      <Suspense fallback={<StatCardsFallback />}>
+        <StatCards />
+      </Suspense>
       <Suspense fallback={null}>
         <Recent />
       </Suspense>

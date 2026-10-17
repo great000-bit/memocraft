@@ -41,31 +41,6 @@
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0f1211;
-    --surface: #181c1a;
-    --sunken: #202523;
-    --line: #2e3431;
-    --control-border: #69716d;
-    --text: #e6eae8;
-    --text-muted: #9aa29e;
-    --text-subtle: #7e8783;
-    --fixer: #5fbbae;
-    --fixer-hover: #8ad1c6;
-    --fixer-tint: #14302b;
-    --on-fixer: #0f1211;
-    --proof-text: #e8a33d;
-    --proof-tint: #2e2210;
-    --focus-ring: #e8a33d;
-    --success: #5cc27e;
-    --error: #f08a75;
-    --info: #7fb0e8;
-    --logo-ink: #e6eae8;
-    color-scheme: dark;
-  }
-}
-
 * {
   box-sizing: border-box;
 }
@@ -127,6 +102,19 @@ a {
   --focus-ring: #8a5208;
   --success: #1d7a3a;
   --logo-ink: #1e1919;
+  color-scheme: light;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+}
+
+/* The signed-in workspace is always light: a soft grey canvas with white cards, whatever the device theme. */
+.app-scope {
+  --bg: #f3f5f4;
+  --surface: #ffffff;
+  --sunken: #edf0ee;
+  --line: #e3e8e5;
+  --shadow-card: 0 1px 2px rgb(16 24 20 / 0.04), 0 12px 32px -16px rgb(16 24 20 / 0.12);
   color-scheme: light;
   background: var(--bg);
   color: var(--text);

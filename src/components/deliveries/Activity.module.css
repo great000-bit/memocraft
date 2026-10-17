@@ -4,7 +4,8 @@
   padding: var(--space-4);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 24px;
+  box-shadow: var(--shadow-card);
 }
 
 .head {
@@ -104,4 +105,10 @@
 
 .when {
   color: var(--text-muted);
+}
+
+@media (min-width: 600px) {
+  .panel {
+    padding: var(--space-6);
+  }
 }
