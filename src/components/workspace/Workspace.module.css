@@ -726,3 +726,8 @@
     animation: none;
   }
 }
+
+/* The Admin link in the account area, shown only to admins, looks like the log-out row. */
+a.signOut {
+  text-decoration: none;
+}
