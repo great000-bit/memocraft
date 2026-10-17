@@ -87,6 +87,12 @@
   animation: rise 500ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
+/* Sized so the stage keeps the same height as the other two tabs. */
+.visual .phone {
+  --w: 204px;
+  margin-inline: auto;
+}
+
 @keyframes rise {
   from {
     opacity: 0;

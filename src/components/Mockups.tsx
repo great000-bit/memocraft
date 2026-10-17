@@ -1,3 +1,4 @@
+import { Phone } from "./Phone";
 import { Photo } from "./Photo";
 import type { PhotoKey } from "./photos";
 import styles from "./Mockups.module.css";
@@ -105,21 +106,27 @@ export function ActivityMock() {
   );
 }
 
-const phonePhotos: PhotoKey[] = ["limePhone", "beretPhone", "capFists", "printSmile", "purplePhone", "faceSculpture"];
+const phonePhotos: PhotoKey[] = ["printLaugh", "capFists", "faceSculpture", "purplePhone", "limePhone", "beretPhone"];
 
-export function PhoneMock() {
+// The client's view on an iPhone: the gallery scrolls under a Save to phone bar pinned to the bottom.
+export function PhoneMock({ className = "" }: { className?: string }) {
   return (
-    <div className={styles.phone} role="img" aria-label="A delivery open on a phone with a save to phone button">
-      <div className={styles.notch} aria-hidden="true" />
-      <p className={styles.studio}>Lumen Studio</p>
-      <p className={styles.title}>Spring Lookbook</p>
-      <div className={styles.phoneGrid}>
-        {phonePhotos.map((photo) => (
-          <Thumb key={photo} photo={photo} sizes="120px" />
-        ))}
+    <Phone label="A delivery open on an iPhone with Save to phone and Ask for a file" className={className} tilt>
+      <div className={styles.phoneInner}>
+        <p className={styles.phoneStudio}>Lumen Studio</p>
+        <p className={styles.phoneTitle}>Spring Lookbook</p>
+        <div className={styles.phoneGrid}>
+          {phonePhotos.map((photo) => (
+            <i key={photo}>
+              <Photo name={photo} sizes="120px" />
+            </i>
+          ))}
+        </div>
+        <div className={styles.phoneBar}>
+          <span className={styles.phoneSave}>Save to phone</span>
+          <span className={styles.phoneAsk}>Ask for a file</span>
+        </div>
       </div>
-      <span className={styles.save}>Save to phone</span>
-      <span className={styles.request}>Ask for a file</span>
-    </div>
+    </Phone>
   );
 }
