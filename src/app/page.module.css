@@ -327,7 +327,8 @@
   background: #171b19;
   color: var(--text);
   text-align: center;
-  overflow: hidden;
+  /* clip, not hidden: hidden would make the panel the scroll container for the cards' scroll animation */
+  overflow: clip;
 }
 
 .panelIcon {
@@ -376,75 +377,229 @@
   font-size: 18px;
 }
 
-/* Overlapping cards that run off the bottom of the panel */
+/* Three overlapping cards that run off the bottom of the panel */
 .collage {
   position: relative;
-  width: min(100%, 800px);
-  height: clamp(300px, 34vw, 440px);
+  width: min(100%, 1000px);
+  height: clamp(360px, 36vw, 500px);
   margin-top: var(--space-12);
   text-align: left;
 }
 
-.cTile,
-.cPhoto,
-.cModal {
-  position: absolute;
-  display: block;
-  border-radius: 20px 20px 0 0;
-}
-
-.cTile {
-  left: 0;
-  top: 22%;
-  width: 26%;
-  aspect-ratio: 1;
-  background: linear-gradient(135deg, #e8a33d, #f4d29a);
-}
-
-.cPhoto {
-  left: 14%;
-  top: 0;
-  width: 42%;
-  bottom: 0;
-  background: linear-gradient(160deg, #0b6b5d, #5fbbae 60%, #cfeee9);
-}
-
-.cShare {
-  position: absolute;
-  top: 16%;
-  right: 8%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 14px;
-  border-radius: 10px;
-  background: #f7f5f2;
-  color: #1e1919;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.cModal {
+.cCard {
   --surface: #ffffff;
   --text: #1e1919;
   --text-muted: #5c5856;
   --line: #e4e2dd;
   --fixer: #0b6b5d;
-  right: 0;
-  top: 24%;
-  bottom: 0;
-  width: 54%;
+  position: absolute;
+  bottom: -90px;
+  display: grid;
+  align-content: start;
+  gap: var(--space-4);
   padding: var(--space-6);
+  border-radius: 24px 24px 0 0;
   background: #ffffff;
   color: #1e1919;
+  box-shadow: 0 -20px 60px -20px rgb(0 0 0 / 0.5);
+}
+
+.cCover {
+  left: 0;
+  top: 26%;
+  width: 31%;
+  background: var(--proof-tint);
+}
+
+.coverPhoto {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #2e3431, #848c88);
+}
+
+.coverPhoto::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-pill);
+  background: rgb(255 255 255 / 0.92)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9.5 7.5v9l7.5-4.5z' fill='%231e1919'/%3E%3C/svg%3E") center / 28px no-repeat;
+}
+
+.coverName {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.chip {
+  justify-self: start;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--fixer) 14%, transparent);
+  color: var(--fixer);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cGallery {
+  left: 19%;
+  top: 0;
+  width: 40%;
+  background: #f7f5f2;
+}
+
+.galleryHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.galleryTitle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 24px;
+}
+
+.gallerySub {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.cShare {
+  flex: none;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.galleryGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.galleryGrid i {
+  display: block;
+  aspect-ratio: 4 / 3;
+  border-radius: 10px;
+}
+
+.galleryFoot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: 12px;
+  background: #ffffff;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.galleryFoot b {
+  flex: none;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--proof-tint);
+  color: var(--proof-text);
+  font-size: 12px;
+}
+
+.cModal {
+  right: 0;
+  top: 15%;
+  width: 46%;
+}
+
+.modalBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.modalIcons {
+  display: flex;
+  gap: var(--space-4);
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 1;
 }
 
 .lockTitle {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 18px;
-  padding-bottom: var(--space-3);
+  font-size: 22px;
+  line-height: 26px;
+}
+
+.modalTabs {
+  display: flex;
+  gap: var(--space-6);
   border-bottom: 1px solid var(--line);
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.modalTabs b {
+  padding-bottom: var(--space-3);
+  border-bottom: 2px solid var(--fixer);
+  color: var(--text);
+}
+
+.person {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding-block: var(--space-2);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  background: var(--fixer-tint);
+  color: var(--fixer);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.avatar[data-tone="amber"] {
+  background: var(--proof-tint);
+  color: var(--proof-text);
+}
+
+.avatar[data-tone="sand"] {
+  background: #eceeed;
+  color: #1e1919;
+}
+
+.personName {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.personNote {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.personRole {
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .lockRow {
@@ -452,12 +607,8 @@
   justify-content: space-between;
   align-items: center;
   padding-block: var(--space-3);
-  border-bottom: 1px solid var(--line);
+  border-top: 1px solid var(--line);
   font-size: 15px;
-}
-
-.lockRow:last-child {
-  border-bottom: 0;
 }
 
 .lockValue {
@@ -493,6 +644,34 @@
   }
 }
 
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .cCard {
+      animation: rise ease-out both;
+      animation-timeline: view();
+      animation-range: entry 30% cover 38%;
+    }
+
+    .cGallery {
+      animation-range: entry 38% cover 42%;
+    }
+
+    .cModal {
+      animation-range: entry 46% cover 46%;
+    }
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(120px);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
 @keyframes widen {
   from {
     margin-inline: 0;
@@ -506,18 +685,28 @@
 }
 
 @media (max-width: 719px) {
-  .cTile {
+  .cCover {
     display: none;
   }
 
-  .cPhoto {
+  .cGallery {
     left: 0;
-    width: 50%;
+    width: 56%;
+    padding: var(--space-4);
   }
 
   .cModal {
-    width: 62%;
+    width: 68%;
     padding: var(--space-4);
+  }
+
+  .modalTabs,
+  .personRole {
+    display: none;
+  }
+
+  .person {
+    grid-template-columns: 40px 1fr;
   }
 }
 
