@@ -88,7 +88,7 @@ function FileCard({
       <span className={styles.thumb}>
         {thumb ? (
           // eslint-disable-next-line @next/next/no-img-element -- a signed storage link, not a site asset
-          <img src={thumb} alt="" loading="lazy" />
+          <img src={thumb} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" />
         ) : (
           <>
             <FeatureIcon name="file" />

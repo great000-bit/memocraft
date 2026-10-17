@@ -7,7 +7,7 @@ import { OpenBeacon } from "@/components/deliveries/OpenBeacon";
 import { PasswordGate } from "@/components/deliveries/PasswordGate";
 import { getLinkBySlug, getPublishedBySlug } from "@/lib/deliveries";
 import { passesPassword } from "@/lib/link-access";
-import { clientThumbnailPaths } from "@/lib/thumbnails";
+import { clientThumbnailLinks } from "@/lib/thumbnails";
 
 export const metadata: Metadata = { title: "Your delivery" };
 
@@ -23,7 +23,7 @@ async function Delivery({ params }: Pick<PageProps<"/d/[slug]">, "params">) {
     <>
       <ClientView delivery={delivery} senderName={delivery.senderName}
         brand={delivery.brand}
-        thumbs={clientThumbnailPaths(delivery)} canAsk />
+        thumbs={await clientThumbnailLinks(delivery)} canAsk />
       <OpenBeacon slug={delivery.slug} />
     </>
   );
