@@ -8,11 +8,14 @@ import styles from "./ClientView.module.css";
 const askEvent = "memocraft:ask";
 
 // A quiet link under a file: one tap takes the client to the request form with that file already chosen.
-export function AskAbout({ fileId }: { fileId: string }) {
+// On a picture it is a small round button, so a long gallery is not full of the same sentence.
+export function AskAbout({ fileId, name, compact = false }: { fileId: string; name: string; compact?: boolean }) {
   return (
     <button
       type="button"
-      className={styles.askLink}
+      className={compact ? styles.askIcon : styles.askLink}
+      aria-label={compact ? `Ask about ${name}` : undefined}
+      title={compact ? "Need another format?" : undefined}
       onClick={() => {
         window.dispatchEvent(new CustomEvent(askEvent, { detail: fileId }));
         document.getElementById("ask")?.scrollIntoView({
@@ -21,7 +24,13 @@ export function AskAbout({ fileId }: { fileId: string }) {
         });
       }}
     >
-      Need another format?
+      {compact ? (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8l-4 3.5V16H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" />
+        </svg>
+      ) : (
+        "Need another format?"
+      )}
     </button>
   );
 }
