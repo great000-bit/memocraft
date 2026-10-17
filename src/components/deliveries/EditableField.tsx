@@ -14,6 +14,8 @@ type EditableFieldProps = {
   // "title" and "heading" look like page text until focused; "plain" is a normal form control.
   look?: "title" | "heading" | "plain" | "quiet" | "compact";
   hideLabel?: boolean;
+  // For names in a list: selects the text when focused, and Enter moves on to the next name instead of stopping.
+  rename?: boolean;
 };
 
 type Status = { kind: "idle" } | { kind: "saving" } | { kind: "saved" } | { kind: "error"; message: string };
@@ -28,6 +30,7 @@ export function EditableField({
   placeholder,
   look = "plain",
   hideLabel,
+  rename,
 }: EditableFieldProps) {
   const id = useId();
   const lastSaved = useRef(defaultValue);
@@ -72,8 +75,22 @@ export function EditableField({
           <input
             {...shared}
             type="text"
+            data-rename={rename ? "" : undefined}
+            onFocus={rename ? (event) => event.currentTarget.select() : undefined}
             onKeyDown={(event) => {
-              if (event.key === "Enter") event.currentTarget.blur();
+              if (event.key !== "Enter") return;
+              event.preventDefault();
+              const current = event.currentTarget;
+              if (rename) {
+                const names = Array.from(document.querySelectorAll<HTMLInputElement>("input[data-rename]"));
+                const next = names[names.indexOf(current) + 1];
+                if (next) {
+                  // Moving focus saves this name, because leaving the field commits it.
+                  next.focus();
+                  return;
+                }
+              }
+              current.blur();
             }}
           />
         )}

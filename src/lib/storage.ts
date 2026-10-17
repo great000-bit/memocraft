@@ -50,6 +50,11 @@ export const newObjectKey = (deliveryId: string, fileId: string) =>
 
 const UPLOAD_URL_SECONDS = 60 * 60 * 6;
 const DOWNLOAD_URL_SECONDS = 60 * 10;
+// Thumbnails are shown only to the signed-in owner, so their links can live long enough for a working session.
+// Thumbnail links are signed from a rounded start time, so the same picture keeps the same address while the owner
+// edits the page and the browser does not fetch every thumbnail again after each save.
+const THUMB_URL_SECONDS = 2 * 60 * 60;
+const THUMB_SIGNING_STEP_MS = 30 * 60 * 1000;
 
 export function presignPut(key: string, type: string, size: number) {
   return getSignedUrl(
@@ -136,13 +141,24 @@ export async function deleteObjects(keys: string[]) {
   }
 }
 
-export type PendingUpload = { key: string; uploadId: string | null; size: number; type: string; ext: string | null; at: string };
+export type PendingUpload = {
+  key: string;
+  uploadId: string | null;
+  size: number;
+  type: string;
+  ext: string | null;
+  at: string;
+  // Set when the browser is also uploading a preview image for this file.
+  thumbKey?: string;
+  thumbSize?: number;
+};
 
 export async function discardPending(pending: PendingUpload) {
   if (!storageConfigured()) return;
   try {
     if (pending.uploadId) await abortMultipart(pending.key, pending.uploadId);
     else await deleteObjects([pending.key]);
+    if (pending.thumbKey) await deleteObjects([pending.thumbKey]);
   } catch (error) {
     console.error("Could not discard an unfinished upload", error);
   }
@@ -168,9 +184,25 @@ export function presignDownload(key: string, filename: string, type: string | nu
   );
 }
 
-// Removes everything a set of deleted file rows left in storage: attached objects and unfinished uploads.
-export async function removeStored(files: { storageKey: string | null; pending: PendingUpload | null }[]) {
-  await deleteObjects(files.flatMap((file) => (file.storageKey ? [file.storageKey] : [])));
+// A link to a thumbnail for the signed-in owner. Not a download: the browser shows it inline.
+export function presignThumb(key: string) {
+  return getSignedUrl(
+    s3(),
+    new GetObjectCommand({ Bucket: bucket(), Key: key, ResponseContentType: "image/jpeg" }),
+    {
+      expiresIn: THUMB_URL_SECONDS,
+      signingDate: new Date(Math.floor(Date.now() / THUMB_SIGNING_STEP_MS) * THUMB_SIGNING_STEP_MS),
+    },
+  );
+}
+
+// Removes everything a set of deleted file rows left in storage: attached objects, thumbnails and unfinished uploads.
+export async function removeStored(
+  files: { storageKey: string | null; thumbKey?: string | null; pending: PendingUpload | null }[],
+) {
+  await deleteObjects(
+    files.flatMap((file) => [...(file.storageKey ? [file.storageKey] : []), ...(file.thumbKey ? [file.thumbKey] : [])]),
+  );
   for (const file of files) if (file.pending) await discardPending(file.pending);
 }
 

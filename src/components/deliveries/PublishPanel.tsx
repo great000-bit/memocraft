@@ -30,9 +30,9 @@ export function PublishPanel({ deliveryId, slug, published }: PublishPanelProps)
       <section className={styles.share} aria-labelledby="share-title">
         <div>
           <h2 id="share-title" className={styles.shareTitle}>
-            Not shared yet
+            Ready to send?
           </h2>
-          <p className={styles.shareText}>Publish to switch the link on. Your client opens it with no account.</p>
+          <p className={styles.shareText}>Publish to switch on your client link. They open it on any phone, with no account.</p>
         </div>
         <ActionButton key="publish" action={() => setPublished(deliveryId, true)} variant="primary">
           Publish

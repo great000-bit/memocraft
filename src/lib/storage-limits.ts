@@ -10,6 +10,8 @@ export const storageLimits = {
   singleUploadMaxBytes: 64 * MB,
   minPartBytes: 16 * MB,
   maxParts: 10_000,
+  // A thumbnail is a small JPEG made in the browser; anything bigger is refused.
+  thumbMaxBytes: 256 * 1024,
 } as const;
 
 export function partSizeFor(size: number): number {

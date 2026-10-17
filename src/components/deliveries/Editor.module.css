@@ -376,15 +376,6 @@ textarea.heading {
   border-radius: 10px;
 }
 
-.details {
-  display: grid;
-  gap: var(--space-4);
-  padding: var(--space-4);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-}
-
 .sectionList {
   display: grid;
   gap: var(--space-4);
@@ -419,30 +410,6 @@ textarea.heading {
   list-style: none;
   margin: 0;
   padding: 0;
-}
-
-.file {
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
-  gap: var(--space-3);
-  padding: var(--space-3);
-  background: var(--sunken);
-  border-radius: 12px;
-}
-
-.fileIcon {
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  border-radius: 10px;
-  background: var(--surface);
-  color: var(--fixer);
-}
-
-.fileIcon svg {
-  width: 22px;
-  height: 22px;
 }
 
 .fileBody {
@@ -496,36 +463,6 @@ textarea.heading {
   .button:active:not(:disabled) {
     transform: none;
   }
-}
-
-/* Uploads */
-.uploader {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.drop {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  border: 1px dashed var(--control-border);
-  border-radius: 12px;
-  transition:
-    background-color 150ms ease,
-    border-color 150ms ease;
-}
-
-.dropOver {
-  border-color: var(--fixer);
-  background: var(--fixer-tint);
-}
-
-.dropText {
-  font-size: 15px;
-  color: var(--text-muted);
 }
 
 .jobs {
@@ -618,4 +555,308 @@ textarea.heading {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
+}
+
+/* Steps: the page reads top to bottom, one thing to do in each. */
+.step {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.stepHead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.stepNumber {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--fixer-tint);
+  color: var(--fixer);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stepText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.stepTitle {
+  font-size: 20px;
+  line-height: 28px;
+  letter-spacing: -0.01em;
+}
+
+.stepHint {
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--text-muted);
+}
+
+.groupRow {
+  display: flex;
+  margin-left: calc(var(--space-3) * -1);
+}
+
+/* The place files go: a big target that shrinks to a slim bar once there is something in the delivery. */
+.area {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.drop {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  min-height: 280px;
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  background: var(--sunken);
+  border: 2px dashed var(--control-border);
+  border-radius: 16px;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.drop[data-size="small"] {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  min-height: 0;
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border-width: 1px;
+}
+
+.drop:hover,
+.drop[data-over] {
+  border-color: var(--fixer);
+  background: var(--fixer-tint);
+}
+
+.drop:focus-within {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Hidden to the eye, still reachable by keyboard and screen reader. */
+.dropInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.dropIcon {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--fixer);
+}
+
+.dropIcon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.drop[data-size="small"] .dropIcon {
+  width: 40px;
+  height: 40px;
+}
+
+.drop[data-size="small"] .dropIcon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.dropText {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: center;
+}
+
+.drop[data-size="small"] .dropText {
+  flex: 1;
+  justify-items: start;
+}
+
+.dropTitle {
+  font-family: var(--font-display);
+  font-stretch: 106%;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 30px;
+  letter-spacing: -0.01em;
+}
+
+.drop[data-size="small"] .dropTitle {
+  font-size: 17px;
+  line-height: 24px;
+}
+
+.dropHint {
+  max-width: 42ch;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--text-muted);
+}
+
+.dropButton {
+  pointer-events: none;
+}
+
+.drop[data-size="small"] .dropButton {
+  min-height: 40px;
+}
+
+/* One file, one card. */
+.file {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--sunken);
+  border-radius: 12px;
+}
+
+.fileBusy {
+  background: var(--surface);
+  outline: 1px dashed var(--control-border);
+  outline-offset: -1px;
+}
+
+.thumb {
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--fixer);
+  overflow: hidden;
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumb svg {
+  width: 26px;
+  height: 26px;
+}
+
+.thumbExt {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 14px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.queue {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.queueTitle {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--text-muted);
+}
+
+.noteBox summary {
+  display: inline-block;
+  padding: 2px 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--text-muted);
+  cursor: pointer;
+  list-style: none;
+}
+
+.noteBox summary::-webkit-details-marker {
+  display: none;
+}
+
+.noteBox summary:hover {
+  color: var(--text);
+}
+
+.noteBox summary:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.noteBox[open] summary {
+  margin-bottom: var(--space-2);
+}
+
+/* A button that does not compete with the main action. */
+.ghost {
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+.ghost:hover:not(:disabled) {
+  background: var(--surface);
+  color: var(--text);
+}
+
+@media (min-width: 720px) {
+  .step {
+    padding: var(--space-6);
+  }
+}
+
+@media (max-width: 480px) {
+  .file {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+
+  .thumb {
+    width: 56px;
+    height: 56px;
+  }
+
+  .drop[data-size="small"] .dropButton {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drop {
+    transition: none;
+  }
 }
