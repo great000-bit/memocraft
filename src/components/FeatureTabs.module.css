@@ -129,3 +129,9 @@
     transform: scaleX(1);
   }
 }
+
+:global(.neu-scope) .stage {
+  border-color: rgb(255 255 255 / 0.7);
+  background: var(--neu-face);
+  box-shadow: var(--neu-raised);
+}

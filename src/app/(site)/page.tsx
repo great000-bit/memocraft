@@ -35,19 +35,13 @@ const legalLinks = [
 
 export default function Home() {
   return (
-    <>
+    <div className={`neu-scope ${styles.page}`}>
       <SiteNav />
 
       <main>
         <section className={styles.hero}>
           <div className={styles.heroGrid} aria-hidden="true" />
           <Reveal className={styles.heroText}>
-            <p className={styles.heroBadge}>
-              <span className={styles.heroBadgeIcon} aria-hidden="true">
-                <FeatureIcon name="brand" />
-              </span>
-              New: your logo on every client page
-            </p>
             <h1 className={styles.display}>
               Did they get the files? <span className={styles.displayAccent}>Now you&rsquo;ll know.</span>
             </h1>
@@ -353,6 +347,6 @@ export default function Home() {
         </div>
         <p className={`${styles.small} ${styles.copy}`}>&copy; 2026 Memocraft</p>
       </footer>
-    </>
+    </div>
   );
 }
