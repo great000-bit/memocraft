@@ -47,7 +47,7 @@ export default function Home() {
           <Reveal effect="scale" delay={150} className={styles.heroMedia}>
             <div id="example" className={styles.heroStack}>
               <DeliveryMock />
-              <Phone label="A delivery on an iPhone with Save to phone" className={styles.heroPhone}>
+              <Phone label="A delivery on an iPhone with Save to phone" className={styles.heroPhone} tilt>
                 <div className={styles.phoneInner}>
                   <p className={styles.phoneStudio}>Lumen Studio</p>
                   <p className={styles.phoneTitle}>Adaeze &amp; Tobi</p>

@@ -66,9 +66,9 @@
 
 .heroPhone {
   position: absolute;
-  right: -40px;
-  bottom: -56px;
-  --w: 190px;
+  right: 12px;
+  bottom: -88px;
+  --w: 230px;
   display: none;
 }
 
@@ -602,7 +602,8 @@
 
 @media (min-width: 1200px) {
   .heroPhone {
-    --w: 200px;
+    --w: 260px;
+    right: -28px;
   }
 }
 
