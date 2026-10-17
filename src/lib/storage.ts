@@ -116,6 +116,21 @@ export async function abortMultipart(key: string, uploadId: string) {
   await s3().send(new AbortMultipartUploadCommand({ Bucket: bucket(), Key: key, UploadId: uploadId }));
 }
 
+// Small objects only (profile pictures): the whole body is held in memory.
+export async function putObject(key: string, body: Uint8Array, type: string) {
+  await s3().send(new PutObjectCommand({ Bucket: bucket(), Key: key, Body: body, ContentType: type }));
+}
+
+export async function getObject(key: string): Promise<{ bytes: Uint8Array; type: string } | null> {
+  try {
+    const result = await s3().send(new GetObjectCommand({ Bucket: bucket(), Key: key }));
+    if (!result.Body) return null;
+    return { bytes: await result.Body.transformToByteArray(), type: result.ContentType ?? "application/octet-stream" };
+  } catch {
+    return null;
+  }
+}
+
 export async function headObject(key: string): Promise<{ size: number } | null> {
   try {
     const result = await s3().send(new HeadObjectCommand({ Bucket: bucket(), Key: key }));

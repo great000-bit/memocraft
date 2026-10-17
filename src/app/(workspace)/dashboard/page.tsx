@@ -6,13 +6,19 @@ import { DeliveryList } from "@/components/deliveries/DeliveryList";
 import { listDeliveries } from "@/lib/deliveries";
 import { countOpenRequests } from "@/lib/requests";
 import { requireUser } from "@/lib/session";
+import { Avatar } from "@/components/workspace/Avatar";
 import { StatCards, StatCardsFallback } from "@/components/workspace/StatCards";
 import styles from "@/components/workspace/Workspace.module.css";
 
 async function Greeting() {
   const user = await requireUser();
   const first = user.name.trim().split(/\s+/)[0] || "there";
-  return <h1 className={styles.heading}>Welcome back, {first}</h1>;
+  return (
+    <div className={styles.greeting}>
+      <Avatar name={user.name} image={user.image} size={52} />
+      <h1 className={styles.heading}>Welcome back, {first}</h1>
+    </div>
+  );
 }
 
 // A line, not a card: the three cards stay the three things the dashboard is about. It only shows when someone is waiting.

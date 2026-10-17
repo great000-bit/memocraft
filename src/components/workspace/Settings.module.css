@@ -1,0 +1,198 @@
+/* Profile and Settings: stacked panels, one job each. */
+.panels {
+  margin-top: var(--space-4);
+  display: grid;
+  gap: var(--space-6);
+  max-width: 760px;
+}
+
+.panel {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: var(--shadow-card);
+}
+
+.panelTitle {
+  font-size: 20px;
+  line-height: 26px;
+  letter-spacing: -0.01em;
+}
+
+.panelText {
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--text-muted);
+}
+
+.photoRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-6);
+}
+
+.photoActions {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+
+.buttonRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.hiddenInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.label {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.input {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px var(--space-4);
+  font: inherit;
+  font-size: 16px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--control-border);
+  border-radius: 10px;
+}
+
+.input:hover:not(:disabled):not([readonly]) {
+  border-color: var(--text);
+}
+
+.input[readonly] {
+  background: var(--sunken);
+  border-color: var(--line);
+  color: var(--text-muted);
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-color: var(--text);
+}
+
+.hint {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text-muted);
+}
+
+.facts {
+  margin: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.fact {
+  display: grid;
+  gap: 2px;
+}
+
+.fact dt {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text-muted);
+}
+
+.fact dd {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.ok {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--success);
+}
+
+.error {
+  padding: var(--space-3) var(--space-4);
+  border-radius: 10px;
+  font-size: 15px;
+  line-height: 22px;
+  color: #8f2a1a;
+  background: #fdeeea;
+  border: 1px solid #f1c3b9;
+}
+
+.checkRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  font-size: 15px;
+  line-height: 22px;
+}
+
+.checkRow input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  accent-color: var(--fixer);
+}
+
+.divider {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 0;
+}
+
+/* Delete account: the only panel that is not neutral. */
+.dangerPanel {
+  border-color: #f1c3b9;
+}
+
+.dangerList {
+  margin: 0;
+  padding-left: 1.2em;
+  display: grid;
+  gap: 4px;
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--text-muted);
+}
+
+.dangerButton {
+  background: var(--error);
+  color: #ffffff;
+}
+
+.dangerButton:hover:not(:disabled) {
+  background: #9c2f1d;
+}
+
+.dangerButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -10,6 +10,8 @@ const items: { label: string; icon: FeatureIconName; href?: string }[] = [
   { label: "Deliveries", icon: "upload", href: "/deliveries" },
   { label: "Requests", icon: "request", href: "/requests" },
   { label: "Team", icon: "people" },
+  { label: "Profile", icon: "profile", href: "/profile" },
+  { label: "Settings", icon: "settings", href: "/settings" },
 ];
 
 // Sections that are not built yet are shown, marked Soon, so the shape of the product is visible.
@@ -18,7 +20,7 @@ export function NavList({ pathname }: { pathname: string | null }) {
   const isActive = (href: string) =>
     pathname !== null && (pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`)));
   return (
-    <nav aria-label="Workspace">
+    <nav id="workspace-nav" aria-label="Workspace">
       <ul className={styles.nav}>
         {items.map((item) => (
           <li key={item.label}>
@@ -27,14 +29,15 @@ export function NavList({ pathname }: { pathname: string | null }) {
                 href={item.href}
                 className={styles.navItem}
                 aria-current={isActive(item.href) ? "page" : undefined}
+                data-label={item.label}
               >
                 <FeatureIcon name={item.icon} />
-                {item.label}
+                <span className={styles.navLabel}>{item.label}</span>
               </Link>
             ) : (
-              <span className={`${styles.navItem} ${styles.navSoon}`} aria-disabled="true">
+              <span className={`${styles.navItem} ${styles.navSoon}`} aria-disabled="true" data-label={`${item.label} (soon)`}>
                 <FeatureIcon name={item.icon} />
-                {item.label}
+                <span className={styles.navLabel}>{item.label}</span>
                 <span className={styles.soon}>Soon</span>
               </span>
             )}

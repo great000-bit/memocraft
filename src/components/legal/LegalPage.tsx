@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Logo } from "../Logo";
 import styles from "./LegalPage.module.css";
 
-type LegalPageProps = { title: string; updated: string; children: React.ReactNode };
+type LegalPageProps = { title: string; updated?: string; children: React.ReactNode };
 
 // Plain reading layout for the privacy policy and terms.
 export function LegalPage({ title, updated, children }: LegalPageProps) {
@@ -15,7 +15,7 @@ export function LegalPage({ title, updated, children }: LegalPageProps) {
       </header>
       <main className={styles.main}>
         <h1 className={styles.title}>{title}</h1>
-        <p className={styles.updated}>Last updated {updated}</p>
+        {updated && <p className={styles.updated}>Last updated {updated}</p>}
         <div className={styles.body}>{children}</div>
       </main>
       <footer className={styles.footer}>

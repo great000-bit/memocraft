@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { InlineScript } from "@/components/InlineScript";
 import { Sidebar } from "@/components/workspace/Sidebar";
 import { VerifyEmail } from "@/components/workspace/VerifyEmail";
 import { emailConfigured } from "@/lib/email";
@@ -23,7 +24,9 @@ async function VerifyNotice() {
 
 export default function WorkspaceLayout({ children }: LayoutProps<"/">) {
   return (
-    <div className={`app-scope ${styles.shell}`}>
+    <div className={`app-scope ${styles.shell}`} data-shell>
+      {/* Applies the saved open or closed sidebar before the first paint, so a closed sidebar never flashes open. */}
+      <InlineScript html={`try{if(localStorage.getItem("mc-sidebar")==="collapsed")document.currentScript.parentElement.setAttribute("data-collapsed","true")}catch(e){}`} />
       <Sidebar />
       <div className={styles.body}>
         <header className={styles.topbar}>

@@ -4,6 +4,7 @@ import { Pool } from "pg";
 import type { PoolClient, PoolConfig } from "pg";
 import { emailConfigured, sendInBackground } from "./email";
 import { resetPasswordEmail, verifyEmailEmail } from "./email-templates";
+import { isGooglePicture } from "./avatar";
 import { googleConfigured } from "./providers";
 
 type PendingItem = {
@@ -56,6 +57,31 @@ export const pool =
 
 if (process.env.NODE_ENV !== "production") globalForPool.memocraftPool = pool;
 
+// A Google sign-in carries the person's picture in the ID token it saved. It fills the account's picture only
+// while none was ever set (null), so a picture someone uploaded or removed is never replaced. This runs at every
+// sign-in, which also covers a password account that links Google later. Failing to read it never blocks a sign-in.
+function pictureFromIdToken(token: string): string | null {
+  const payload = token.split(".")[1];
+  if (!payload) return null;
+  const claims = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as { picture?: unknown };
+  return typeof claims.picture === "string" && isGooglePicture(claims.picture) ? claims.picture : null;
+}
+
+async function fillGooglePicture(userId: string) {
+  try {
+    const { rows } = await pool.query<{ idToken: string }>(
+      `select a."idToken" from "account" a join "user" u on u."id" = a."userId"
+        where a."userId" = $1 and a."providerId" = 'google' and a."idToken" is not null and u."image" is null
+        limit 1`,
+      [userId],
+    );
+    const picture = rows[0] ? pictureFromIdToken(rows[0].idToken) : null;
+    if (picture) await pool.query(`update "user" set "image" = $1, "updatedAt" = now() where "id" = $2 and "image" is null`, [picture, userId]);
+  } catch (error) {
+    console.warn("Could not read the Google profile picture:", error instanceof Error ? error.message : error);
+  }
+}
+
 // Preview deployments live on their own hostnames, so they are trusted as origins too.
 const trustedOrigins = [process.env.VERCEL_URL, process.env.VERCEL_BRANCH_URL, process.env.VERCEL_PROJECT_PRODUCTION_URL]
   .filter((host): host is string => Boolean(host))
@@ -107,6 +133,9 @@ export const auth = betterAuth({
       "/request-password-reset": { window: 60, max: 3 },
       "/send-verification-email": { window: 60, max: 3 },
     },
+  },
+  databaseHooks: {
+    session: { create: { after: async (session) => fillGooglePicture(session.userId) } },
   },
   advanced: { cookiePrefix: "memocraft" },
   plugins: [nextCookies()],
