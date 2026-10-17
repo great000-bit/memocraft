@@ -185,13 +185,72 @@
   line-height: 20px;
 }
 
-.tileDownload {
+.tileActions {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-3);
+}
+
+.tileDownload,
+.tileSave {
   grid-column: auto;
   min-height: 44px;
-  margin: var(--space-3);
   padding: 0 var(--space-3);
   border-radius: 10px;
   font-size: 16px;
+}
+
+/* Where the phone can save straight to its photo library that is the main button, and Download steps back. */
+.tile:has([data-save]) .tileDownload,
+.file:has([data-save]) .rowDownload {
+  min-height: 40px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--text-muted);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.tile:has([data-save]) .tileDownload:hover,
+.file:has([data-save]) .rowDownload:hover {
+  background: var(--sunken);
+}
+
+.rowActions {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.saveWrap {
+  display: grid;
+  gap: 4px;
+}
+
+.saveWrap > button {
+  cursor: pointer;
+  border: 0;
+  font-family: inherit;
+}
+
+.saveWrap > button:disabled {
+  cursor: progress;
+  opacity: 0.75;
+}
+
+.saveError {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--error);
+}
+
+.saveAll {
+  max-width: 420px;
+}
+
+.saveAll .saveWrap > button,
+.saveAll > span {
+  width: 100%;
 }
 
 .foot {
@@ -279,6 +338,12 @@
     grid-column: auto;
     min-height: 44px;
     padding: 0 var(--space-4);
+  }
+
+  .rowActions {
+    grid-column: auto;
+    display: flex;
+    align-items: center;
   }
 }
 

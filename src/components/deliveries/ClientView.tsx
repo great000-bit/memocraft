@@ -1,13 +1,43 @@
 import Link from "next/link";
 import { FeatureIcon } from "../FeatureIcons";
-import type { Delivery, DeliveryFile } from "@/lib/deliveries";
+import { downloadName, type Delivery, type DeliveryFile } from "@/lib/deliveries";
+import { saveLimits, saveType, type SaveTarget } from "@/lib/save-to-phone";
 import { formatSize } from "@/lib/storage-limits";
+import { SaveToPhone } from "./SaveToPhone";
 import styles from "./ClientView.module.css";
 
 const dateFormat = new Intl.DateTimeFormat("en", { dateStyle: "long", timeZone: "UTC" });
 
 function fileMeta(file: DeliveryFile): string {
   return `${file.sizeBytes ? formatSize(file.sizeBytes) : "Ready"}${file.ext ? ` · ${file.ext.toUpperCase()}` : ""}`;
+}
+
+// The photo library takes pictures and videos only, and only up to a size a phone can hold in memory.
+function saveTarget(slug: string, file: DeliveryFile): SaveTarget | null {
+  const type = saveType(file.mimeType, file.ext);
+  if (!type || (file.sizeBytes ?? 0) > saveLimits.fileBytes) return null;
+  return {
+    id: file.id,
+    fileName: downloadName(file.name, file.ext),
+    url: `/d/${slug}/files/${file.id}`,
+    type,
+    size: file.sizeBytes ?? 0,
+  };
+}
+
+function SaveFile({
+  target,
+  live,
+  label,
+  className,
+}: {
+  target: SaveTarget | undefined;
+  live: boolean;
+  label: string;
+  className: string;
+}) {
+  if (!target) return null;
+  return <SaveToPhone targets={[target]} label={label} disabled={!live} className={className} />;
 }
 
 function DownloadButton({ file, href, className }: { file: DeliveryFile; href: string | null; className: string }) {
@@ -42,6 +72,14 @@ export function ClientView({
   const sections = delivery.sections
     .map((section) => ({ ...section, files: section.files.filter((file) => file.attached) }))
     .filter((section) => section.files.length > 0);
+  const targets = new Map<string, SaveTarget>();
+  for (const section of sections) {
+    for (const file of section.files) {
+      const target = saveTarget(delivery.slug, file);
+      if (target) targets.set(file.id, target);
+    }
+  }
+  const saveAll = [...targets.values()];
   return (
     <article className={styles.page}>
       <header className={styles.top}>
@@ -53,6 +91,17 @@ export function ClientView({
       </header>
 
       {sections.length === 0 && <p className={styles.none}>No files have been added yet.</p>}
+
+      {saveAll.length > 1 && (
+        <div className={styles.saveAll}>
+          <SaveToPhone
+            targets={saveAll}
+            label={`Save all ${saveAll.length} to your phone`}
+            disabled={!live}
+            className={styles.download}
+          />
+        </div>
+      )}
 
       {sections.map((section) => (
         <section key={section.id} className={styles.section} aria-labelledby={`s-${section.id}`}>
@@ -75,11 +124,14 @@ export function ClientView({
                       {file.note && <p className={styles.fileNote}>{file.note}</p>}
                       <p className={styles.fileMeta}>{fileMeta(file)}</p>
                     </div>
-                    <DownloadButton
-                      file={file}
-                      href={live ? `/d/${delivery.slug}/files/${file.id}` : null}
-                      className={`${styles.download} ${styles.tileDownload}`}
-                    />
+                    <div className={styles.tileActions}>
+                      <SaveFile target={targets.get(file.id)} live={live} label="Save" className={`${styles.download} ${styles.tileSave}`} />
+                      <DownloadButton
+                        file={file}
+                        href={live ? `/d/${delivery.slug}/files/${file.id}` : null}
+                        className={`${styles.download} ${styles.tileDownload}`}
+                      />
+                    </div>
                   </li>
                 ))}
             </ul>
@@ -98,11 +150,19 @@ export function ClientView({
                       {file.note && <p className={styles.fileNote}>{file.note}</p>}
                       <p className={styles.fileMeta}>{fileMeta(file)}</p>
                     </div>
-                    <DownloadButton
-                      file={file}
-                      href={live ? `/d/${delivery.slug}/files/${file.id}` : null}
-                      className={styles.download}
-                    />
+                    <div className={styles.rowActions}>
+                      <SaveFile
+                        target={targets.get(file.id)}
+                        live={live}
+                        label="Save to phone"
+                        className={`${styles.download} ${styles.rowSave}`}
+                      />
+                      <DownloadButton
+                        file={file}
+                        href={live ? `/d/${delivery.slug}/files/${file.id}` : null}
+                        className={`${styles.download} ${styles.rowDownload}`}
+                      />
+                    </div>
                   </li>
                 ))}
             </ul>
