@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { Ago, Meter, PanelSkeleton, UserChip, plural, providerName, size } from "@/components/admin/AdminParts";
 import { listUsers, userSorts, usersPerPage, type UserSort } from "@/lib/admin-data";
@@ -22,6 +23,7 @@ function hrefWith(current: Search, change: Search) {
 }
 
 async function Users({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  await connection();
   const raw = await searchParams;
   const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value) ?? "";
   const q = one(raw.q).trim().slice(0, 100);

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { Feed, PanelSkeleton } from "@/components/admin/AdminParts";
 import { feedKinds, feedPageSize, listFeed, type FeedKind } from "@/lib/admin-data";
@@ -10,6 +11,7 @@ import styles from "@/components/admin/Admin.module.css";
 export const metadata: Metadata = { title: "Activity" };
 
 async function Activity({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  await connection();
   const raw = await searchParams;
   const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value) ?? "";
   const kind = one(raw.kind) in feedKinds ? (one(raw.kind) as FeedKind) : null;
