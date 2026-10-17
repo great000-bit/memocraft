@@ -135,7 +135,7 @@
 :global(.neu-scope) .outline:hover,
 :global(.neu-scope) .secondary:hover {
   background: var(--neu-face);
-  color: var(--fixer);
+  color: var(--fixer-ink, var(--fixer));
   box-shadow: var(--neu-raised-xs);
 }
 

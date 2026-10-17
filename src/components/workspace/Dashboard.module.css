@@ -25,7 +25,7 @@
   min-width: 0;
   padding: var(--space-6);
   background: var(--neu-face);
-  border: 1px solid rgb(255 255 255 / 0.7);
+  border: 1px solid var(--neu-edge);
   border-radius: 28px;
   box-shadow: var(--neu-raised);
   isolation: isolate;
@@ -49,7 +49,7 @@
   background: conic-gradient(
     from var(--glow-angle),
     transparent 0deg 200deg,
-    rgb(11 107 93 / 0.55) 270deg,
+    var(--glow-teal) 270deg,
     rgb(232 163 61 / 0.9) 320deg,
     transparent 355deg
   );
@@ -70,7 +70,7 @@
   inset: 0;
   z-index: -1;
   border-radius: inherit;
-  box-shadow: 0 0 32px 4px rgb(11 107 93 / 0.22);
+  box-shadow: 0 0 32px 4px var(--glow-halo);
   opacity: 0.35;
   pointer-events: none;
   animation: glow-breathe 4.5s ease-in-out infinite;
@@ -134,7 +134,7 @@
   place-items: center;
   border-radius: 14px;
   background: var(--bg);
-  color: var(--fixer);
+  color: var(--fixer-ink, var(--fixer));
   box-shadow: var(--neu-inset-sm);
 }
 
@@ -184,7 +184,7 @@
   display: inline-block;
   padding: 1px 9px;
   border-radius: var(--radius-pill);
-  background: #e3f4ea;
+  background: var(--success-tint);
   color: var(--success);
   font-weight: 700;
   box-shadow: var(--neu-raised-xs);
@@ -279,7 +279,7 @@
 
 .segments [data-kind="waiting"],
 .legend [data-kind="waiting"]::before {
-  background: #cfd6d2;
+  background: var(--waiting);
 }
 
 .legend {
@@ -314,7 +314,7 @@
 
 .skeleton {
   min-height: 184px;
-  background: linear-gradient(90deg, #f9fbfa 0%, var(--sunken) 50%, #f9fbfa 100%);
+  background: linear-gradient(90deg, var(--skeleton-hi) 0%, var(--sunken) 50%, var(--skeleton-hi) 100%);
   background-size: 200% 100%;
   animation: shimmer 1.6s ease-in-out infinite;
 }

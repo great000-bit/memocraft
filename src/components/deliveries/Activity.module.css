@@ -3,7 +3,7 @@
   gap: var(--space-4);
   padding: var(--space-4);
   background: var(--neu-face);
-  border: 1px solid rgb(255 255 255 / 0.7);
+  border: 1px solid var(--neu-edge);
   border-radius: 28px;
   box-shadow: var(--neu-raised-sm);
 }

@@ -5,6 +5,7 @@ import { getDashboardStats } from "@/lib/dashboard";
 import { signInMethods } from "@/lib/profile";
 import { requireUser } from "@/lib/session";
 import { formatSize } from "@/lib/storage-limits";
+import { ThemeToggle } from "@/components/workspace/ThemeToggle";
 import { DeleteAccount, OtherDevices, PasswordForm } from "@/components/workspace/SettingsForms";
 import styles from "@/components/workspace/Workspace.module.css";
 import panels from "@/components/workspace/Settings.module.css";
@@ -20,6 +21,19 @@ async function SettingsPanels() {
 
   return (
     <div className={panels.panels}>
+      <section className={panels.panel} aria-labelledby="look-title">
+        <h2 id="look-title" className={panels.panelTitle}>
+          Appearance
+        </h2>
+        <p className={panels.panelText}>
+          Your workspace opens dark. Switch to light if you prefer; this device remembers the choice. Client pages always
+          stay light.
+        </p>
+        <div className={panels.buttonRow}>
+          <ThemeToggle className={`${editor.button} ${editor.secondary}`} />
+        </div>
+      </section>
+
       <section className={panels.panel} aria-labelledby="security-title">
         <h2 id="security-title" className={panels.panelTitle}>
           Sign-in and security

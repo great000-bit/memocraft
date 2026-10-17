@@ -8,7 +8,7 @@ import { emailConfigured } from "@/lib/email";
 import { getSession } from "@/lib/session";
 import styles from "@/components/workspace/Workspace.module.css";
 
-// The workspace is always light and stays out of search results.
+// The workspace opens dark (light is a saved choice) and stays out of search results.
 export const metadata: Metadata = {
   title: { default: "Dashboard", template: "%s | Memocraft" },
   robots: { index: false, follow: false },
@@ -24,9 +24,10 @@ async function VerifyNotice() {
 
 export default function WorkspaceLayout({ children }: LayoutProps<"/">) {
   return (
-    <div className={`app-scope ${styles.shell}`} data-shell>
+    <div className={`app-scope ${styles.shell}`} data-shell suppressHydrationWarning>
       {/* Applies the saved open or closed sidebar before the first paint, so a closed sidebar never flashes open. */}
-      <InlineScript html={`try{if(localStorage.getItem("mc-sidebar")==="collapsed")document.currentScript.parentElement.setAttribute("data-collapsed","true")}catch(e){}`} />
+      {/* The saved light theme goes on the same way, so a light workspace never flashes dark. */}
+      <InlineScript html={`try{var s=document.currentScript.parentElement;if(localStorage.getItem("mc-sidebar")==="collapsed")s.setAttribute("data-collapsed","true");if(localStorage.getItem("mc-theme")==="light")s.setAttribute("data-theme","light")}catch(e){}`} />
       <Sidebar />
       <Notifier />
       <div className={styles.body}>
