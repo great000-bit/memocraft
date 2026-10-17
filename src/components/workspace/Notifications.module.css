@@ -1,0 +1,105 @@
+/* The Notifications page: what clients did, newest first, in one raised card. New lines carry an amber dot. */
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  background: var(--neu-face);
+  border: 1px solid var(--neu-edge);
+  border-radius: 28px;
+  box-shadow: var(--neu-raised-sm);
+  overflow: hidden;
+}
+
+.item {
+  border-bottom: 1px solid var(--line);
+}
+
+.item:last-child {
+  border-bottom: 0;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 64px;
+  padding: var(--space-3) var(--space-4);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 150ms ease;
+}
+
+.link:hover {
+  background: var(--sunken);
+}
+
+.icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--fixer-ink, var(--fixer));
+  box-shadow: var(--neu-inset-sm);
+}
+
+.icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.item[data-kind="request"] .icon {
+  color: var(--proof-text);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.line {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 22px;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--text-muted);
+}
+
+.dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--proof);
+}
+
+.item:not([data-new]) .line {
+  font-weight: 500;
+}
+
+.empty {
+  padding: var(--space-8) var(--space-6);
+  text-align: center;
+  color: var(--text-muted);
+  background: var(--neu-face);
+  border: 1px solid var(--neu-edge);
+  border-radius: 28px;
+  box-shadow: var(--neu-raised-sm);
+}
+
+.heading {
+  margin-top: var(--space-4);
+  font-size: 20px;
+  line-height: 26px;
+  letter-spacing: -0.01em;
+}

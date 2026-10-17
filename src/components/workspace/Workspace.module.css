@@ -172,6 +172,17 @@
   color: var(--text);
 }
 
+/* Something new on the Notifications page: a small amber dot after the label, or on the icon in the closed rail. */
+.navDot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--proof);
+  box-shadow: 0 0 0 3px var(--bg);
+}
+
 .navSoon {
   color: var(--text-subtle);
   font-weight: 500;
@@ -567,6 +578,12 @@
     padding: 0;
     width: 52px;
     min-height: 52px;
+  }
+
+  .shell[data-collapsed="true"] .navDot {
+    position: absolute;
+    top: 12px;
+    right: 12px;
   }
 
   /* Closed: the account shrinks to its picture and a log-out icon, stacked. */

@@ -24,7 +24,10 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Memocraft: did they get the files? Now you\u2019ll know",
   description:
-    "Send one link for every delivery. Files that explain themselves, proof your client opened and saved them, and downloads made for their phone. Free to start."
+    "Send one link for every delivery. Files that explain themselves, proof your client opened and saved them, and downloads made for their phone. Free to start.",
+  // Added to an iPhone's Home Screen, Memocraft opens full screen like an app, with its own icon.
+  appleWebApp: { capable: true, title: "Memocraft", statusBarStyle: "black-translucent" },
+  icons: { apple: "/icons/apple-touch-icon.png" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

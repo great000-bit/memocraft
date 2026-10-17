@@ -1,5 +1,6 @@
 import { userAgent } from "next/server";
 import { auth, pool } from "./auth";
+import { notifyOwner } from "./push";
 
 // Proof of delivery: what the client did with the link. Only real browsers count, and never the owner.
 
@@ -56,13 +57,14 @@ type Target = { id: string; ownerId: string };
 export async function recordOpen(delivery: Target, visit: string, headers: Headers): Promise<void> {
   const device = describeDevice(headers);
   if (!device || (await isOwner(headers, delivery.ownerId))) return;
-  await pool.query(
+  const inserted = await pool.query(
     `insert into "deliveryEvent" ("deliveryId", "kind", "visit", "device")
      select $1::uuid, 'open', $2::text, $3::text
       where (select count(*) from "deliveryEvent" where "deliveryId" = $1::uuid and "at" > now() - interval '1 hour') < $4::int
      on conflict do nothing`,
     [delivery.id, visit, device, hourlyCap],
   );
+  if (inserted.rowCount) notifyOwner(delivery.id, "open");
 }
 
 export async function recordDownload(
@@ -72,12 +74,17 @@ export async function recordDownload(
 ): Promise<void> {
   const device = describeDevice(headers);
   if (!device || (await isOwner(headers, delivery.ownerId))) return;
-  await pool.query(
+  // "earlier" counts downloads from this delivery in the two minutes before this one, so a "Save all" of 20 photos
+  // sends one phone notification, not 20.
+  const inserted = await pool.query<{ earlier: number }>(
     `insert into "deliveryEvent" ("deliveryId", "kind", "fileId", "fileName", "device")
      select $1::uuid, 'download', $2::uuid, $3::text, $4::text
-      where (select count(*) from "deliveryEvent" where "deliveryId" = $1::uuid and "at" > now() - interval '1 hour') < $5::int`,
+      where (select count(*) from "deliveryEvent" where "deliveryId" = $1::uuid and "at" > now() - interval '1 hour') < $5::int
+     returning (select count(*)::int from "deliveryEvent"
+                 where "deliveryId" = $1::uuid and "kind" = 'download' and "at" > now() - interval '2 minutes') as "earlier"`,
     [delivery.id, file.id, file.name, device, hourlyCap],
   );
+  if (inserted.rows[0] && inserted.rows[0].earlier === 0) notifyOwner(delivery.id, "download", file.name);
 }
 
 const recentLimit = 15;
