@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import styles from "./AuthForm.module.css";
 
@@ -26,9 +26,29 @@ function describe(error: AuthError, mode: AuthFormProps["mode"]) {
   return error.message || (mode === "signup" ? "We could not create your account." : "We could not log you in.");
 }
 
+// Google sends people back here with ?error=<code> when it could not sign them in. The most likely cause is an
+// existing password account for the same email: the sign-in library only links Google to an account whose email
+// is verified, so the person is told to log in with their password instead of being left on a bare page.
+function GoogleReturnNotice() {
+  const code = useSearchParams().get("error");
+  if (!code) return null;
+  const message =
+    code === "account_not_linked" || code === "unable_to_link_account"
+      ? "This email already has a Memocraft account with a password. Log in with your email and password below."
+      : code === "access_denied"
+        ? "Google sign-in was cancelled. Try again, or use your email."
+        : "Google sign-in did not finish. Try again, or use your email.";
+  return (
+    <p className={styles.error} role="alert">
+      {message}
+    </p>
+  );
+}
+
 // Email and password form. It talks to /api/auth so the sign-in attempt limits apply.
 export function AuthForm({ mode, resetEnabled = false, googleEnabled = false }: AuthFormProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -64,7 +84,13 @@ export function AuthForm({ mode, resetEnabled = false, googleEnabled = false }: 
     setError(null);
     setPending(true);
     try {
-      const result = await authClient.signIn.social({ provider: "google", callbackURL: "/dashboard" });
+      const result = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/dashboard",
+        newUserCallbackURL: "/dashboard",
+        // A failed attempt comes back to this page, where GoogleReturnNotice explains it.
+        errorCallbackURL: pathname,
+      });
       if (result.error) {
         setError("We could not start Google sign-in. Try again, or use your email.");
         setPending(false);
@@ -79,6 +105,9 @@ export function AuthForm({ mode, resetEnabled = false, googleEnabled = false }: 
     <>
       {googleEnabled && (
         <div className={styles.social}>
+          <Suspense fallback={null}>
+            <GoogleReturnNotice />
+          </Suspense>
           <button type="button" className={styles.google} onClick={continueWithGoogle} disabled={pending}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path fill="#4285F4" d="M23 12.27c0-.8-.07-1.57-.2-2.3H12v4.35h6.17a5.28 5.28 0 0 1-2.29 3.46v2.87h3.7C21.74 18.65 23 15.7 23 12.27z" />
