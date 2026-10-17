@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { PageSkeleton } from "@/components/workspace/PageSkeleton";
 import { Button } from "@/components/Button";
 import { DeliveryList } from "@/components/deliveries/DeliveryList";
 import { listDeliveries } from "@/lib/deliveries";
@@ -22,7 +23,7 @@ export default function DeliveriesPage() {
         <h1 className={styles.heading}>Deliveries</h1>
         <Button href="/deliveries/new">New delivery</Button>
       </div>
-      <Suspense fallback={null}>
+      <Suspense fallback={<PageSkeleton blocks={2} />}>
         <All />
       </Suspense>
     </>

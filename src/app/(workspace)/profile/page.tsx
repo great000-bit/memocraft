@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { PageSkeleton } from "@/components/workspace/PageSkeleton";
 import { avatarSource } from "@/lib/avatar";
 import { signInMethods } from "@/lib/profile";
 import { requireUser } from "@/lib/session";
@@ -75,7 +76,7 @@ export default function ProfilePage() {
         <h1 className={styles.heading}>Profile</h1>
       </div>
       <p className={styles.sub}>How you appear in Memocraft and to your clients.</p>
-      <Suspense fallback={null}>
+      <Suspense fallback={<PageSkeleton blocks={3} />}>
         <ProfilePanels />
       </Suspense>
     </>

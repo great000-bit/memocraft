@@ -14,9 +14,11 @@ const instrument = Instrument_Sans({
   subsets: ["latin"],
 });
 
+// Only links and file sizes use the mono face, so it is not preloaded on every page.
 const jetbrains = JetBrains_Mono({
   variable: "--font-jetbrains",
   subsets: ["latin"],
+  preload: false,
 });
 
 export const metadata: Metadata = {

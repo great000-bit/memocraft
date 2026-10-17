@@ -131,3 +131,23 @@ a {
   color: var(--text);
   min-height: 100dvh;
 }
+
+/* Anchor links glide instead of jumping. Lenis (landing page, mouse and trackpad) takes over scrolling while it runs. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}

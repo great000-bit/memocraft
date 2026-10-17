@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { PageSkeleton } from "@/components/workspace/PageSkeleton";
 import { getDashboardStats } from "@/lib/dashboard";
 import { signInMethods } from "@/lib/profile";
 import { requireUser } from "@/lib/session";
@@ -78,7 +79,7 @@ export default function SettingsPage() {
         <h1 className={styles.heading}>Settings</h1>
       </div>
       <p className={styles.sub}>Your sign-in, your data, and your account.</p>
-      <Suspense fallback={null}>
+      <Suspense fallback={<PageSkeleton blocks={3} />}>
         <SettingsPanels />
       </Suspense>
     </>
