@@ -12,7 +12,7 @@ export async function GET() {
 
   const [deliveries, sections, files, updates, requests, events, methods, studio] = await Promise.all([
     pool.query(
-      `select "id", "title", "clientName", "message", "status", "createdAt", "updatedAt", "publishedAt", "expiresAt",
+      `select "id", "title", "clientName", "clientEmail", "message", "status", "createdAt", "updatedAt", "publishedAt", "expiresAt",
               ("passwordHash" is not null) as "passwordProtected"
          from "delivery" where "ownerId" = $1 order by "createdAt"`,
       [user.id],
@@ -52,6 +52,29 @@ export async function GET() {
     signInMethods(user.id),
     getStudio(user.id),
   ]);
+  // What clients said back, without the random browser ids.
+  const [approvals, comments, favourites, reminders] = await Promise.all([
+    pool.query(
+      `select a."deliveryId", a."fileName", a."fileSize", a."name", a."device", a."at"
+         from "approval" a join "delivery" d on d."id" = a."deliveryId" where d."ownerId" = $1 order by a."at"`,
+      [user.id],
+    ),
+    pool.query(
+      `select c."deliveryId", c."fileId", c."message", c."name", c."fromOwner", c."createdAt", c."resolvedAt"
+         from "fileComment" c join "delivery" d on d."id" = c."deliveryId" where d."ownerId" = $1 order by c."createdAt"`,
+      [user.id],
+    ),
+    pool.query(
+      `select v."deliveryId", v."fileId", v."at"
+         from "fileFavourite" v join "delivery" d on d."id" = v."deliveryId" where d."ownerId" = $1 order by v."at"`,
+      [user.id],
+    ),
+    pool.query(
+      `select r."deliveryId", r."n", r."channel", r."createdAt", r."handledAt"
+         from "deliveryReminder" r join "delivery" d on d."id" = r."deliveryId" where d."ownerId" = $1 order by r."createdAt"`,
+      [user.id],
+    ),
+  ]);
 
   const body = {
     exportedAt: new Date().toISOString(),
@@ -63,6 +86,10 @@ export async function GET() {
     updates: updates.rows,
     fileRequests: requests.rows,
     proofOfDelivery: events.rows,
+    approvals: approvals.rows,
+    comments: comments.rows,
+    hearts: favourites.rows,
+    reminders: reminders.rows,
   };
   return new Response(JSON.stringify(body, null, 2), {
     headers: {

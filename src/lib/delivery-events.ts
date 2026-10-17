@@ -39,7 +39,7 @@ export function describeDevice(headers: Headers): string | null {
   return "Computer";
 }
 
-async function isOwner(headers: Headers, ownerId: string): Promise<boolean> {
+export async function isOwner(headers: Headers, ownerId: string): Promise<boolean> {
   try {
     const session = await auth.api.getSession({ headers });
     return session?.user.id === ownerId;

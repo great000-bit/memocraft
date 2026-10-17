@@ -12,6 +12,7 @@ import {
 import { limits } from "@/lib/delivery-limits";
 import { linkState, type DeliveryFile, type DeliverySection, type OwnerDelivery } from "@/lib/deliveries";
 import type { Activity } from "@/lib/delivery-events";
+import type { Feedback } from "@/lib/feedback";
 import type { FileRequestItem } from "@/lib/requests";
 import { storageConfigured } from "@/lib/storage";
 import { ownerThumbnailLinks } from "@/lib/thumbnails";
@@ -24,18 +25,21 @@ import { PublishPanel } from "./PublishPanel";
 import { LinkSettings } from "./LinkSettings";
 import { RequestList } from "./RequestList";
 import { FileVersions } from "./FileVersions";
+import { FeedbackPanel } from "./OwnerFeedback";
+import { RemindersPanel } from "./RemindersPanel";
 import { UpdatesPanel } from "./UpdatesPanel";
 import { FileFooter, UploadArea } from "./Uploader";
 import styles from "./Editor.module.css";
 
 const pillText = { draft: "Draft", live: "Published", paused: "Paused", expired: "Expired" } as const;
 
-function fileStatus(file: DeliveryFile): string {
+function fileStatus(file: DeliveryFile, hearts: number): string {
   if (file.attached) {
     const size = file.sizeBytes ? formatSize(file.sizeBytes) : "Attached";
-    const label = file.ext ? `${size} · ${file.ext.toUpperCase()}` : size;
-    if (file.downloads === 0) return label;
-    return `${label} · Downloaded ${file.downloads === 1 ? "once" : `${file.downloads} times`}`;
+    let label = file.ext ? `${size} · ${file.ext.toUpperCase()}` : size;
+    if (file.downloads > 0) label += ` · Downloaded ${file.downloads === 1 ? "once" : `${file.downloads} times`}`;
+    if (hearts > 0) label += ` · ${hearts === 1 ? "1 heart" : `${hearts} hearts`}`;
+    return label;
   }
   return file.uploading ? "Upload not finished" : "No file attached";
 }
@@ -77,11 +81,13 @@ function FileCard({
   section,
   thumb,
   storageReady,
+  hearts,
 }: {
   file: DeliveryFile;
   section: DeliverySection;
   thumb: string | undefined;
   storageReady: boolean;
+  hearts: number;
 }) {
   return (
     <li className={styles.file}>
@@ -132,7 +138,7 @@ function FileCard({
           fileId={file.id}
           attached={file.attached}
           storageReady={storageReady}
-          status={fileStatus(file)}
+          status={fileStatus(file, hearts)}
         >
           <ActionButton
             action={deleteFile.bind(null, file.id)}
@@ -152,16 +158,25 @@ function FileCards({
   section,
   thumbs,
   storageReady,
+  hearts,
 }: {
   section: DeliverySection;
   thumbs: Record<string, string>;
   storageReady: boolean;
+  hearts: Record<string, number>;
 }) {
   if (section.files.length === 0) return null;
   return (
     <ul className={styles.fileList}>
       {section.files.map((file) => (
-        <FileCard key={file.id} file={file} section={section} thumb={thumbs[file.id]} storageReady={storageReady} />
+        <FileCard
+          key={file.id}
+          file={file}
+          section={section}
+          thumb={thumbs[file.id]}
+          storageReady={storageReady}
+          hearts={hearts[file.id] ?? 0}
+        />
       ))}
     </ul>
   );
@@ -172,10 +187,23 @@ export async function DeliveryEditor({
   delivery,
   activity,
   requests,
+  feedback,
+  reminders,
+  linkOrigin,
 }: {
   delivery: OwnerDelivery;
   activity: Activity;
   requests: FileRequestItem[];
+  feedback: Feedback;
+  reminders: {
+    nextAt: string | null;
+    opened: boolean;
+    sent: { n: number; channel: "email" | "app"; at: string; handled: boolean }[];
+    message: string;
+    emailOn: boolean;
+  };
+  // The creative's own web address, when one is connected.
+  linkOrigin: string | null;
 }) {
   const state = linkState(delivery);
   // Once a link has been sent it keeps its place at the top, whether it is live, paused or expired.
@@ -224,7 +252,13 @@ export async function DeliveryEditor({
 
       {sent && (
         <>
-          <PublishPanel deliveryId={delivery.id} slug={delivery.slug} state={state} clientName={delivery.clientName} />
+          <PublishPanel
+            deliveryId={delivery.id}
+            slug={delivery.slug}
+            state={state}
+            clientName={delivery.clientName}
+            linkOrigin={linkOrigin}
+          />
           {requests.length > 0 && (
             <section className={styles.updatesCard} aria-labelledby="requests-title">
               <h2 id="requests-title" className={styles.shareTitle}>
@@ -238,7 +272,24 @@ export async function DeliveryEditor({
             deliveryId={delivery.id}
             updates={delivery.updates.map((update) => ({ id: update.id, note: update.note, at: update.createdAt.toISOString() }))}
           />
-          <ActivityPanel activity={activity} published />
+          <FeedbackPanel
+            feedback={feedback}
+            files={delivery.sections.flatMap((section) =>
+              section.files.filter((file) => file.attached).map((file) => ({ id: file.id, name: file.name, thumb: thumbs[file.id] ?? null })),
+            )}
+          />
+          <RemindersPanel
+            deliveryId={delivery.id}
+            days={delivery.reminderDays}
+            clientName={delivery.clientName}
+            clientEmail={delivery.clientEmail}
+            emailOn={reminders.emailOn}
+            opened={reminders.opened}
+            nextAt={reminders.nextAt}
+            sent={reminders.sent}
+            message={reminders.message}
+          />
+          <ActivityPanel activity={activity} published deliveryId={delivery.id} />
         </>
       )}
 
@@ -251,6 +302,14 @@ export async function DeliveryEditor({
           maxLength={limits.clientName}
           placeholder="Your client's name"
           save={saveDeliveryField.bind(null, delivery.id, "clientName")}
+        />
+        <EditableField
+          label="Client's email (optional, only for reminders)"
+          look="plain"
+          defaultValue={delivery.clientEmail ?? ""}
+          maxLength={limits.email}
+          placeholder="name@example.com"
+          save={saveDeliveryField.bind(null, delivery.id, "clientEmail")}
         />
       </Step>
 
@@ -267,7 +326,7 @@ export async function DeliveryEditor({
         {!grouped && only && (
           <>
             <UploadArea sectionId={only.id} storageReady={storageReady} hasFiles={only.files.length > 0}>
-              <FileCards section={only} thumbs={thumbs} storageReady={storageReady} />
+              <FileCards section={only} thumbs={thumbs} storageReady={storageReady} hearts={feedback.favourites} />
             </UploadArea>
             <div className={styles.groupRow}>
               <ActionButton action={addSection.bind(null, delivery.id)} variant="ghost">
@@ -317,7 +376,7 @@ export async function DeliveryEditor({
                     save={saveSectionField.bind(null, section.id, "note")}
                   />
                   <UploadArea sectionId={section.id} storageReady={storageReady} hasFiles>
-                    <FileCards section={section} thumbs={thumbs} storageReady={storageReady} />
+                    <FileCards section={section} thumbs={thumbs} storageReady={storageReady} hearts={feedback.favourites} />
                   </UploadArea>
                 </li>
               ))}
@@ -350,7 +409,13 @@ export async function DeliveryEditor({
       {!sent && (
         <>
           {settings}
-          <PublishPanel deliveryId={delivery.id} slug={delivery.slug} state={state} clientName={delivery.clientName} />
+          <PublishPanel
+            deliveryId={delivery.id}
+            slug={delivery.slug}
+            state={state}
+            clientName={delivery.clientName}
+            linkOrigin={linkOrigin}
+          />
         </>
       )}
 

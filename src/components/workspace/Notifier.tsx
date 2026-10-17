@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { LogoMark } from "@/components/Logo";
-import { line } from "@/lib/notice-text";
+import { line, noticeHref, type NoticeKind } from "@/lib/notice-text";
 import styles from "./Notifier.module.css";
 
 // Live notes in the corner of the workspace when a client opens a delivery, saves files or asks for something,
@@ -13,7 +13,7 @@ import styles from "./Notifier.module.css";
 
 type Notice = {
   id: string;
-  kind: "open" | "download" | "request";
+  kind: NoticeKind;
   deliveryId: string;
   title: string;
   clientName: string | null;
@@ -145,7 +145,7 @@ export function Notifier() {
       {toasts.map((toast) => (
         <div key={toast.id} className={styles.toast} data-leaving={toast.leaving || undefined} data-kind={toast.kind}>
           <Link
-            href={toast.kind === "request" ? "/requests" : `/deliveries/${toast.deliveryId}`}
+            href={noticeHref(toast)}
             className={styles.body}
             onClick={() => dismiss(toast.id)}
           >

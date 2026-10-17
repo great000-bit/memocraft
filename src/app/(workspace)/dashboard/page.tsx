@@ -4,6 +4,7 @@ import { Button } from "@/components/Button";
 import { FeatureIcon } from "@/components/FeatureIcons";
 import { DeliveryList } from "@/components/deliveries/DeliveryList";
 import { listDeliveries } from "@/lib/deliveries";
+import { raiseDueReminders } from "@/lib/reminders";
 import { countOpenRequests } from "@/lib/requests";
 import { requireUser } from "@/lib/session";
 import { Avatar } from "@/components/workspace/Avatar";
@@ -24,6 +25,8 @@ async function Greeting() {
 // A line, not a card: the three cards stay the three things the dashboard is about. It only shows when someone is waiting.
 async function WaitingRequests() {
   const user = await requireUser();
+  // Reminders that came due since the daily job ran reach Notifications as soon as the creative is back.
+  await raiseDueReminders(user.id).catch((error) => console.error("Could not raise reminders:", error));
   const open = await countOpenRequests(user.id);
   if (open === 0) return null;
   return (

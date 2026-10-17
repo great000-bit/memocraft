@@ -75,6 +75,25 @@ const paths = {
       <path d="M16 14.2a4.5 4.5 0 0 1 5 4.3" />
     </>
   ),
+  heart: <path d="M12 19.5s-7-4.3-7-9.4A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.1c0 5.1-7 9.4-7 9.4z" />,
+  comment: (
+    <>
+      <path d="M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v6a2.5 2.5 0 0 1-2.5 2.5H11l-4 4v-4h0A2 2 0 0 1 5 13z" />
+      <path d="M9 9h6M9 12h4" />
+    </>
+  ),
+  approve: (
+    <>
+      <path d="M7 3h7l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
+      <path d="m8.8 13.6 2.2 2.2 4.2-4.6" />
+    </>
+  ),
+  nudge: (
+    <>
+      <path d="M4 12 20 5l-4.5 15-3.8-6z" />
+      <path d="m11.7 14 8.3-9" />
+    </>
+  ),
 };
 
 export type FeatureIconName = keyof typeof paths;

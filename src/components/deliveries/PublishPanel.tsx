@@ -30,14 +30,15 @@ function take(deliveryId: string) {
 
 const noopSubscribe = () => () => {};
 
-type PublishPanelProps = { deliveryId: string; slug: string; state: LinkState; clientName?: string | null };
+// "linkOrigin" is the creative's own web address when one is connected; otherwise the link uses this site's address.
+type PublishPanelProps = { deliveryId: string; slug: string; state: LinkState; clientName?: string | null; linkOrigin?: string | null };
 
 // The link is built from the address the page was opened on, so it is right on every host.
-export function PublishPanel({ deliveryId, slug, state, clientName }: PublishPanelProps) {
+export function PublishPanel({ deliveryId, slug, state, clientName, linkOrigin }: PublishPanelProps) {
   const origin = useSyncExternalStore(noopSubscribe, () => window.location.origin, () => "");
   const [copied, setCopied] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
-  const url = `${origin}/d/${slug}`;
+  const url = `${linkOrigin || origin}/d/${slug}`;
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- opens once, right after the publish re-render

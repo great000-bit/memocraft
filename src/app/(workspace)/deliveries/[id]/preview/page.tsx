@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ClientView } from "@/components/deliveries/ClientView";
 import { getDeliveryForOwner } from "@/lib/deliveries";
+import { loadFeedback } from "@/lib/feedback";
+import { getBranding, showsBranding } from "@/lib/plan";
 import { requireUser } from "@/lib/session";
 import { brandFrom, getStudio, ownerLogoPath } from "@/lib/studio";
 import { ownerThumbnailLinks } from "@/lib/thumbnails";
@@ -16,7 +18,12 @@ async function Preview({ params }: Pick<PageProps<"/deliveries/[id]/preview">, "
   const { id } = await params;
   const delivery = await getDeliveryForOwner(id, user.id);
   if (!delivery) notFound();
-  const [thumbs, studio] = await Promise.all([ownerThumbnailLinks(delivery), getStudio(user.id)]);
+  const [thumbs, studio, feedback, branding] = await Promise.all([
+    ownerThumbnailLinks(delivery),
+    getStudio(user.id),
+    loadFeedback(delivery),
+    getBranding(user.id),
+  ]);
   const brand = brandFrom(studio, ownerLogoPath);
   return (
     <>
@@ -29,7 +36,14 @@ async function Preview({ params }: Pick<PageProps<"/deliveries/[id]/preview">, "
         </Link>
       </div>
       <div className={`light-scope ${styles.previewFrame}`}>
-        <ClientView delivery={delivery} senderName={brand.name ?? user.name} brand={brand} thumbs={thumbs} />
+        <ClientView
+          delivery={delivery}
+          senderName={brand.name ?? user.name}
+          brand={brand}
+          thumbs={thumbs}
+          feedback={feedback}
+          showBranding={showsBranding(branding)}
+        />
       </div>
     </>
   );

@@ -103,3 +103,28 @@ export function requestEmail(options: {
 </body></html>`;
   return { to: options.to, subject, text, html };
 }
+
+// A reminder to a client who has not opened their link yet, sent for the creative. The client never signed up for
+// anything, so the email says plainly who it is from and that it will not keep coming.
+export function reminderEmail(options: {
+  to: string;
+  clientName: string | null;
+  senderName: string;
+  deliveryTitle: string;
+  url: string;
+}): OutgoingEmail {
+  return {
+    to: options.to,
+    subject: `Your files from ${options.senderName} are ready · ${options.deliveryTitle}`,
+    ...layout({
+      name: options.clientName ?? "there",
+      lines: [
+        `${options.senderName} sent you "${options.deliveryTitle}" and asked us to check you got it.`,
+        "Open the link to see and save your files. You do not need an account.",
+      ],
+      button: "Open my files",
+      url: options.url,
+      footer: `Memocraft sends at most two reminders for a delivery, and none once you have opened it. ${options.senderName} has your email address; Memocraft does not use it for anything else.`,
+    }),
+  };
+}

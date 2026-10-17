@@ -1,0 +1,536 @@
+/* Hearts, comments and approvals on the client page. Same palette as the page: teal for actions, amber for hearts. */
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.heart,
+.commentButton,
+.approve,
+.approveYes,
+.cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.heart svg,
+.commentButton svg,
+.approved svg {
+  width: 20px;
+  height: 20px;
+}
+
+.heart:active,
+.commentButton:active,
+.approve:active,
+.approveYes:active {
+  transform: scale(0.96);
+}
+
+.heart:focus-visible,
+.commentButton:focus-visible,
+.approve:focus-visible,
+.approveYes:focus-visible,
+.cancel:focus-visible,
+.close:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.heart {
+  width: 40px;
+  padding: 0;
+  background: var(--sunken);
+  color: var(--text-muted);
+}
+
+.heart[aria-pressed="true"] {
+  background: var(--proof-tint);
+  color: var(--proof-text);
+}
+
+.heart[aria-pressed="true"] svg path {
+  fill: var(--proof);
+  stroke: var(--proof-text);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .heart[aria-pressed="true"] svg {
+    animation: pop 320ms cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.6);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* On a picture: a round white button in the top corner, readable on any photo. */
+.heartOverlay {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 10px rgba(16, 24, 20, 0.22);
+  color: #3a4441;
+}
+
+.heartOverlay:hover {
+  background: #fff;
+}
+
+.heartOverlay[aria-pressed="true"] {
+  background: #fff;
+}
+
+.bar[data-compact] {
+  flex-wrap: nowrap;
+}
+
+.bar[data-compact] .approve,
+.bar[data-compact] .approved {
+  flex: 1;
+  min-width: 0;
+  padding: 0 var(--space-2);
+  white-space: nowrap;
+}
+
+.bar[data-compact] .approved {
+  justify-content: center;
+}
+
+.confirm[data-compact] {
+  flex: 1;
+  display: grid;
+  gap: 4px;
+}
+
+.confirm[data-compact] .approveYes,
+.confirm[data-compact] .cancel {
+  min-height: 36px;
+  padding: 0 var(--space-2);
+  white-space: nowrap;
+}
+
+.commentButton[data-compact] {
+  flex: none;
+  min-width: 40px;
+  padding: 0 10px;
+}
+
+.commentButton {
+  padding: 0 var(--space-3);
+  background: var(--sunken);
+  color: var(--text);
+}
+
+.commentButton:hover,
+.heart:hover {
+  background: var(--fixer-tint);
+}
+
+.approve {
+  padding: 0 var(--space-4);
+  background: transparent;
+  color: var(--fixer);
+  box-shadow: inset 0 0 0 1.5px var(--fixer);
+}
+
+.approve:hover {
+  background: var(--fixer-tint);
+}
+
+.confirm {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.approveYes {
+  padding: 0 var(--space-4);
+  background: var(--fixer);
+  color: var(--on-fixer);
+}
+
+.approveYes:hover:not(:disabled) {
+  background: var(--fixer-hover);
+}
+
+.approveYes:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.cancel {
+  padding: 0 var(--space-3);
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.approved {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--fixer-tint);
+  color: var(--fixer);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.error {
+  flex-basis: 100%;
+  font-size: 14px;
+  line-height: 20px;
+  color: #8f2a1a;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* The comment sheet: full height on a phone, a centred card on a computer. */
+.sheet {
+  width: min(640px, 100vw);
+  max-width: 100vw;
+  max-height: min(92dvh, 900px);
+  margin: auto auto 0;
+  padding: 0;
+  border: 0;
+  border-radius: 24px 24px 0 0;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 -12px 48px -16px rgba(16, 24, 20, 0.35);
+}
+
+.sheet::backdrop {
+  background: rgba(16, 24, 20, 0.45);
+}
+
+@media (min-width: 700px) {
+  .sheet {
+    margin: auto;
+    border-radius: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet[open] {
+    animation: rise 260ms cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+
+.sheetBody {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-4) var(--space-6);
+}
+
+.sheetHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.sheetTitle {
+  font-size: 20px;
+  line-height: 26px;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.close {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--sunken);
+  color: var(--text);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.stage {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: 16px;
+  background: var(--sunken);
+}
+
+.canvas {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  line-height: 0;
+}
+
+.canvas[data-interactive] {
+  cursor: crosshair;
+}
+
+.canvas img {
+  display: block;
+  max-width: 100%;
+  max-height: 48dvh;
+  border-radius: 8px;
+  user-select: none;
+}
+
+.pin {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  border-radius: 50% 50% 50% 4px;
+  background: var(--proof);
+  color: #3d2603;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 4px 10px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+.pin[data-resolved] {
+  background: #d9dedc;
+  color: #5b6662;
+}
+
+.pinNew {
+  background: var(--fixer);
+  color: var(--on-fixer);
+}
+
+.hint {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text-muted);
+}
+
+.thread {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.note {
+  display: grid;
+  gap: 4px;
+  padding: var(--space-3);
+  border-radius: 14px;
+  background: var(--sunken);
+}
+
+.note[data-owner] {
+  margin-left: var(--space-6);
+  background: var(--fixer-tint);
+}
+
+.note[data-resolved] {
+  opacity: 0.7;
+}
+
+.noteHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--text-muted);
+}
+
+.noteHead b {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.noteNumber {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--proof);
+  color: #3d2603;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.done {
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--fixer-tint);
+  color: var(--fixer);
+  font-weight: 600;
+}
+
+.noteText {
+  font-size: 16px;
+  line-height: 24px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.form,
+.allForm {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.field textarea,
+.field input {
+  width: 100%;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--control-border);
+  border-radius: 10px;
+}
+
+.field textarea {
+  padding: var(--space-3);
+  line-height: 24px;
+  resize: vertical;
+}
+
+.field input {
+  min-height: 52px;
+  padding: 0 var(--space-3);
+}
+
+.field textarea:focus-visible,
+.field input:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-color: var(--text);
+}
+
+.send {
+  min-height: 52px;
+  padding: 0 var(--space-6);
+  border: 0;
+  border-radius: 10px;
+  background: var(--fixer);
+  color: var(--on-fixer);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.send:hover:not(:disabled) {
+  background: var(--fixer-hover);
+}
+
+.send:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Approve everything, at the end of the page. */
+.all {
+  padding: var(--space-4);
+  border-radius: 20px;
+  background: var(--fixer-tint);
+}
+
+.allTitle {
+  font-size: 20px;
+  line-height: 26px;
+  letter-spacing: -0.01em;
+}
+
+.allText {
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--text-muted);
+}
+
+.receipt {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.receiptMark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--fixer);
+  color: var(--on-fixer);
+}
+
+.receiptMark svg {
+  width: 26px;
+  height: 26px;
+}
+
+@media (min-width: 600px) {
+  .all {
+    padding: var(--space-6);
+  }
+
+  .send {
+    justify-self: start;
+  }
+}

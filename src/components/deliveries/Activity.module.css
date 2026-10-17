@@ -112,3 +112,28 @@
     padding: var(--space-6);
   }
 }
+
+/* The certificate to attach to an invoice or settle a dispute. */
+.pdf {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border-radius: 10px;
+  background: var(--fixer);
+  color: var(--on-fixer);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.pdf:hover {
+  background: var(--fixer-hover);
+}
+
+.pdf svg {
+  width: 20px;
+  height: 20px;
+}

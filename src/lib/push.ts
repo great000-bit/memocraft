@@ -27,7 +27,7 @@ function ready() {
   return true;
 }
 
-export type PushKind = "open" | "download" | "request";
+export type PushKind = "open" | "download" | "request" | "approval" | "comment" | "reminder";
 
 type Row = { id: string; endpoint: string; p256dh: string; auth: string };
 
@@ -68,12 +68,15 @@ async function notify(deliveryId: string, kind: PushKind, fileName: string | nul
   const delivery = rows[0];
   if (!delivery || delivery.subs === 0) return;
   const who = delivery.clientName?.trim() || "Your client";
-  const body =
-    kind === "open"
-      ? `${who} opened ${delivery.title}`
-      : kind === "download"
-        ? `${who} is saving ${fileName ?? "files"} from ${delivery.title}`
-        : `${who} asked about ${fileName ?? "a new file"} on ${delivery.title}`;
+  const bodies: Record<PushKind, string> = {
+    open: `${who} opened ${delivery.title}`,
+    download: `${who} is saving ${fileName ?? "files"} from ${delivery.title}`,
+    request: `${who} asked about ${fileName ?? "a new file"} on ${delivery.title}`,
+    approval: `${who} approved ${fileName ?? "everything"} on ${delivery.title}`,
+    comment: `${who} commented on ${fileName ?? "a file"} in ${delivery.title}`,
+    reminder: `${who} has not opened ${delivery.title} yet. Send a reminder`,
+  };
+  const body = bodies[kind];
   await deliver(delivery.ownerId, {
     title: "Memocraft",
     body,

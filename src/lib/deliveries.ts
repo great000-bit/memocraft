@@ -61,7 +61,15 @@ export type Delivery = {
 };
 
 // What the owner sees about the link itself: when it stops working, and whether it asks for a password.
-export type OwnerDelivery = Delivery & { expiresAt: Date | null; expired: boolean; hasPassword: boolean };
+export type OwnerDelivery = Delivery & {
+  expiresAt: Date | null;
+  expired: boolean;
+  hasPassword: boolean;
+  // Typed by the creative, used only to email reminders. Null when they left it blank.
+  clientEmail: string | null;
+  // Days to wait before each reminder; null when reminders are off.
+  reminderDays: number | null;
+};
 
 // The state of a client link, in the words the owner sees. A paused link is one that was sent and switched off.
 export type LinkState = "draft" | "live" | "paused" | "expired";
@@ -229,8 +237,11 @@ export async function listDeliveries(ownerId: string, limit = 50): Promise<Deliv
 
 export async function getDeliveryForOwner(id: string, ownerId: string): Promise<OwnerDelivery | null> {
   if (!isUuid(id)) return null;
-  const { rows } = await pool.query<DeliveryRow & { expiresAt: Date | null; expired: boolean; hasPassword: boolean }>(
+  const { rows } = await pool.query<
+    DeliveryRow & { expiresAt: Date | null; expired: boolean; hasPassword: boolean; clientEmail: string | null; reminderDays: number | null }
+  >(
     `select "id", "title", "clientName", "message", "slug", "status", "updatedAt", "publishedAt", "expiresAt",
+            "clientEmail", "reminderDays",
             ("expiresAt" is not null and "expiresAt" <= now()) as "expired",
             "passwordHash" is not null as "hasPassword"
        from "delivery" where "id" = $1 and "ownerId" = $2`,
@@ -242,15 +253,24 @@ export async function getDeliveryForOwner(id: string, ownerId: string): Promise<
 }
 
 // The sender as a client sees them: the studio name when one is set, else the person's own name, and the logo.
+// "showBranding" is false only while the account's plan allows hiding it and the creative switched it off.
+// "customDomain" is the creative's own web address, once it is connected and their plan allows it.
 const senderColumns = `coalesce(st."name", u."name") as "senderName",
-            st."name", st."logoVersion", st."logoWidth", st."logoHeight"`;
-const senderJoins = `join "user" u on u."id" = d."ownerId" left join "studio" st on st."userId" = d."ownerId"`;
+            st."name", st."logoVersion", st."logoWidth", st."logoHeight",
+            not coalesce(ap."brandingTools" and st."hideBranding", false) as "showBranding",
+            case when ap."brandingTools" and st."domainStatus" = 'active' then lower(st."customDomain") end as "customDomain"`;
+const senderJoins = `join "user" u on u."id" = d."ownerId" left join "studio" st on st."userId" = d."ownerId"
+            left join "accountPlan" ap on ap."userId" = d."ownerId"`;
+
+type SenderExtras = { showBranding: boolean; customDomain: string | null };
 
 // What a client sees: only deliveries whose link is live, found by slug, with the sender's name and brand. Whether
 // the client has typed the password is the caller's question (see getLinkBySlug and passesPassword).
-export async function getPublishedBySlug(slug: string): Promise<(Delivery & { senderName: string; brand: Brand }) | null> {
+export async function getPublishedBySlug(
+  slug: string,
+): Promise<(Delivery & SenderExtras & { senderName: string; brand: Brand }) | null> {
   if (!/^[a-z0-9-]{1,80}$/.test(slug)) return null;
-  const { rows } = await pool.query<DeliveryRow & Studio & { senderName: string }>(
+  const { rows } = await pool.query<DeliveryRow & Studio & SenderExtras & { senderName: string }>(
     `select d."id", d."title", d."clientName", d."message", d."slug", d."status", d."updatedAt", d."publishedAt",
             ${senderColumns}
        from "delivery" d ${senderJoins}
@@ -310,7 +330,7 @@ export async function getPublishedThumb(slug: string, fileId: string) {
   return rows[0] ?? null;
 }
 
-export type LinkGate = {
+export type LinkGate = SenderExtras & {
   id: string;
   ownerId: string;
   senderName: string;

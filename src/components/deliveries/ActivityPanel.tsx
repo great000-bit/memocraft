@@ -1,4 +1,5 @@
 import type { Activity } from "@/lib/delivery-events";
+import { FeatureIcon } from "../FeatureIcons";
 import { LocalTime } from "./LocalTime";
 import styles from "./Activity.module.css";
 
@@ -9,7 +10,7 @@ function headline(activity: Activity): { text: string; state: "waiting" | "opene
 }
 
 // What the client has done with the link, as a record the creative can point to.
-export function ActivityPanel({ activity, published }: { activity: Activity; published: boolean }) {
+export function ActivityPanel({ activity, published, deliveryId }: { activity: Activity; published: boolean; deliveryId: string }) {
   if (!published && activity.recent.length === 0) return null;
   const status = headline(activity);
   return (
@@ -64,6 +65,11 @@ export function ActivityPanel({ activity, published }: { activity: Activity; pub
           </ul>
         </>
       )}
+
+      <a href={`/api/deliveries/${deliveryId}/proof`} className={styles.pdf} download>
+        <FeatureIcon name="file" />
+        Download proof of delivery (PDF)
+      </a>
 
       <p className={styles.note}>
         Your own visits while you are signed in are not counted, and neither are link previews. A download counts when it

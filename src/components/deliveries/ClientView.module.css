@@ -154,6 +154,7 @@
 
 /* The whole picture is shown, never cropped, on a calm background. */
 .photo {
+  position: relative;
   aspect-ratio: 1;
   background: var(--sunken);
 }

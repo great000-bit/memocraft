@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { PageSkeleton } from "@/components/workspace/PageSkeleton";
 import { avatarSource } from "@/lib/avatar";
+import { getBranding } from "@/lib/plan";
 import { signInMethods } from "@/lib/profile";
 import { requireUser } from "@/lib/session";
 import { brandFrom, getStudio, ownerLogoPath } from "@/lib/studio";
 import { NameForm, PhotoEditor } from "@/components/workspace/ProfileForms";
+import { CustomDomainForm, HideBrandingForm } from "@/components/workspace/BrandingForms";
 import { LogoEditor, StudioNameForm } from "@/components/workspace/StudioForms";
 import styles from "@/components/workspace/Workspace.module.css";
 import panels from "@/components/workspace/Settings.module.css";
@@ -17,7 +19,7 @@ const methodText = { google: "Google", password: "Email and password" } as const
 
 async function ProfilePanels() {
   const user = await requireUser();
-  const [methods, studio] = await Promise.all([signInMethods(user.id), getStudio(user.id)]);
+  const [methods, studio, branding] = await Promise.all([signInMethods(user.id), getStudio(user.id), getBranding(user.id)]);
   const brand = brandFrom(studio, ownerLogoPath);
   const hasPhoto = avatarSource(user.image, 96) !== null;
   return (
@@ -65,6 +67,19 @@ async function ProfilePanels() {
         <hr className={panels.divider} />
         <StudioNameForm name={brand.name} />
       </section>
+
+      {/* Only shown to accounts whose plan includes it; there is no plan to buy yet, so it is turned on by hand. */}
+      {branding.brandingTools && (
+        <section className={panels.panel} aria-labelledby="branding-title">
+          <h2 id="branding-title" className={panels.panelTitle}>
+            Your branding
+          </h2>
+          <p className={panels.panelText}>Make client pages fully yours: no Memocraft name, and links on your own web address.</p>
+          <HideBrandingForm hidden={branding.hideBranding} />
+          <hr className={panels.divider} />
+          <CustomDomainForm domain={branding.customDomain} status={branding.domainStatus} />
+        </section>
+      )}
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
-import { line } from "@/lib/notice-text";
+import { line, noticeHref, type NoticeKind } from "@/lib/notice-text";
 import { FeatureIcon } from "../FeatureIcons";
 import { LocalTime } from "../deliveries/LocalTime";
 import { unreadEvent } from "./Notifier";
@@ -10,7 +10,7 @@ import styles from "./Notifications.module.css";
 
 export type NoticeRow = {
   id: string;
-  kind: "open" | "download" | "request";
+  kind: NoticeKind;
   deliveryId: string;
   title: string;
   clientName: string | null;
@@ -21,7 +21,16 @@ export type NoticeRow = {
   isNew: boolean;
 };
 
-const icons = { open: "proof", download: "upload", request: "request" } as const;
+const icons = {
+  open: "proof",
+  download: "upload",
+  request: "request",
+  approval: "approve",
+  comment: "comment",
+  favourite: "heart",
+  reminder: "nudge",
+  reminded: "nudge",
+} as const;
 
 // Opening the page marks everything on it as read; the lines stay marked new until the next visit, so you can see
 // what you missed.
@@ -35,7 +44,7 @@ export function NotificationList({ notices }: { notices: NoticeRow[] }) {
   if (notices.length === 0) {
     return (
       <p className={styles.empty}>
-        Nothing yet. When a client opens one of your links, saves files or asks for something, it shows up here.
+        Nothing yet. When a client opens one of your links, saves, approves or comments on files, or asks for something, it shows up here.
       </p>
     );
   }
@@ -44,7 +53,7 @@ export function NotificationList({ notices }: { notices: NoticeRow[] }) {
     <ul className={styles.list}>
       {notices.map((notice) => (
         <li key={notice.id} className={styles.item} data-kind={notice.kind} data-new={notice.isNew || undefined}>
-          <Link href={notice.kind === "request" ? "/requests" : `/deliveries/${notice.deliveryId}`} className={styles.link}>
+          <Link href={noticeHref(notice)} className={styles.link}>
             <span className={styles.icon} aria-hidden="true">
               <FeatureIcon name={icons[notice.kind]} />
             </span>

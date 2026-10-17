@@ -2,9 +2,11 @@ import Link from "next/link";
 import { FeatureIcon } from "../FeatureIcons";
 import { noBrand, type Brand } from "@/lib/brand";
 import { downloadName, type Delivery, type DeliveryFile } from "@/lib/deliveries";
+import { currentApproval, noFeedback, type Feedback } from "@/lib/feedback";
 import { saveLimits, saveType, type SaveTarget } from "@/lib/save-to-phone";
 import { formatSize } from "@/lib/storage-limits";
 import { ClientBrand } from "./ClientBrand";
+import { ApproveAll, FileFeedback, Heart, type ApprovalView, type CommentView } from "./ClientFeedback";
 import { AskAbout, RequestFile } from "./RequestFile";
 import { SaveToPhone } from "./SaveToPhone";
 import styles from "./ClientView.module.css";
@@ -76,6 +78,8 @@ export function ClientView({
   brand = noBrand,
   thumbs = {},
   canAsk = false,
+  feedback = noFeedback,
+  showBranding = true,
 }: {
   delivery: Delivery;
   // The studio name when one is set, else the person's own name.
@@ -84,6 +88,10 @@ export function ClientView({
   thumbs?: Record<string, string>;
   // True on the public page, where a client may ask for a file. The owner's preview shows the page without it.
   canAsk?: boolean;
+  // Approvals and comments so far. The owner's preview shows them without the buttons.
+  feedback?: Feedback;
+  // False when the creative's plan hides "Sent with Memocraft".
+  showBranding?: boolean;
 }) {
   const live = delivery.status === "published";
   // Files that are not in storage yet, and sections left with none, are not shown to the client.
@@ -99,6 +107,38 @@ export function ClientView({
   }
   const saveAll = [...targets.values()];
   const askable = canAsk && live;
+  const approvalFor = (fileId: string | null): ApprovalView => {
+    const found = currentApproval(feedback, fileId);
+    return found ? { at: found.at.toISOString(), name: found.name } : null;
+  };
+  const commentsFor = (fileId: string): CommentView[] =>
+    feedback.comments
+      .filter((comment) => comment.fileId === fileId)
+      .map((comment) => ({
+        id: comment.id,
+        message: comment.message,
+        x: comment.x,
+        y: comment.y,
+        name: comment.name,
+        fromOwner: comment.fromOwner,
+        parentId: comment.parentId,
+        at: comment.createdAt.toISOString(),
+        resolved: comment.resolved,
+      }));
+  const fileFeedback = (file: DeliveryFile, compact = false) => (
+    <FileFeedback
+      slug={delivery.slug}
+      fileId={file.id}
+      fileName={file.name}
+      picture={thumbs[file.id] ?? null}
+      approval={approvalFor(file.id)}
+      comments={commentsFor(file.id)}
+      interactive={askable}
+      defaultName={delivery.clientName}
+      compact={compact}
+    />
+  );
+  const fileCount = sections.reduce((sum, section) => sum + section.files.length, 0);
   const [latest, ...earlier] = delivery.updates;
   const mark = (file: DeliveryFile) => {
     const found = fileMark(file, delivery.publishedAt);
@@ -169,6 +209,7 @@ export function ClientView({
                     <div className={styles.photo}>
                       {/* eslint-disable-next-line @next/next/no-img-element -- a signed storage link, not a site asset */}
                       <img src={thumbs[file.id]} alt={file.name} loading="lazy" decoding="async" />
+                      {askable && <Heart slug={delivery.slug} fileId={file.id} fileName={file.name} overlay />}
                     </div>
                     <div className={styles.tileBody}>
                       <p className={styles.tileName}>
@@ -177,6 +218,7 @@ export function ClientView({
                       </p>
                       {file.note && <p className={styles.fileNote}>{file.note}</p>}
                       <p className={styles.fileMeta}>{fileMeta(file)}</p>
+                      {fileFeedback(file, true)}
                       {askable && <AskAbout fileId={file.id} />}
                     </div>
                     <div className={styles.tileActions}>
@@ -207,6 +249,7 @@ export function ClientView({
                       </p>
                       {file.note && <p className={styles.fileNote}>{file.note}</p>}
                       <p className={styles.fileMeta}>{fileMeta(file)}</p>
+                      {fileFeedback(file)}
                       {askable && <AskAbout fileId={file.id} />}
                     </div>
                     <div className={styles.rowActions}>
@@ -229,6 +272,15 @@ export function ClientView({
         </section>
       ))}
 
+      <ApproveAll
+        slug={delivery.slug}
+        senderName={senderName}
+        approval={approvalFor(null)}
+        fileCount={fileCount}
+        interactive={askable}
+        defaultName={delivery.clientName}
+      />
+
       {askable && (
         <RequestFile
           slug={delivery.slug}
@@ -240,12 +292,15 @@ export function ClientView({
       <footer className={styles.foot}>
         {live && (
           <p className={styles.notice}>
-            {senderName} sees when you open this page or start a download, and the kind of device, such as iPhone.
+            {senderName} sees when you open this page or start a download, and the kind of device, such as iPhone. Hearts,
+            comments and approvals go to {senderName} too.
           </p>
         )}
-        <Link href="/" className={styles.footLink}>
-          Sent with Memocraft
-        </Link>
+        {showBranding && (
+          <Link href="/" className={styles.footLink}>
+            Sent with Memocraft
+          </Link>
+        )}
       </footer>
     </article>
   );

@@ -1,11 +1,12 @@
 import { pool } from "./auth";
+import type { NoticeKind } from "./notice-text";
 
 // What happened on a creative's links since they last looked: a client opened a delivery, saved files from it, or
 // asked for something. Downloads from one visit are folded into one line ("saved 6 files"), so a "Save all" is one
 // notification, not six.
 export type Notice = {
   id: string;
-  kind: "open" | "download" | "request";
+  kind: NoticeKind;
   deliveryId: string;
   title: string;
   clientName: string | null;
@@ -42,6 +43,29 @@ export async function listNotices(
               null, r."fileName", 1, r."createdAt"
          from "fileRequest" r join "delivery" d on d."id" = r."deliveryId"
         where d."ownerId" = $1 and r."createdAt" > $2
+       union all
+       select a."id"::text, 'approval', d."id", d."title", coalesce(a."name", d."clientName"),
+              a."device", a."fileName", 1, a."at"
+         from "approval" a join "delivery" d on d."id" = a."deliveryId"
+        where d."ownerId" = $1 and a."at" > $2
+       union all
+       select c."id"::text, 'comment', d."id", d."title", coalesce(c."name", d."clientName"),
+              null, f."name", 1, c."createdAt"
+         from "fileComment" c join "delivery" d on d."id" = c."deliveryId" join "deliveryFile" f on f."id" = c."fileId"
+        where d."ownerId" = $1 and c."createdAt" > $2 and not c."fromOwner"
+       union all
+       -- hearts from one browser on one delivery fold into one line, like a "Save all"
+       select 'fav:' || d."id"::text || ':' || v."clientKey", 'favourite', d."id", d."title", d."clientName",
+              null, min(f."name"), count(*)::int, max(v."at")
+         from "fileFavourite" v join "delivery" d on d."id" = v."deliveryId" join "deliveryFile" f on f."id" = v."fileId"
+        where d."ownerId" = $1 and v."at" > $2
+        group by d."id", v."clientKey"
+       having max(v."at") < now() - interval '6 seconds'
+       union all
+       select m."id"::text, case when m."channel" = 'email' then 'reminded' else 'reminder' end, d."id", d."title",
+              d."clientName", null, null, 1, m."createdAt"
+         from "deliveryReminder" m join "delivery" d on d."id" = m."deliveryId"
+        where d."ownerId" = $1 and m."createdAt" > $2
      ) n
      order by "at" desc
      limit $3`,

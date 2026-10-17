@@ -51,7 +51,9 @@
   height: 22px;
 }
 
-.item[data-kind="request"] .icon {
+.item[data-kind="request"] .icon,
+.item[data-kind="reminder"] .icon,
+.item[data-kind="favourite"] .icon {
   color: var(--proof-text);
 }
 

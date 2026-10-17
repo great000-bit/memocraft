@@ -24,8 +24,14 @@ export default function PrivacyPage() {
           you choose, such as a password or an end date.
         </li>
         <li>
-          <strong>Client activity.</strong> When a client opens a link, downloads a file or sends a file request, we
-          record that so you can see it.
+          <strong>Client activity.</strong> When a client opens a link, downloads a file, sends a file request, hearts,
+          comments on or approves a file, we record that so you can see it, with the time and the kind of device. A name
+          is kept only if the client types one. A random id kept in the client&rsquo;s browser lets them take back a
+          heart; it is not linked to who they are.
+        </li>
+        <li>
+          <strong>Your client&rsquo;s email, if you add it.</strong> Used only to send at most two reminders when a link
+          has not been opened.
         </li>
       </ul>
 

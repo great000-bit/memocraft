@@ -1,0 +1,432 @@
+/* Client feedback and reminders in the editor. Built on the proof-of-delivery panel's look. */
+
+.panel {
+  scroll-margin-top: var(--space-6);
+}
+
+.block {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.blockTitle {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.receipts,
+.hearts,
+.notes {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.receipt {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: 14px;
+  background: var(--sunken);
+  opacity: 0.65;
+}
+
+.receipt[data-current] {
+  opacity: 1;
+}
+
+.receiptIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--fixer-tint);
+  color: var(--fixer-ink, var(--fixer));
+}
+
+.receiptIcon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.receiptText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--text-muted);
+}
+
+.receiptText b {
+  font-size: 15px;
+  line-height: 21px;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.heartItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 6px var(--space-3) 6px 6px;
+  border-radius: 14px;
+  background: var(--sunken);
+}
+
+.heartItem img,
+.heartFile {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--bg);
+}
+
+.heartFile {
+  display: grid;
+  place-items: center;
+  color: var(--text-subtle);
+}
+
+.heartFile svg {
+  width: 22px;
+  height: 22px;
+}
+
+.heartName {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.heartCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  color: var(--proof-text);
+}
+
+.heartCount svg {
+  width: 18px;
+  height: 18px;
+}
+
+.heartCount svg path {
+  fill: var(--proof);
+}
+
+.file {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: 18px;
+  background: var(--sunken);
+}
+
+.fileName {
+  font-size: 15px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.fileBody {
+  display: grid;
+  gap: var(--space-3);
+}
+
+@media (min-width: 760px) {
+  .fileBody:has(.canvas) {
+    grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.canvas {
+  position: relative;
+  justify-self: start;
+  max-width: 100%;
+  line-height: 0;
+}
+
+.canvas img {
+  display: block;
+  max-width: 100%;
+  max-height: 260px;
+  border-radius: 10px;
+}
+
+.pin {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
+  border-radius: 50% 50% 50% 4px;
+  background: var(--proof);
+  color: #3d2603;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+.pin[data-resolved] {
+  background: #d9dedc;
+  color: #5b6662;
+}
+
+.note {
+  display: grid;
+  gap: 6px;
+  padding: var(--space-3);
+  border-radius: 14px;
+  background: var(--bg);
+}
+
+.note[data-resolved] .noteText {
+  color: var(--text-muted);
+}
+
+.noteHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.noteHead b {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.noteNumber {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--proof);
+  color: #3d2603;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.done {
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--fixer-tint);
+  color: var(--fixer-ink, var(--fixer));
+  font-weight: 600;
+}
+
+.noteText {
+  font-size: 15px;
+  line-height: 22px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.reply {
+  margin-left: var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  border-radius: 10px;
+  background: var(--fixer-tint);
+  font-size: 14px;
+  line-height: 20px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.replyForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.replyForm input,
+.field input,
+.field select {
+  flex: 1 1 200px;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0 var(--space-3);
+  font: inherit;
+  font-size: 15px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--control-border);
+  border-radius: 10px;
+}
+
+.replyForm input:focus-visible,
+.field input:focus-visible,
+.field select:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.replyButton,
+.doneButton,
+.chipButton {
+  min-height: 42px;
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.replyButton {
+  background: var(--fixer);
+  color: var(--on-fixer);
+}
+
+.replyButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.doneButton,
+.chipButton {
+  background: transparent;
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--control-border);
+}
+
+.doneButton:hover,
+.chipButton:hover {
+  box-shadow: inset 0 0 0 1px var(--text);
+}
+
+.error {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--error, #b3261e);
+}
+
+/* Reminders */
+.fields {
+  display: grid;
+  gap: var(--space-3);
+}
+
+@media (min-width: 640px) {
+  .fields {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  }
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.status {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: 14px;
+  background: var(--sunken);
+  font-size: 15px;
+  line-height: 22px;
+}
+
+.status svg {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  color: var(--fixer-ink, var(--fixer));
+}
+
+.due {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: 18px;
+  background: var(--proof-tint);
+}
+
+.dueTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--proof-text);
+}
+
+.message {
+  margin: 0;
+  padding: var(--space-3);
+  border-radius: 12px;
+  background: var(--surface);
+  font: inherit;
+  font-size: 15px;
+  line-height: 22px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.actions a,
+.actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.primaryAction {
+  background: var(--fixer);
+  color: var(--on-fixer);
+}
+
+.whatsApp {
+  background: #1f8f4e;
+  color: #fff;
+}
+
+.quietAction {
+  background: transparent;
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--control-border);
+}
+
+.hint {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text-subtle);
+}

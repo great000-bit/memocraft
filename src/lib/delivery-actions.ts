@@ -20,7 +20,11 @@ const deliveryFields: Record<string, FieldRule> = {
   title: { column: "title", max: limits.title, required: true, label: "The title" },
   clientName: { column: "clientName", max: limits.clientName, label: "The client name" },
   message: { column: "message", max: limits.message, label: "The message" },
+  clientEmail: { column: "clientEmail", max: limits.email, label: "The email address" },
 };
+
+// Loose on purpose: the address is the creative's to get right; this only catches a slip such as a missing @.
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const sectionFields: Record<string, FieldRule> = {
   title: { column: "title", max: limits.title, required: true, label: "The section name" },
@@ -68,6 +72,7 @@ export async function saveDeliveryField(deliveryId: string, field: string, input
   if (!rule || !isUuid(deliveryId)) return fail("That field cannot be edited.");
   const cleaned = clean(input, rule);
   if ("error" in cleaned) return fail(cleaned.error);
+  if (field === "clientEmail" && cleaned.value && !emailPattern.test(cleaned.value)) return fail("That does not look like an email address.");
   const result = await pool.query(
     `update "delivery" set "${rule.column}" = $1, "updatedAt" = now() where "id" = $2 and "ownerId" = $3`,
     [cleaned.value, deliveryId, user.id],
