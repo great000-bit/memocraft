@@ -1,4 +1,5 @@
 import { Button } from "@/components/Button";
+import { FeatureIcon, type FeatureIconName } from "@/components/FeatureIcons";
 import { FeatureTabs } from "@/components/FeatureTabs";
 import { Logo, LogoMark } from "@/components/Logo";
 import { DeliveryMock } from "@/components/Mockups";
@@ -9,13 +10,13 @@ import styles from "./page.module.css";
 
 const audiences = ["Photographers", "Designers", "Filmmakers", "Brand studios", "Illustrators", "Videographers"];
 
-const extras = [
-  { title: "Passwords and expiry", body: "Lock a delivery with a password, or let it close on a date you choose." },
-  { title: "Your brand on every page", body: "Your logo and studio name lead, so clients see you first." },
-  { title: "File requests", body: "Clients ask for a missing file, and it lands on your to-do list." },
-  { title: "Version history", body: "Every replaced file is kept, so nothing is ever lost." },
-  { title: "Big files, no fuss", body: "Uploads pause and resume on a weak connection." },
-  { title: "Collaborators", body: "Invite a second shooter or editor to help on a delivery." },
+const extras: { title: string; body: string; icon: FeatureIconName; tone: "mint" | "sand" | "amber" }[] = [
+  { title: "Passwords and expiry", body: "Lock a delivery with a password, or let it close on a date you choose.", icon: "lock", tone: "mint" },
+  { title: "Your brand on every page", body: "Your logo and studio name lead, so clients see you first.", icon: "brand", tone: "sand" },
+  { title: "File requests", body: "Clients ask for a missing file, and it lands on your to-do list.", icon: "request", tone: "amber" },
+  { title: "Version history", body: "Every replaced file is kept, so nothing is ever lost.", icon: "history", tone: "sand" },
+  { title: "Big files, no fuss", body: "Uploads pause and resume on a weak connection.", icon: "upload", tone: "amber" },
+  { title: "Collaborators", body: "Invite a second shooter or editor to help on a delivery.", icon: "people", tone: "mint" },
 ];
 
 const footer = [
@@ -161,12 +162,17 @@ export default function Home() {
             <p className={styles.kicker}>More</p>
             <h2 className={styles.h2}>There when you need it</h2>
           </Reveal>
-          <ul className={styles.extras}>
-            {extras.map((e, i) => (
-              <Reveal as="li" key={e.title} delay={(i % 3) * 100} className={styles.extra}>
-                <h3 className={styles.h3}>{e.title}</h3>
-                <p className={styles.body}>{e.body}</p>
-              </Reveal>
+          <ul className={styles.cards}>
+            {extras.map((e) => (
+              <li key={e.title} className={styles.card} data-tone={e.tone}>
+                <span className={styles.cardIcon}>
+                  <FeatureIcon name={e.icon} />
+                </span>
+                <div className={styles.cardText}>
+                  <h3 className={styles.cardTitle}>{e.title}</h3>
+                  <p className={styles.cardBody}>{e.body}</p>
+                </div>
+              </li>
             ))}
           </ul>
         </section>
