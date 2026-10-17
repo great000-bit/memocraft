@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { Ago, Feed, Meter, PanelSkeleton, plural, providerName, size } from "@/components/admin/AdminParts";
 import { Avatar } from "@/components/workspace/Avatar";
@@ -20,6 +21,7 @@ function linkState(d: AdminDelivery): { label: string; tone: string } {
 }
 
 async function Account({ params }: { params: Promise<{ id: string }> }) {
+  await connection();
   const admin = await requireAdmin();
   const { id } = await params;
   const user = await getUserDetail(id);

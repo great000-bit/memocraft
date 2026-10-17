@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+// Every block reads live numbers, so each waits for the request (connection()) instead of being baked in at build.
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { Ago, DayBars, Feed, Meter, PanelSkeleton, StatCard, UserChip, plural, size } from "@/components/admin/AdminParts";
 import { getDailyCounts, getHealth, getOverview, listAudit, listFeed, listUsers } from "@/lib/admin-data";
@@ -13,6 +15,7 @@ import styles from "@/components/admin/Admin.module.css";
 export const metadata: Metadata = { title: "Overview" };
 
 async function Numbers() {
+  await connection();
   const o = await getOverview();
   return (
     <div className={cards.cardsWrap}>
@@ -67,6 +70,7 @@ async function Numbers() {
 }
 
 async function Charts() {
+  await connection();
   const days = await getDailyCounts();
   return (
     <div className={styles.twoCol}>
@@ -84,6 +88,7 @@ async function Charts() {
 }
 
 async function Recent() {
+  await connection();
   const items = await listFeed({ limit: 12 });
   return (
     <section className={styles.panel}>
@@ -99,6 +104,7 @@ async function Recent() {
 }
 
 async function TopStorage() {
+  await connection();
   const { users } = await listUsers({ q: "", sort: "storage", page: 1 });
   const top = users.filter((u) => u.storageBytes > 0).slice(0, 5);
   return (
@@ -131,6 +137,7 @@ async function TopStorage() {
 const storageText = { ok: "Connected", off: "Not set up", error: "Not reachable" } as const;
 
 async function Health() {
+  await connection();
   const [db, storage] = await Promise.all([getHealth(), storageStatus()]);
   return (
     <section className={styles.panel}>
@@ -152,6 +159,7 @@ async function Health() {
 }
 
 async function AuditLog() {
+  await connection();
   const rows = await listAudit();
   return (
     <section className={styles.panel}>
