@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 import { Pool } from "pg";
-import type { PoolClient } from "pg";
+import type { PoolClient, PoolConfig } from "pg";
 
 type PendingItem = {
   callback: (error: Error | undefined, client?: PoolClient, release?: () => void) => void;
@@ -16,6 +16,17 @@ const retryConnectAfterMs = 400;
 // and a client opening a link never sees the hiccup. A second failure is a real outage and still surfaces.
 // `newClient` is internal to pg-pool; if a future version renames it this override is simply never called.
 class WakingPool extends Pool {
+  constructor(config: PoolConfig) {
+    super(config);
+    // While a client is checked out the pool stops listening to it, and pg emits "error" when its connection
+    // drops (Neon suspending or restarting the database does exactly that). With nobody listening Node treats
+    // it as an uncaught exception and the whole serverless process exits, taking every request in flight with
+    // it. The query that was running still fails on its own, so this only keeps the process alive.
+    this.on("connect", (client) => {
+      client.on("error", (error) => console.warn("Database connection dropped:", error.message));
+    });
+  }
+
   newClient(pendingItem: PendingItem) {
     const open = (Pool.prototype as unknown as { newClient(item: PendingItem): void }).newClient;
     const callback = pendingItem.callback;
