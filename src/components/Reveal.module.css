@@ -1,0 +1,39 @@
+.reveal {
+  transition:
+    opacity 700ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.up {
+  opacity: 0;
+  transform: translateY(32px);
+}
+
+.fade {
+  opacity: 0;
+}
+
+.scale {
+  opacity: 0;
+  transform: scale(0.94);
+}
+
+.shown {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    transition: opacity 300ms ease;
+    transform: none;
+  }
+}
+
+/* Content stays visible when scripts never run */
+@media (scripting: none) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
