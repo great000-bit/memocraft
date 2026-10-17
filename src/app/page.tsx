@@ -142,12 +142,55 @@ export default function Home() {
               </Button>
             </div>
             <div className={styles.collage} aria-hidden="true">
-              <span className={styles.cTile} />
-              <span className={styles.cPhoto}>
-                <span className={styles.cShare}>Share</span>
-              </span>
-              <div className={styles.cModal}>
+              <div className={`${styles.cCard} ${styles.cCover}`}>
+                <span className={styles.coverPhoto} />
+                <p className={styles.coverName}>launch-film-4k.mp4</p>
+                <span className={styles.chip}>Downloaded Mon 09:44</span>
+              </div>
+              <div className={`${styles.cCard} ${styles.cGallery}`}>
+                <div className={styles.galleryHead}>
+                  <div>
+                    <p className={styles.galleryTitle}>Adaeze &amp; Tobi</p>
+                    <p className={styles.gallerySub}>Wedding &middot; 48 files</p>
+                  </div>
+                  <span className={styles.cShare}>Share</span>
+                </div>
+                <div className={styles.galleryGrid}>
+                  {[0, 1, 2, 3].map((n) => (
+                    <i key={n} className={styles[`tone${n}`]} />
+                  ))}
+                </div>
+                <p className={styles.galleryFoot}>
+                  <b>Updated</b>
+                  Retouched files replaced, same link
+                </p>
+              </div>
+              <div className={`${styles.cCard} ${styles.cModal}`}>
+                <div className={styles.modalBar}>
+                  <span>&lsaquo; Back</span>
+                  <span className={styles.modalIcons}>&#9881; &times;</span>
+                </div>
                 <p className={styles.lockTitle}>Link settings</p>
+                <div className={styles.modalTabs}>
+                  <b>People</b>
+                  <span>Links</span>
+                </div>
+                {[
+                  ["KO", "mint", "Kemi at Orbit Foods", "Opened 2 hours ago", "Can download"],
+                  ["TA", "amber", "Tobi Adeyemi", "Not opened yet", "Can view"],
+                  ["LS", "sand", "Lumen Studio", "You", "Owner"],
+                ].map(([initials, tone, name, note, role]) => (
+                  <div key={name} className={styles.person}>
+                    <span className={styles.avatar} data-tone={tone}>
+                      {initials}
+                    </span>
+                    <div>
+                      <p className={styles.personName}>{name}</p>
+                      <p className={styles.personNote}>{note}</p>
+                    </div>
+                    <span className={styles.personRole}>{role}</span>
+                  </div>
+                ))}
                 <div className={styles.lockRow}>
                   <span>Password</span>
                   <span className={styles.toggleOn} />
@@ -155,14 +198,6 @@ export default function Home() {
                 <div className={styles.lockRow}>
                   <span>Closes</span>
                   <span className={styles.lockValue}>31 Dec 2026</span>
-                </div>
-                <div className={styles.lockRow}>
-                  <span>Downloads</span>
-                  <span className={styles.lockValue}>Allowed</span>
-                </div>
-                <div className={styles.lockRow}>
-                  <span>Link</span>
-                  <span className={styles.toggleOn} />
                 </div>
               </div>
             </div>
