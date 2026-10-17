@@ -25,7 +25,12 @@ const galleryTiles: PhotoKey[] = ["printLaugh", "capFists", "purplePhone", "bere
 const footer = [
   { head: "Products", links: ["Deliveries", "Client links", "File requests", "Proof of delivery"] },
   { head: "Solutions", links: ["Photographers", "Designers", "Filmmakers", "Brand studios"] },
-  { head: "Company", links: ["About", "Pricing", "Contact", "Privacy"] },
+  { head: "Company", links: ["About", "Pricing", "Contact"] },
+];
+
+const legalLinks = [
+  { label: "Privacy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
 ];
 
 export default function Home() {
@@ -305,6 +310,12 @@ export default function Home() {
                     <a href="#">{l}</a>
                   </li>
                 ))}
+                {col.head === "Company" &&
+                  legalLinks.map((l) => (
+                    <li key={l.label}>
+                      <a href={l.href}>{l.label}</a>
+                    </li>
+                  ))}
               </ul>
             </div>
           ))}

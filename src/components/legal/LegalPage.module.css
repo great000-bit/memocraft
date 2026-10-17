@@ -1,0 +1,11 @@
+.page { min-height: 100dvh; display: flex; flex-direction: column; }
+.header { padding: var(--space-6) clamp(var(--space-4), 5.5vw, 110px); }
+.logo { height: 24px; width: auto; display: block; }
+.main { flex: 1; width: 100%; max-width: 720px; margin: 0 auto; padding: var(--space-6) var(--space-4) 64px; }
+.title { font-size: clamp(28px, 5vw, 40px); line-height: 1.15; margin: 0 0 8px; }
+.updated { margin: 0 0 32px; opacity: 0.65; font-size: 14px; }
+.body h2 { font-size: 20px; margin: 32px 0 8px; }
+.body p, .body li { line-height: 1.65; font-size: 16px; }
+.body ul { padding-left: 20px; }
+.body a { text-decoration: underline; }
+.footer { display: flex; gap: 20px; flex-wrap: wrap; padding: 24px clamp(var(--space-4), 5.5vw, 110px); font-size: 14px; opacity: 0.75; }
