@@ -23,6 +23,6 @@ Set these in `.env.local` (never commit it):
 | `BETTER_AUTH_SECRET` | Random string, at least 32 characters, that signs login sessions. |
 | `BETTER_AUTH_URL` | The app's public address, such as `http://localhost:3000`. |
 
-The auth tables are in `db/migrations/0001_auth.sql`. Apply it to a new database with `psql "$DATABASE_URL" -f db/migrations/0001_auth.sql`. `node scripts/auth-sql.mjs` prints the SQL the installed Better Auth version expects, to check for drift after an upgrade. `/api/health` reports whether the app can reach its database.
+The tables are in `db/migrations`, numbered in the order to apply them: `0001_auth.sql` (accounts and sessions) and `0002_deliveries.sql` (deliveries, sections and files). Apply each to a new database with `psql "$DATABASE_URL" -f db/migrations/0001_auth.sql`. `node scripts/auth-sql.mjs` prints the SQL the installed Better Auth version expects, to check for drift after an upgrade. `/api/health` reports whether the app can reach its database.
 
 Design tokens live in `src/app/globals.css` and mirror the Memocraft Design System. The logo in `src/components/Logo.tsx` is outlined from Godber (licensed for logo use); never load Godber as a web font.

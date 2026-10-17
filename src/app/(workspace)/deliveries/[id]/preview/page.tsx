@@ -1,0 +1,40 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { ClientView } from "@/components/deliveries/ClientView";
+import { getDeliveryForOwner } from "@/lib/deliveries";
+import { requireUser } from "@/lib/session";
+import styles from "@/components/workspace/Workspace.module.css";
+
+export const metadata: Metadata = { title: "Preview" };
+
+async function Preview({ params }: Pick<PageProps<"/deliveries/[id]/preview">, "params">) {
+  const user = await requireUser();
+  const { id } = await params;
+  const delivery = await getDeliveryForOwner(id, user.id);
+  if (!delivery) notFound();
+  return (
+    <>
+      <div className={styles.previewBar}>
+        <p>
+          Preview: this is what your client sees. {delivery.status === "published" ? "It is published." : "It is still a draft, so the link is off."}
+        </p>
+        <Link href={`/deliveries/${delivery.id}`} className={styles.previewBack}>
+          Back to editing
+        </Link>
+      </div>
+      <div className={`light-scope ${styles.previewFrame}`}>
+        <ClientView delivery={delivery} senderName={user.name} />
+      </div>
+    </>
+  );
+}
+
+export default function PreviewPage({ params }: PageProps<"/deliveries/[id]/preview">) {
+  return (
+    <Suspense fallback={<p className={styles.sub}>Loading preview…</p>}>
+      <Preview params={params} />
+    </Suspense>
+  );
+}

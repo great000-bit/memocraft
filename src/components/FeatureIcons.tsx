@@ -30,6 +30,12 @@ const paths = {
       <path d="M12 16v-5m0 0-2 2m2-2 2 2" />
     </>
   ),
+  file: (
+    <>
+      <path d="M7 3h7l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
+      <path d="M14 3v5h5" />
+    </>
+  ),
   people: (
     <>
       <circle cx="9" cy="9" r="3" />

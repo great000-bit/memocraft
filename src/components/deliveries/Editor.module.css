@@ -1,0 +1,499 @@
+.field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.label {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.optional {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.input {
+  width: 100%;
+  min-width: 0;
+  padding-right: 68px;
+  font: inherit;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  resize: none;
+}
+
+.input::placeholder {
+  color: var(--text-subtle);
+}
+
+.plain {
+  min-height: 52px;
+  padding: 12px 68px 12px var(--space-4);
+  font-size: 17px;
+  background: var(--surface);
+  border-color: var(--control-border);
+}
+
+/* A smaller control for rows inside a card, such as a file's name and note. */
+.compact {
+  min-height: 44px;
+  padding: 9px 68px 9px var(--space-3);
+  font-size: 16px;
+  line-height: 24px;
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+
+textarea.plain {
+  field-sizing: content;
+  min-height: 84px;
+  line-height: 24px;
+}
+
+textarea.compact {
+  field-sizing: content;
+  min-height: 44px;
+}
+
+.title {
+  padding: 6px 68px 6px var(--space-3);
+  margin-inline: calc(var(--space-3) * -1);
+  width: calc(100% + var(--space-3) * 2);
+  font-family: var(--font-display);
+  font-stretch: 106%;
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.heading {
+  padding: 4px 68px 4px var(--space-3);
+  margin-inline: calc(var(--space-3) * -1);
+  width: calc(100% + var(--space-3) * 2);
+  font-family: var(--font-display);
+  font-stretch: 106%;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 28px;
+  letter-spacing: -0.01em;
+}
+
+.quiet {
+  padding: 6px 68px 6px var(--space-3);
+  margin-inline: calc(var(--space-3) * -1);
+  width: calc(100% + var(--space-3) * 2);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+textarea.quiet,
+textarea.title,
+textarea.heading {
+  field-sizing: content;
+}
+
+.input:hover {
+  border-color: var(--line);
+}
+
+.plain:hover {
+  border-color: var(--text);
+}
+
+.compact:hover {
+  border-color: var(--control-border);
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-color: var(--text);
+  background: var(--surface);
+}
+
+.control {
+  position: relative;
+  display: grid;
+}
+
+/* The save confirmation floats over the field's right edge, so fields keep their spacing. */
+.chip {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--sunken);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+  pointer-events: none;
+}
+
+.chip[data-kind="saved"] {
+  background: var(--fixer-tint);
+  color: var(--fixer);
+  animation: chipOut 2.6s ease forwards;
+}
+
+@keyframes chipOut {
+  0%,
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.status {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--error);
+}
+
+.status:empty {
+  display: none;
+}
+
+.hint {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text-muted);
+}
+
+/* Buttons */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.button:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.primary {
+  background: var(--fixer);
+  color: var(--on-fixer);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--fixer-hover);
+}
+
+.secondary {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--control-border);
+}
+
+.secondary:hover:not(:disabled) {
+  border-color: var(--text);
+}
+
+.add {
+  justify-self: start;
+  min-height: 40px;
+  background: var(--fixer-tint);
+  color: var(--fixer);
+}
+
+.add:hover:not(:disabled) {
+  background: var(--sunken);
+}
+
+.danger {
+  background: var(--error);
+  color: #ffffff;
+}
+
+.wide {
+  min-height: 56px;
+  font-size: 18px;
+}
+
+.confirm,
+.actionWrap {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.actionError {
+  font-size: 14px;
+  color: var(--error);
+}
+
+.newForm {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 520px;
+}
+
+.formError {
+  padding: var(--space-3) var(--space-4);
+  border-radius: 10px;
+  font-size: 15px;
+  line-height: 22px;
+  color: #8f2a1a;
+  background: #fdeeea;
+  border: 1px solid #f1c3b9;
+}
+
+/* Editor page */
+.back {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--text);
+}
+
+.head {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.headTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.pill {
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--sunken);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.pill[data-status="published"] {
+  background: var(--fixer-tint);
+  color: var(--fixer);
+}
+
+.headActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.share {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.shareMain {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.shareTitle {
+  font-size: 18px;
+  line-height: 24px;
+  letter-spacing: -0.01em;
+}
+
+.shareText {
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--text-muted);
+}
+
+.linkRow {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.linkInput {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--sunken);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.details {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.sectionList {
+  display: grid;
+  gap: var(--space-4);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.section {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.sectionTop {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.sectionTop > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.fileList {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.file {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--sunken);
+  border-radius: 12px;
+}
+
+.fileIcon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--fixer);
+}
+
+.fileIcon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.fileBody {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.fileFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.fileMeta {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--text-muted);
+}
+
+.empty {
+  padding: var(--space-4);
+  border: 1px dashed var(--control-border);
+  border-radius: 12px;
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+@media (min-width: 720px) {
+  .share {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .linkRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip[data-kind="saved"] {
+    animation: none;
+  }
+
+  .button {
+    transition: background-color 150ms ease;
+  }
+
+  .button:active:not(:disabled) {
+    transform: none;
+  }
+}
