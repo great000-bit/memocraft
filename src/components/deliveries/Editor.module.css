@@ -1485,3 +1485,143 @@ textarea.heading {
   line-height: 20px;
   color: var(--text);
 }
+
+/* AI enhance on a photo card. Amber, the Proof colour, marks it as the special extra on the card. */
+.enhance {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px dashed var(--proof);
+  border-radius: 16px;
+}
+
+.enhanceActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.enhanceButton {
+  background: var(--proof);
+  color: #3d2603;
+  font-weight: 700;
+}
+
+.enhanceButton:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.enhanceFaces {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.enhanceTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 22px;
+}
+
+.enhanceSpark {
+  color: var(--proof-text);
+}
+
+.enhanceHint {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--text-muted);
+}
+
+.enhanceSpin {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--proof-tint);
+  border-top-color: var(--proof);
+  border-radius: 50%;
+  animation: enhance-spin 0.9s linear infinite;
+}
+
+@keyframes enhance-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.compare {
+  width: min(960px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  padding: var(--space-3);
+  border: 0;
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.compare[open] {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.compare::backdrop {
+  background: rgb(0 0 0 / 0.6);
+}
+
+.compareFrame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #000;
+}
+
+.compareImage {
+  display: block;
+  width: 100%;
+  max-height: calc(100vh - 180px);
+  object-fit: contain;
+}
+
+.compareImage + .compareImage {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+}
+
+.compareLabel {
+  position: absolute;
+  top: 10px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.6);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.compareLabel[data-side="before"] {
+  left: 10px;
+}
+
+.compareLabel[data-side="after"] {
+  right: 10px;
+}
+
+.compareLine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #fff;
+  box-shadow: 0 0 6px rgb(0 0 0 / 0.5);
+  pointer-events: none;
+}
+
+.compareSlider {
+  width: 100%;
+}

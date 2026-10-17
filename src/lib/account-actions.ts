@@ -13,7 +13,7 @@ export type AccountResult = { ok: true } | { ok: false; error: string };
 
 const fail = (error: string) => ({ ok: false as const, error });
 
-type StoredFile = { storageKey: string | null; thumbKey: string | null; pending: PendingUpload | null };
+type StoredFile = { storageKey: string | null; thumbKey: string | null; enhancedKey: string | null; pending: PendingUpload | null };
 type StoredVersion = { storageKey: string; thumbKey: string | null };
 
 // Deletes the signed-in person's account for good. The database does the heavy lifting: every table that holds
@@ -39,7 +39,7 @@ export async function deleteAccount(_previous: AccountResult | null, formData: F
   }
 
   const files = await pool.query<StoredFile>(
-    `select f."storageKey", f."thumbKey", f."pending"
+    `select f."storageKey", f."thumbKey", f."enhancedKey", f."pending"
        from "deliveryFile" f
        join "deliverySection" s on s."id" = f."sectionId"
        join "delivery" d on d."id" = s."deliveryId"
@@ -71,7 +71,7 @@ export async function deleteAccount(_previous: AccountResult | null, formData: F
 
   await removeStored([
     ...files.rows,
-    ...versions.rows.map((version) => ({ storageKey: version.storageKey, thumbKey: version.thumbKey, pending: null })),
+    ...versions.rows.map((version) => ({ storageKey: version.storageKey, thumbKey: version.thumbKey, enhancedKey: null, pending: null })),
   ]);
   await deleteObjects([avatarKey(user.id), studioLogoKey(user.id)]);
 

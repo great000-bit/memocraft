@@ -24,6 +24,9 @@ import { PublishPanel } from "./PublishPanel";
 import { LinkSettings } from "./LinkSettings";
 import { RequestList } from "./RequestList";
 import { FileVersions } from "./FileVersions";
+import { EnhancePanel } from "./EnhancePanel";
+import { ENHANCEABLE_TYPES } from "@/lib/enhance";
+import { enhanceAllowance } from "@/lib/enhance-actions";
 import { UpdatesPanel } from "./UpdatesPanel";
 import { FileFooter, UploadArea } from "./Uploader";
 import styles from "./Editor.module.css";
@@ -71,17 +74,27 @@ function Step({
   );
 }
 
+type Allowance = { used: number; limit: number } | null;
+
+function enhanceState(file: DeliveryFile) {
+  if (file.enhancing) return file.enhancing;
+  if (file.enhancedBytes !== null) return { state: "ready" as const, bytes: file.enhancedBytes };
+  return { state: "none" as const };
+}
+
 // One file, one card: a picture, a name to click and change, and a note if the creative wants one.
 function FileCard({
   file,
   section,
   thumb,
   storageReady,
+  allowance,
 }: {
   file: DeliveryFile;
   section: DeliverySection;
   thumb: string | undefined;
   storageReady: boolean;
+  allowance: Allowance;
 }) {
   return (
     <li className={styles.file}>
@@ -127,6 +140,14 @@ function FileCard({
             replacedAt: version.replacedAt.toISOString(),
           }))}
         />
+        {allowance && file.attached && ENHANCEABLE_TYPES.includes(file.mimeType ?? "") && (
+          <EnhancePanel
+            key={`${file.id}:${file.enhancing?.state ?? ""}:${file.enhancedBytes ?? ""}`}
+            fileId={file.id}
+            initial={enhanceState(file)}
+            allowance={allowance}
+          />
+        )}
         <FileFooter
           sectionId={section.id}
           fileId={file.id}
@@ -152,16 +173,25 @@ function FileCards({
   section,
   thumbs,
   storageReady,
+  allowance,
 }: {
   section: DeliverySection;
   thumbs: Record<string, string>;
   storageReady: boolean;
+  allowance: Allowance;
 }) {
   if (section.files.length === 0) return null;
   return (
     <ul className={styles.fileList}>
       {section.files.map((file) => (
-        <FileCard key={file.id} file={file} section={section} thumb={thumbs[file.id]} storageReady={storageReady} />
+        <FileCard
+          key={file.id}
+          file={file}
+          section={section}
+          thumb={thumbs[file.id]}
+          storageReady={storageReady}
+          allowance={allowance}
+        />
       ))}
     </ul>
   );
@@ -190,6 +220,9 @@ export async function DeliveryEditor({
   );
   const storageReady = storageConfigured();
   const thumbs = await ownerThumbnailLinks(delivery);
+  // Enhance shows only once Replicate and storage are both set up.
+  const enhance = await enhanceAllowance();
+  const allowance: Allowance = enhance.on ? { used: enhance.used, limit: enhance.limit } : null;
   const grouped = delivery.sections.length > 1;
   const fileCount = delivery.sections.reduce((sum, section) => sum + section.files.length, 0);
   const only = delivery.sections[0];
@@ -267,7 +300,7 @@ export async function DeliveryEditor({
         {!grouped && only && (
           <>
             <UploadArea sectionId={only.id} storageReady={storageReady} hasFiles={only.files.length > 0}>
-              <FileCards section={only} thumbs={thumbs} storageReady={storageReady} />
+              <FileCards section={only} thumbs={thumbs} storageReady={storageReady} allowance={allowance} />
             </UploadArea>
             <div className={styles.groupRow}>
               <ActionButton action={addSection.bind(null, delivery.id)} variant="ghost">
@@ -317,7 +350,7 @@ export async function DeliveryEditor({
                     save={saveSectionField.bind(null, section.id, "note")}
                   />
                   <UploadArea sectionId={section.id} storageReady={storageReady} hasFiles>
-                    <FileCards section={section} thumbs={thumbs} storageReady={storageReady} />
+                    <FileCards section={section} thumbs={thumbs} storageReady={storageReady} allowance={allowance} />
                   </UploadArea>
                 </li>
               ))}

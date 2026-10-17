@@ -140,7 +140,7 @@ export async function addSection(deliveryId: string): Promise<ActionResult> {
   return done;
 }
 
-type StoredFile = { storageKey: string | null; thumbKey: string | null; pending: PendingUpload | null };
+type StoredFile = { storageKey: string | null; thumbKey: string | null; enhancedKey?: string | null; pending: PendingUpload | null };
 
 // Earlier versions live in their own table and are removed from the database with their file, so the objects they
 // point to are collected first and cleared from storage together with the file's own.
@@ -158,7 +158,7 @@ export async function deleteSection(sectionId: string): Promise<ActionResult> {
   const deliveryId = section.rows[0]?.deliveryId;
   if (!deliveryId) return fail("This section was not found.");
   const files = await pool.query<StoredFile>(
-    `select "storageKey", "thumbKey", "pending" from "deliveryFile" where "sectionId" = $1`,
+    `select "storageKey", "thumbKey", "enhancedKey", "pending" from "deliveryFile" where "sectionId" = $1`,
     [sectionId],
   );
   const versions = await pool.query<StoredVersion>(
@@ -177,7 +177,7 @@ export async function deleteFile(fileId: string): Promise<ActionResult> {
   const user = await requireUser();
   if (!isUuid(fileId)) return fail("This file was not found.");
   const file = await pool.query<StoredFile & { deliveryId: string }>(
-    `select f."storageKey", f."thumbKey", f."pending", s."deliveryId"
+    `select f."storageKey", f."thumbKey", f."enhancedKey", f."pending", s."deliveryId"
        from "deliveryFile" f
        join "deliverySection" s on s."id" = f."sectionId"
        join "delivery" d on d."id" = s."deliveryId"
@@ -290,7 +290,7 @@ export async function deleteDelivery(deliveryId: string): Promise<ActionResult> 
   const owned = await pool.query(`select 1 from "delivery" where "id" = $1 and "ownerId" = $2`, [deliveryId, user.id]);
   if (!owned.rowCount) return fail("This delivery was not found.");
   const files = await pool.query<StoredFile>(
-    `select f."storageKey", f."thumbKey", f."pending"
+    `select f."storageKey", f."thumbKey", f."enhancedKey", f."pending"
        from "deliveryFile" f join "deliverySection" s on s."id" = f."sectionId"
       where s."deliveryId" = $1`,
     [deliveryId],

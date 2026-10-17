@@ -6,6 +6,7 @@ import { pool } from "./auth";
 import { isUuid } from "./deliveries";
 import { limits } from "./delivery-limits";
 import { requireUser } from "./session";
+import { storageUsed } from "./storage-usage";
 import {
   completeMultipart,
   discardPending,
@@ -102,20 +103,7 @@ export async function beginUpload(input: BeginUploadInput): Promise<BeginUploadR
     previousPending = existing.rows[0].pending;
   }
 
-  // Counted: attached files, earlier versions kept from replaced files, and uploads started in the last day. A file
-  // being replaced still counts, because its current copy becomes a version when the new one arrives.
-  const usage = await pool.query<{ used: string }>(
-    `select coalesce(sum(case when f."storageKey" is not null then f."sizeBytes" end), 0)
-          + coalesce(sum(case when f."pending" is not null and (f."pending"->>'at')::timestamptz > now() - interval '24 hours'
-                              then (f."pending"->>'size')::bigint end), 0)
-          + coalesce(sum((select coalesce(sum(v."sizeBytes"), 0) from "deliveryFileVersion" v where v."fileId" = f."id")), 0) as "used"
-       from "deliveryFile" f
-       join "deliverySection" s on s."id" = f."sectionId"
-       join "delivery" d on d."id" = s."deliveryId"
-      where d."ownerId" = $1`,
-    [user.id],
-  );
-  if (Number(usage.rows[0].used) + size > storageLimits.accountBytes) {
+  if ((await storageUsed(user.id)) + size > storageLimits.accountBytes) {
     return fail(`This would pass your ${formatSize(storageLimits.accountBytes)} of storage. Remove a file or upload less.`);
   }
 
@@ -230,6 +218,9 @@ export async function completeUpload(fileId: string): Promise<Result> {
     return fail("Storage did not respond. Try again in a moment.");
   }
 
+  // An enhanced copy belongs to the copy it was made from, so a new upload drops it.
+  const enhanced = await pool.query<{ enhancedKey: string | null }>(`select "enhancedKey" from "deliveryFile" where "id" = $1`, [fileId]);
+
   // A file that already had a copy in storage keeps it as an earlier version, and is marked as replaced so the
   // client page can show it as Updated. Both happen in the one statement that attaches the new copy.
   const updated = await pool.query(
@@ -244,11 +235,14 @@ export async function completeUpload(fileId: string): Promise<Result> {
      )
      update "deliveryFile"
         set "storageKey" = $1, "sizeBytes" = $2, "mimeType" = $3, "ext" = $4, "thumbKey" = $6, "pending" = null,
+            "enhancedKey" = null, "enhancedBytes" = null, "enhanceJob" = null,
             "replacedAt" = case when exists (select 1 from kept) then now() else "replacedAt" end
       where "id" = $5 and "pending"->>'key' = $1`,
     [pending.key, pending.size, pending.type, pending.ext, fileId, thumbKey],
   );
   if (!updated.rowCount) return fail("This upload was replaced by a newer one.");
+  const oldEnhanced = enhanced.rows[0]?.enhancedKey;
+  if (oldEnhanced) await deleteObjects([oldEnhanced]);
   await pool.query(`update "delivery" set "updatedAt" = now() where "id" = $1`, [row.deliveryId]);
   refresh(row.deliveryId);
   return { ok: true };
