@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Sidebar } from "@/components/workspace/Sidebar";
+import { VerifyEmail } from "@/components/workspace/VerifyEmail";
+import { emailConfigured } from "@/lib/email";
+import { getSession } from "@/lib/session";
 import { UserMenu, UserMenuFallback } from "@/components/workspace/UserMenu";
 import styles from "@/components/workspace/Workspace.module.css";
 
@@ -9,6 +12,14 @@ export const metadata: Metadata = {
   title: { default: "Dashboard", template: "%s | Memocraft" },
   robots: { index: false, follow: false },
 };
+
+// Only shown when email can actually be sent, and only until the address is confirmed.
+async function VerifyNotice() {
+  if (!emailConfigured()) return null;
+  const session = await getSession();
+  if (!session || session.user.emailVerified) return null;
+  return <VerifyEmail email={session.user.email} />;
+}
 
 export default function WorkspaceLayout({ children }: LayoutProps<"/">) {
   return (
@@ -20,7 +31,12 @@ export default function WorkspaceLayout({ children }: LayoutProps<"/">) {
             <UserMenu />
           </Suspense>
         </header>
-        <main className={styles.main}>{children}</main>
+        <main className={styles.main}>
+          <Suspense fallback={null}>
+            <VerifyNotice />
+          </Suspense>
+          {children}
+        </main>
       </div>
     </div>
   );

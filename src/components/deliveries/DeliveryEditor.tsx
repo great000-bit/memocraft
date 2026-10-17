@@ -2,6 +2,7 @@ import Link from "next/link";
 import { FeatureIcon } from "../FeatureIcons";
 import {
   addSection,
+  deleteDelivery,
   deleteFile,
   deleteSection,
   saveDeliveryField,
@@ -9,8 +10,9 @@ import {
   saveSectionField,
 } from "@/lib/delivery-actions";
 import { limits } from "@/lib/delivery-limits";
-import type { Delivery, DeliveryFile, DeliverySection } from "@/lib/deliveries";
+import { linkState, type DeliveryFile, type DeliverySection, type OwnerDelivery } from "@/lib/deliveries";
 import type { Activity } from "@/lib/delivery-events";
+import type { FileRequestItem } from "@/lib/requests";
 import { storageConfigured } from "@/lib/storage";
 import { ownerThumbnailLinks } from "@/lib/thumbnails";
 import { formatSize } from "@/lib/storage-limits";
@@ -18,8 +20,14 @@ import { ActionButton } from "./ActionButton";
 import { ActivityPanel } from "./ActivityPanel";
 import { EditableField } from "./EditableField";
 import { PublishPanel } from "./PublishPanel";
+import { LinkSettings } from "./LinkSettings";
+import { RequestList } from "./RequestList";
+import { FileVersions } from "./FileVersions";
+import { UpdatesPanel } from "./UpdatesPanel";
 import { FileFooter, UploadArea } from "./Uploader";
 import styles from "./Editor.module.css";
+
+const pillText = { draft: "Draft", live: "Published", paused: "Paused", expired: "Expired" } as const;
 
 function fileStatus(file: DeliveryFile): string {
   if (file.attached) {
@@ -110,6 +118,14 @@ function FileCard({
             save={saveFileField.bind(null, file.id, "note")}
           />
         </details>
+        <FileVersions
+          versions={file.versions.map((version) => ({
+            id: version.id,
+            sizeBytes: version.sizeBytes,
+            ext: version.ext,
+            replacedAt: version.replacedAt.toISOString(),
+          }))}
+        />
         <FileFooter
           sectionId={section.id}
           fileId={file.id}
@@ -151,8 +167,26 @@ function FileCards({
 }
 
 // Bound actions are passed to client components, which call them when a field loses focus.
-export async function DeliveryEditor({ delivery, activity }: { delivery: Delivery; activity: Activity }) {
-  const published = delivery.status === "published";
+export async function DeliveryEditor({
+  delivery,
+  activity,
+  requests,
+}: {
+  delivery: OwnerDelivery;
+  activity: Activity;
+  requests: FileRequestItem[];
+}) {
+  const state = linkState(delivery);
+  // Once a link has been sent it keeps its place at the top, whether it is live, paused or expired.
+  const sent = state !== "draft";
+  const settings = (
+    <LinkSettings
+      deliveryId={delivery.id}
+      expiresAt={delivery.expiresAt ? delivery.expiresAt.toISOString() : null}
+      expired={delivery.expired}
+      hasPassword={delivery.hasPassword}
+    />
+  );
   const storageReady = storageConfigured();
   const thumbs = await ownerThumbnailLinks(delivery);
   const grouped = delivery.sections.length > 1;
@@ -167,8 +201,8 @@ export async function DeliveryEditor({ delivery, activity }: { delivery: Deliver
 
       <div className={styles.head}>
         <div className={styles.headTop}>
-          <span className={styles.pill} data-status={delivery.status}>
-            {published ? "Published" : "Draft"}
+          <span className={styles.pill} data-status={state}>
+            {pillText[state]}
           </span>
           <div className={styles.headActions}>
             <Link href={`/deliveries/${delivery.id}/preview`} className={`${styles.button} ${styles.secondary}`}>
@@ -186,9 +220,22 @@ export async function DeliveryEditor({ delivery, activity }: { delivery: Deliver
         />
       </div>
 
-      {published && (
+      {sent && (
         <>
-          <PublishPanel deliveryId={delivery.id} slug={delivery.slug} published />
+          <PublishPanel deliveryId={delivery.id} slug={delivery.slug} state={state} />
+          {requests.length > 0 && (
+            <section className={styles.updatesCard} aria-labelledby="requests-title">
+              <h2 id="requests-title" className={styles.shareTitle}>
+                Requests from your client
+              </h2>
+              <RequestList requests={requests} showDelivery={false} inCard />
+            </section>
+          )}
+          {settings}
+          <UpdatesPanel
+            deliveryId={delivery.id}
+            updates={delivery.updates.map((update) => ({ id: update.id, note: update.note, at: update.createdAt.toISOString() }))}
+          />
           <ActivityPanel activity={activity} published />
         </>
       )}
@@ -298,7 +345,32 @@ export async function DeliveryEditor({ delivery, activity }: { delivery: Deliver
         />
       </Step>
 
-      {!published && <PublishPanel deliveryId={delivery.id} slug={delivery.slug} published={false} />}
+      {!sent && (
+        <>
+          {settings}
+          <PublishPanel deliveryId={delivery.id} slug={delivery.slug} state={state} />
+        </>
+      )}
+
+      <section className={styles.danger} aria-labelledby="delete-title">
+        <div className={styles.dangerText}>
+          <h2 id="delete-title" className={styles.dangerTitle}>
+            Delete this delivery
+          </h2>
+          <p className={styles.shareText}>
+            Removes the delivery, its files and the record of who opened it. Your client&rsquo;s link stops working for good.
+            This cannot be undone.
+          </p>
+        </div>
+        <ActionButton
+          action={deleteDelivery.bind(null, delivery.id)}
+          variant="secondary"
+          confirmLabel="Yes, delete it"
+          label="Delete this delivery"
+        >
+          Delete delivery
+        </ActionButton>
+      </section>
     </>
   );
 }

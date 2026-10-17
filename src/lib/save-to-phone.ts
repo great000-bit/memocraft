@@ -76,7 +76,9 @@ export function canSaveToPhone(): boolean {
 }
 
 export async function prepareFile(target: SaveTarget, signal: AbortSignal): Promise<File> {
-  const response = await fetch(target.url, { signal, credentials: "omit" });
+  // Same-origin cookies go with this request, so a password-protected link still lets the client save; the signed
+  // storage address it redirects to is another origin and receives none.
+  const response = await fetch(target.url, { signal });
   if (!response.ok) throw new Error(`The file answered ${response.status}`);
   const blob = await response.blob();
   const type = blob.type && blob.type !== "application/octet-stream" ? blob.type : target.type;

@@ -356,3 +356,221 @@
     transform: none;
   }
 }
+
+/* New and Updated marks beside a file's name, and the note about what changed above the files. */
+.chip {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  background: var(--fixer-tint);
+  color: var(--fixer);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 18px;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+
+.chip[data-kind="updated"] {
+  background: var(--proof-tint);
+  color: var(--proof-text);
+}
+
+.update {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--proof-tint);
+  border-radius: 16px;
+}
+
+.updateHead {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--proof-text);
+}
+
+.updateHead .chip {
+  margin-left: 0;
+  margin-right: var(--space-2);
+  background: var(--proof);
+  color: #3d2603;
+}
+
+.updateNote {
+  font-size: 18px;
+  line-height: 28px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.earlier summary {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--proof-text);
+  cursor: pointer;
+}
+
+.earlier ul {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.earlier li {
+  font-size: 15px;
+  line-height: 22px;
+  overflow-wrap: anywhere;
+}
+
+.earlier time {
+  display: block;
+  font-size: 13px;
+  color: var(--proof-text);
+}
+
+/* Asking the sender for another format or a missing file. */
+.askLink {
+  justify-self: start;
+  margin-top: 2px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--fixer);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.askLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.askLink:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.ask {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--sunken);
+  border-radius: 20px;
+  scroll-margin-top: var(--space-6);
+}
+
+.askTitle {
+  font-size: 20px;
+  line-height: 26px;
+  letter-spacing: -0.01em;
+}
+
+.askForm,
+.askDone {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.askText,
+.askDone p {
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--text-muted);
+}
+
+.askField {
+  display: grid;
+  gap: 6px;
+}
+
+.askField label {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.askField select,
+.askField textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 17px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--control-border);
+  border-radius: 10px;
+}
+
+.askField select {
+  min-height: 52px;
+  padding: 0 var(--space-3);
+}
+
+.askField textarea {
+  padding: var(--space-3);
+  line-height: 24px;
+  resize: vertical;
+}
+
+.askField select:hover,
+.askField textarea:hover {
+  border-color: var(--text);
+}
+
+.askField select:focus-visible,
+.askField textarea:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-color: var(--text);
+}
+
+.askError {
+  padding: var(--space-3) var(--space-4);
+  border-radius: 10px;
+  font-size: 15px;
+  line-height: 22px;
+  color: #8f2a1a;
+  background: #fdeeea;
+  border: 1px solid #f1c3b9;
+}
+
+.askSubmit {
+  min-height: 52px;
+  padding: 0 var(--space-6);
+  border: 0;
+  border-radius: 10px;
+  background: var(--fixer);
+  color: var(--on-fixer);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.askSubmit:hover:not(:disabled) {
+  background: var(--fixer-hover);
+}
+
+.askSubmit:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+@media (min-width: 600px) {
+  .update,
+  .ask {
+    padding: var(--space-6);
+  }
+
+  .askSubmit {
+    justify-self: start;
+  }
+}

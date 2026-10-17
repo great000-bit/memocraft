@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { pool } from "./auth";
 import { limits } from "./delivery-limits";
 import { createDeliveryRow, isUuid } from "./deliveries";
+import { hashPassword, passwordProblem } from "./link-access";
 import { requireUser } from "./session";
 import { removeStored, type PendingUpload } from "./storage";
 
@@ -140,6 +141,11 @@ export async function addSection(deliveryId: string): Promise<ActionResult> {
 
 type StoredFile = { storageKey: string | null; thumbKey: string | null; pending: PendingUpload | null };
 
+// Earlier versions live in their own table and are removed from the database with their file, so the objects they
+// point to are collected first and cleared from storage together with the file's own.
+type StoredVersion = { storageKey: string; thumbKey: string | null };
+const asStored = (version: StoredVersion): StoredFile => ({ storageKey: version.storageKey, thumbKey: version.thumbKey, pending: null });
+
 export async function deleteSection(sectionId: string): Promise<ActionResult> {
   const user = await requireUser();
   if (!isUuid(sectionId)) return fail("This section was not found.");
@@ -154,9 +160,14 @@ export async function deleteSection(sectionId: string): Promise<ActionResult> {
     `select "storageKey", "thumbKey", "pending" from "deliveryFile" where "sectionId" = $1`,
     [sectionId],
   );
+  const versions = await pool.query<StoredVersion>(
+    `select v."storageKey", v."thumbKey" from "deliveryFileVersion" v join "deliveryFile" f on f."id" = v."fileId"
+      where f."sectionId" = $1`,
+    [sectionId],
+  );
   await pool.query(`delete from "deliverySection" where "id" = $1`, [sectionId]);
   await pool.query(`update "delivery" set "updatedAt" = now() where "id" = $1`, [deliveryId]);
-  await removeStored(files.rows);
+  await removeStored([...files.rows, ...versions.rows.map(asStored)]);
   refresh(deliveryId);
   return done;
 }
@@ -174,9 +185,10 @@ export async function deleteFile(fileId: string): Promise<ActionResult> {
   );
   const row = file.rows[0];
   if (!row) return fail("This file was not found.");
+  const versions = await pool.query<StoredVersion>(`select "storageKey", "thumbKey" from "deliveryFileVersion" where "fileId" = $1`, [fileId]);
   await pool.query(`delete from "deliveryFile" where "id" = $1`, [fileId]);
   await pool.query(`update "delivery" set "updatedAt" = now() where "id" = $1`, [row.deliveryId]);
-  await removeStored([row]);
+  await removeStored([row, ...versions.rows.map(asStored)]);
   refresh(row.deliveryId);
   return done;
 }
@@ -193,4 +205,107 @@ export async function setPublished(deliveryId: string, published: boolean): Prom
   if (!result.rowCount) return fail("This delivery was not found.");
   refresh(deliveryId);
   return done;
+}
+
+const longestExpiryDays = 5 * 366;
+
+// The browser sends the end of the day the creative picked, in their own time zone, as an ISO time. Null removes it.
+export async function setLinkExpiry(deliveryId: string, expiresAt: string | null): Promise<ActionResult> {
+  const user = await requireUser();
+  if (!isUuid(deliveryId)) return fail("This delivery was not found.");
+  let when: Date | null = null;
+  if (expiresAt !== null) {
+    when = typeof expiresAt === "string" ? new Date(expiresAt) : null;
+    if (!when || Number.isNaN(when.getTime())) return fail("Pick a valid date.");
+    if (when.getTime() <= Date.now()) return fail("Pick a date that has not passed yet.");
+    if (when.getTime() > Date.now() + longestExpiryDays * 24 * 60 * 60 * 1000) return fail("Pick a date within the next five years.");
+  }
+  const result = await pool.query(`update "delivery" set "expiresAt" = $1 where "id" = $2 and "ownerId" = $3`, [
+    when,
+    deliveryId,
+    user.id,
+  ]);
+  if (!result.rowCount) return fail("This delivery was not found.");
+  refresh(deliveryId);
+  return done;
+}
+
+// Null removes the password. A new password also clears any lock left by wrong guesses on the old one.
+export async function setLinkPassword(deliveryId: string, password: string | null): Promise<ActionResult> {
+  const user = await requireUser();
+  if (!isUuid(deliveryId)) return fail("This delivery was not found.");
+  let hash: string | null = null;
+  if (password !== null) {
+    if (typeof password !== "string") return fail("The password is missing.");
+    const problem = passwordProblem(password);
+    if (problem) return fail(problem);
+    hash = await hashPassword(password);
+  }
+  const result = await pool.query(
+    `update "delivery" set "passwordHash" = $1, "passwordFailures" = 0, "passwordLockedUntil" = null
+      where "id" = $2 and "ownerId" = $3`,
+    [hash, deliveryId, user.id],
+  );
+  if (!result.rowCount) return fail("This delivery was not found.");
+  refresh(deliveryId);
+  return done;
+}
+
+// A note about what changed, shown to the client above the files. The link stays the same.
+export async function postUpdate(deliveryId: string, note: string): Promise<ActionResult> {
+  const user = await requireUser();
+  if (!isUuid(deliveryId)) return fail("This delivery was not found.");
+  const cleaned = clean(note, { column: "note", max: limits.update, required: true, label: "The update" });
+  if ("error" in cleaned) return fail(cleaned.error);
+  const result = await pool.query(
+    `insert into "deliveryUpdate" ("deliveryId", "note")
+     select d."id", $1 from "delivery" d where d."id" = $2 and d."ownerId" = $3`,
+    [cleaned.value, deliveryId, user.id],
+  );
+  if (!result.rowCount) return fail("This delivery was not found.");
+  refresh(deliveryId);
+  return done;
+}
+
+export async function deleteUpdate(updateId: string): Promise<ActionResult> {
+  const user = await requireUser();
+  if (!isUuid(updateId)) return fail("This update was not found.");
+  const result = await pool.query<{ deliveryId: string }>(
+    `delete from "deliveryUpdate" u using "delivery" d
+      where u."id" = $1 and d."id" = u."deliveryId" and d."ownerId" = $2
+      returning u."deliveryId"`,
+    [updateId, user.id],
+  );
+  if (!result.rows[0]) return fail("This update was not found.");
+  refresh(result.rows[0].deliveryId);
+  return done;
+}
+
+// Removes the delivery, its files and everything a client did on it, and clears the files from storage. The editor
+// asks twice before calling this.
+export async function deleteDelivery(deliveryId: string): Promise<ActionResult> {
+  const user = await requireUser();
+  if (!isUuid(deliveryId)) return fail("This delivery was not found.");
+  const owned = await pool.query(`select 1 from "delivery" where "id" = $1 and "ownerId" = $2`, [deliveryId, user.id]);
+  if (!owned.rowCount) return fail("This delivery was not found.");
+  const files = await pool.query<StoredFile>(
+    `select f."storageKey", f."thumbKey", f."pending"
+       from "deliveryFile" f join "deliverySection" s on s."id" = f."sectionId"
+      where s."deliveryId" = $1`,
+    [deliveryId],
+  );
+  const versions = await pool.query<StoredVersion>(
+    `select v."storageKey", v."thumbKey"
+       from "deliveryFileVersion" v
+       join "deliveryFile" f on f."id" = v."fileId"
+       join "deliverySection" s on s."id" = f."sectionId"
+      where s."deliveryId" = $1`,
+    [deliveryId],
+  );
+  const removed = await pool.query(`delete from "delivery" where "id" = $1 and "ownerId" = $2`, [deliveryId, user.id]);
+  if (!removed.rowCount) return fail("This delivery was not found.");
+  await removeStored([...files.rows, ...versions.rows.map(asStored)]);
+  revalidatePath("/dashboard");
+  revalidatePath("/deliveries");
+  redirect("/deliveries");
 }

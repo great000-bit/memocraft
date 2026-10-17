@@ -2,6 +2,9 @@ import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 import { Pool } from "pg";
 import type { PoolClient, PoolConfig } from "pg";
+import { emailConfigured, sendInBackground } from "./email";
+import { resetPasswordEmail, verifyEmailEmail } from "./email-templates";
+import { googleConfigured } from "./providers";
 
 type PendingItem = {
   callback: (error: Error | undefined, client?: PoolClient, release?: () => void) => void;
@@ -67,13 +70,44 @@ export const auth = betterAuth({
     minPasswordLength: 8,
     maxPasswordLength: 128,
     autoSignIn: true,
+    // A reset link works for an hour, and changing the password signs every other device out.
+    resetPasswordTokenExpiresIn: 60 * 60,
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, url }) => {
+      if (!emailConfigured()) {
+        console.warn("A password reset was asked for, but email is not set up.");
+        return;
+      }
+      sendInBackground(resetPasswordEmail(user.email, user.name, url));
+    },
   },
+  // Confirming the address is asked for but never blocks signing in: a new creative gets straight to work.
+  emailVerification: {
+    sendOnSignUp: emailConfigured(),
+    autoSignInAfterVerification: true,
+    expiresIn: 60 * 60 * 24,
+    sendVerificationEmail: async ({ user, url }) => {
+      if (!emailConfigured()) return;
+      sendInBackground(verifyEmailEmail(user.email, user.name, url));
+    },
+  },
+  socialProviders: googleConfigured()
+    ? { google: { clientId: process.env.GOOGLE_CLIENT_ID as string, clientSecret: process.env.GOOGLE_CLIENT_SECRET as string } }
+    : {},
   session: {
     expiresIn: 60 * 60 * 24 * 30,
     updateAge: 60 * 60 * 24,
   },
   // Serverless processes do not share memory, so attempts are counted in the database.
-  rateLimit: { enabled: true, storage: "database" },
+  rateLimit: {
+    enabled: true,
+    storage: "database",
+    // Each of these sends an email, so they are held to a few a minute.
+    customRules: {
+      "/request-password-reset": { window: 60, max: 3 },
+      "/send-verification-email": { window: 60, max: 3 },
+    },
+  },
   advanced: { cookiePrefix: "memocraft" },
   plugins: [nextCookies()],
 });

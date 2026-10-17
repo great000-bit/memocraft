@@ -3,10 +3,20 @@ import { FeatureIcon } from "../FeatureIcons";
 import { downloadName, type Delivery, type DeliveryFile } from "@/lib/deliveries";
 import { saveLimits, saveType, type SaveTarget } from "@/lib/save-to-phone";
 import { formatSize } from "@/lib/storage-limits";
+import { AskAbout, RequestFile } from "./RequestFile";
 import { SaveToPhone } from "./SaveToPhone";
 import styles from "./ClientView.module.css";
 
 const dateFormat = new Intl.DateTimeFormat("en", { dateStyle: "long", timeZone: "UTC" });
+const shortDate = new Intl.DateTimeFormat("en", { day: "numeric", month: "short", timeZone: "UTC" });
+
+// A file added or replaced after the link first went out is marked, so a client coming back knows what changed.
+function fileMark(file: DeliveryFile, publishedAt: Date | null): { kind: "new" | "updated"; text: string } | null {
+  if (!publishedAt) return null;
+  if (file.addedAt > publishedAt) return { kind: "new", text: "New" };
+  if (file.replacedAt && file.replacedAt > publishedAt) return { kind: "updated", text: `Updated ${shortDate.format(file.replacedAt)}` };
+  return null;
+}
 
 function fileMeta(file: DeliveryFile): string {
   return `${file.sizeBytes ? formatSize(file.sizeBytes) : "Ready"}${file.ext ? ` · ${file.ext.toUpperCase()}` : ""}`;
@@ -62,10 +72,13 @@ export function ClientView({
   delivery,
   senderName,
   thumbs = {},
+  canAsk = false,
 }: {
   delivery: Delivery;
   senderName: string;
   thumbs?: Record<string, string>;
+  // True on the public page, where a client may ask for a file. The owner's preview shows the page without it.
+  canAsk?: boolean;
 }) {
   const live = delivery.status === "published";
   // Files that are not in storage yet, and sections left with none, are not shown to the client.
@@ -80,6 +93,12 @@ export function ClientView({
     }
   }
   const saveAll = [...targets.values()];
+  const askable = canAsk && live;
+  const [latest, ...earlier] = delivery.updates;
+  const mark = (file: DeliveryFile) => {
+    const found = fileMark(file, delivery.publishedAt);
+    return found && <span className={styles.chip} data-kind={found.kind}>{found.text}</span>;
+  };
   return (
     <article className={styles.page}>
       <header className={styles.top}>
@@ -87,8 +106,33 @@ export function ClientView({
         <h1 className={styles.title}>{delivery.title}</h1>
         {delivery.clientName && <p className={styles.for}>For {delivery.clientName}</p>}
         {delivery.message && <p className={styles.message}>{delivery.message}</p>}
-        <p className={styles.updated}>Updated {dateFormat.format(delivery.updatedAt)}</p>
+        {delivery.publishedAt && <p className={styles.updated}>Sent {dateFormat.format(delivery.publishedAt)}</p>}
       </header>
+
+      {latest && (
+        <aside className={styles.update} aria-label="Latest update">
+          <p className={styles.updateHead}>
+            <span className={styles.chip} data-kind="updated">
+              Updated
+            </span>
+            {dateFormat.format(latest.createdAt)}
+          </p>
+          <p className={styles.updateNote}>{latest.note}</p>
+          {earlier.length > 0 && (
+            <details className={styles.earlier}>
+              <summary>Earlier updates ({earlier.length})</summary>
+              <ul>
+                {earlier.map((update) => (
+                  <li key={update.id}>
+                    <time dateTime={update.createdAt.toISOString()}>{dateFormat.format(update.createdAt)}</time>
+                    {update.note}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </aside>
+      )}
 
       {sections.length === 0 && <p className={styles.none}>No files have been added yet.</p>}
 
@@ -120,9 +164,13 @@ export function ClientView({
                       <img src={thumbs[file.id]} alt={file.name} loading="lazy" decoding="async" />
                     </div>
                     <div className={styles.tileBody}>
-                      <p className={styles.tileName}>{file.name}</p>
+                      <p className={styles.tileName}>
+                        {file.name}
+                        {mark(file)}
+                      </p>
                       {file.note && <p className={styles.fileNote}>{file.note}</p>}
                       <p className={styles.fileMeta}>{fileMeta(file)}</p>
+                      {askable && <AskAbout fileId={file.id} />}
                     </div>
                     <div className={styles.tileActions}>
                       <SaveFile target={targets.get(file.id)} live={live} label="Save" className={`${styles.download} ${styles.tileSave}`} />
@@ -146,9 +194,13 @@ export function ClientView({
                       <FeatureIcon name="file" />
                     </span>
                     <div className={styles.fileBody}>
-                      <p className={styles.fileName}>{file.name}</p>
+                      <p className={styles.fileName}>
+                        {file.name}
+                        {mark(file)}
+                      </p>
                       {file.note && <p className={styles.fileNote}>{file.note}</p>}
                       <p className={styles.fileMeta}>{fileMeta(file)}</p>
+                      {askable && <AskAbout fileId={file.id} />}
                     </div>
                     <div className={styles.rowActions}>
                       <SaveFile
@@ -169,6 +221,14 @@ export function ClientView({
           )}
         </section>
       ))}
+
+      {askable && (
+        <RequestFile
+          slug={delivery.slug}
+          senderName={senderName}
+          files={sections.flatMap((section) => section.files.map((file) => ({ id: file.id, name: file.name })))}
+        />
+      )}
 
       <footer className={styles.foot}>
         {live && (
