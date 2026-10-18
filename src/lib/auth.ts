@@ -3,7 +3,7 @@ import { nextCookies } from "better-auth/next-js";
 import { Pool } from "pg";
 import type { PoolClient, PoolConfig } from "pg";
 import { emailConfigured, sendInBackground } from "./email";
-import { resetPasswordEmail, verifyEmailEmail } from "./email-templates";
+import { verifyEmailEmail } from "./email-templates";
 import { isGooglePicture } from "./avatar";
 import { googleConfigured } from "./providers";
 
@@ -91,22 +91,8 @@ export const auth = betterAuth({
   database: pool,
   baseURL: process.env.BETTER_AUTH_URL,
   trustedOrigins,
-  emailAndPassword: {
-    enabled: true,
-    minPasswordLength: 8,
-    maxPasswordLength: 128,
-    autoSignIn: true,
-    // A reset link works for an hour, and changing the password signs every other device out.
-    resetPasswordTokenExpiresIn: 60 * 60,
-    revokeSessionsOnPasswordReset: true,
-    sendResetPassword: async ({ user, url }) => {
-      if (!emailConfigured()) {
-        console.warn("A password reset was asked for, but email is not set up.");
-        return;
-      }
-      sendInBackground(resetPasswordEmail(user.email, user.name, url));
-    },
-  },
+  // Google is the only way in. Switching passwords off also closes the reset and change-password routes.
+  emailAndPassword: { enabled: false },
   // Confirming the address is asked for but never blocks signing in: a new creative gets straight to work.
   emailVerification: {
     sendOnSignUp: emailConfigured(),
