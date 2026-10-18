@@ -10,7 +10,7 @@ import editor from "@/components/deliveries/Editor.module.css";
 import styles from "./Settings.module.css";
 
 const notices: Record<string, { ok: boolean; text: string }> = {
-  on: { ok: true, text: "Drive backup is on. Your files are being copied to a Memocraft folder in your Drive." },
+  on: { ok: true, text: "Drive backup is on. Your files are being copied to a Memocraft folder in your Drive, and new uploads follow automatically." },
   declined: { ok: false, text: "Google did not give Memocraft access to Drive, so nothing was turned on." },
 };
 
@@ -52,7 +52,7 @@ export function DriveBackup({ initial }: { initial: DriveStatus }) {
     }
   }, []);
 
-  // Someone ticked the Drive box while logging in to an older account: Google needs one more step from Settings.
+  // An account made before automatic backup signed in: Google needs one more step, sent here once.
   useEffect(() => {
     if (params.get("drive") === "connect" && !started.current && !status.connected) {
       started.current = true;
@@ -87,7 +87,7 @@ export function DriveBackup({ initial }: { initial: DriveStatus }) {
       {active ? (
         <>
           <p className={styles.panelText}>
-            {status.done} {status.done === 1 ? "file is" : "files are"} saved in your Drive
+            Automatic backup is on. {status.done} {status.done === 1 ? "file is" : "files are"} saved in your Drive
             {status.pending > 0 ? `, ${status.pending} still to copy` : ""}
             {status.failed > 0 ? `, ${status.failed} could not be copied` : ""}.
           </p>
@@ -119,7 +119,7 @@ export function DriveBackup({ initial }: { initial: DriveStatus }) {
             onClick={status.connected ? () => run(turnOnDriveBackup) : connect}
             disabled={pending}
           >
-            {pending ? "Working…" : status.connected ? "Turn Drive backup on" : "Back up to my Google Drive"}
+            {pending ? "Working…" : status.connected ? "Turn automatic backup back on" : "Allow Drive backup"}
           </button>
         </div>
       )}

@@ -52,12 +52,12 @@ async function SettingsPanels() {
 
       <section className={panels.panel} aria-labelledby="drive-title">
         <h2 id="drive-title" className={panels.panelTitle}>
-          Back up to your Google Drive
+          Automatic Google Drive backup
         </h2>
         <p className={panels.panelText}>
-          Optional. Memocraft saves a copy of your files in a Memocraft folder in your own Google Drive, so you always hold
+          On by default. Memocraft saves a copy of your files in a Memocraft folder in your own Google Drive, so you always hold
           them yourself. It can only see the files and folders it makes there, nothing else in your Drive. Your client links
-          keep working either way, and deleting a file here never deletes your Drive copy. The copies use your Drive space.
+          keep working either way, and deleting a file here never deletes your Drive copy. The copies use your Drive space. Turn it off here any time.
         </p>
         <Suspense fallback={null}>
           <DriveBackup initial={drive} />

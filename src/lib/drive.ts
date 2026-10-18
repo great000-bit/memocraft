@@ -81,6 +81,34 @@ export async function enableBackup(userId: string) {
   );
 }
 
+// Remembers that someone said no (unticked Drive on Google's screen, or turned it off), so they are not asked again.
+export async function recordNoBackup(userId: string) {
+  await pool.query(
+    `insert into "driveBackup" ("userId", "enabled") values ($1, false) on conflict ("userId") do nothing`,
+    [userId],
+  );
+}
+
+export type DriveGrant = { scope: string | null; hasRefresh: boolean; fresh: boolean; backupEnabled: boolean | null };
+
+// What Google handed over at the last sign-in, and what the person chose before.
+export async function driveGrant(userId: string): Promise<DriveGrant> {
+  const [account, state] = await Promise.all([
+    pool.query<{ scope: string | null; hasRefresh: boolean; fresh: boolean }>(
+      `select "scope", "refreshToken" is not null as "hasRefresh", "createdAt" > now() - interval '5 minutes' as "fresh"
+         from "account" where "userId" = $1 and "providerId" = 'google' limit 1`,
+      [userId],
+    ),
+    pool.query<{ enabled: boolean }>(`select "enabled" from "driveBackup" where "userId" = $1`, [userId]),
+  ]);
+  return {
+    scope: account.rows[0]?.scope ?? null,
+    hasRefresh: account.rows[0]?.hasRefresh ?? false,
+    fresh: account.rows[0]?.fresh ?? false,
+    backupEnabled: state.rows[0] ? state.rows[0].enabled : null,
+  };
+}
+
 export async function disableBackup(userId: string) {
   await pool.query(`update "driveBackup" set "enabled" = false, "updatedAt" = now() where "userId" = $1`, [userId]);
 }

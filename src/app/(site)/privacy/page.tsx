@@ -23,7 +23,7 @@ export default function PrivacyPage() {
           you choose, such as a password or an end date.
         </li>
         <li>
-          <strong>Google Drive backup (optional).</strong> Only if you turn it on, at sign-up or in Settings, Memocraft
+          <strong>Google Drive backup (on by default).</strong> When you sign in with Google, Memocraft
           asks Google for the drive.file permission. That lets us create a Memocraft folder in your Drive and save
           copies of your delivery files into it. We can see only the files and folders Memocraft itself creates there,
           never the rest of your Drive. We keep an encrypted token to do this, use it only to save and finish saving
