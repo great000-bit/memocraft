@@ -238,3 +238,8 @@
 .steps b {
   color: var(--text);
 }
+
+.driveBlock {
+  display: grid;
+  gap: var(--space-3);
+}

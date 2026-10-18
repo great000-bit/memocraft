@@ -93,6 +93,8 @@ export const auth = betterAuth({
   trustedOrigins,
   // Google is the only way in. Switching passwords off also closes the reset and change-password routes.
   emailAndPassword: { enabled: false },
+  // Google tokens (including the Drive backup refresh token) are stored encrypted with BETTER_AUTH_SECRET.
+  account: { encryptOAuthTokens: true },
   // Confirming the address is asked for but never blocks signing in: a new creative gets straight to work.
   emailVerification: {
     sendOnSignUp: emailConfigured(),
