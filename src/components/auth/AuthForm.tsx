@@ -74,10 +74,6 @@ export function AuthForm({ mode, googleEnabled = false }: AuthFormProps) {
           {error}
         </p>
       )}
-      <p className={styles.driveNote}>
-        Memocraft also saves a copy of your deliveries in a Memocraft folder in your own Google Drive, so you always
-        keep your files. It can only see what it saves there. Turn it off any time in Settings.
-      </p>
       <button type="button" className={styles.google} onClick={continueWithGoogle} disabled={pending}>
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path fill="#4285F4" d="M23 12.27c0-.8-.07-1.57-.2-2.3H12v4.35h6.17a5.28 5.28 0 0 1-2.29 3.46v2.87h3.7C21.74 18.65 23 15.7 23 12.27z" />

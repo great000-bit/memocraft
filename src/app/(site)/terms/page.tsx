@@ -20,6 +20,15 @@ export default function TermsPage() {
         share it with, only so the service works. You confirm you have the right to share what you upload.
       </p>
 
+      <h2>Google Drive backup</h2>
+      <p>
+        When you sign in with Google, Memocraft asks for permission to save a copy of your deliveries in a Memocraft
+        folder in your own Google Drive, so you always keep your files. It can only see the files and folders it
+        creates there, nothing else in your Drive. The copies use your Drive space. You can turn this off any time in
+        Settings, and deleting a file in Memocraft never deletes your Drive copy. See the privacy policy for how we
+        handle the permission.
+      </p>
+
       <h2>What you must not do</h2>
       <ul>
         <li>Upload anything illegal, or that infringes someone else&rsquo;s rights.</li>

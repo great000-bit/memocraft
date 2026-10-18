@@ -206,12 +206,3 @@
   background: #e7f5ec;
   border: 1px solid #b9e0c6;
 }
-
-/* The line above the Google button saying what the Drive permission is for. */
-.driveNote {
-  margin: 0;
-  text-align: left;
-  font-size: 13px;
-  line-height: 19px;
-  color: var(--text-muted, #5b6460);
-}
