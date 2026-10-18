@@ -6,7 +6,7 @@ import { signInMethods } from "@/lib/profile";
 import { requireUser } from "@/lib/session";
 import { formatSize } from "@/lib/storage-limits";
 import { ThemeToggle } from "@/components/workspace/ThemeToggle";
-import { DeleteAccount, OtherDevices, PasswordForm } from "@/components/workspace/SettingsForms";
+import { DeleteAccount, OtherDevices } from "@/components/workspace/SettingsForms";
 import styles from "@/components/workspace/Workspace.module.css";
 import panels from "@/components/workspace/Settings.module.css";
 import editor from "@/components/deliveries/Editor.module.css";
@@ -38,13 +38,9 @@ async function SettingsPanels() {
         <h2 id="security-title" className={panels.panelTitle}>
           Sign-in and security
         </h2>
-        {hasPassword ? (
-          <PasswordForm />
-        ) : (
-          <p className={panels.panelText}>
-            You sign in with Google, so there is no Memocraft password to manage. Google keeps your account safe.
-          </p>
-        )}
+        <p className={panels.panelText}>
+          You sign in with Google, so there is no Memocraft password to manage. Google keeps your account safe.
+        </p>
         <hr className={panels.divider} />
         <p className={panels.panelText}>
           Signed in somewhere you no longer use? This logs you out everywhere except this device.

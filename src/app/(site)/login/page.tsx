@@ -4,7 +4,6 @@ import { Suspense } from "react";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { RedirectIfSignedIn } from "@/components/auth/RedirectIfSignedIn";
-import { emailConfigured } from "@/lib/email";
 import { googleConfigured } from "@/lib/providers";
 
 export const metadata: Metadata = { title: "Log in to Memocraft" };
@@ -23,7 +22,7 @@ export default function LoginPage() {
       <Suspense>
         <RedirectIfSignedIn />
       </Suspense>
-      <AuthForm mode="login" resetEnabled={emailConfigured()} googleEnabled={googleConfigured()} />
+      <AuthForm mode="login" googleEnabled={googleConfigured()} />
     </AuthShell>
   );
 }
