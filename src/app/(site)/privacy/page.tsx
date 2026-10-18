@@ -14,14 +14,22 @@ export default function PrivacyPage() {
       <h2>What we collect</h2>
       <ul>
         <li>
-          <strong>Your account.</strong> Your name and email, and a password if you sign up with email. If you choose
-          Continue with Google, we receive your name, email address and profile picture from Google. We do not get
-          your Google password, and we do not read your Gmail, Drive or any other Google data. You can also upload a
-          profile picture of your own.
+          <strong>Your account.</strong> You sign in with Google, so we receive your name, email address and profile
+          picture from Google. We do not get your Google password, and we do not read your Gmail or any other Google
+          data. You can also upload a profile picture of your own.
         </li>
         <li>
           <strong>Your deliveries.</strong> The files, notes and settings you add to a delivery, and the link options
           you choose, such as a password or an end date.
+        </li>
+        <li>
+          <strong>Google Drive backup (optional).</strong> Only if you turn it on, at sign-up or in Settings, Memocraft
+          asks Google for the drive.file permission. That lets us create a Memocraft folder in your Drive and save
+          copies of your delivery files into it. We can see only the files and folders Memocraft itself creates there,
+          never the rest of your Drive. We keep an encrypted token to do this, use it only to save and finish saving
+          your own files, and never read the contents for any other purpose or share them. Turn it off in Settings, or
+          remove Memocraft in your Google Account permissions, and copying stops. Files already in your Drive stay
+          yours, and deleting a file in Memocraft does not delete your Drive copy.
         </li>
         <li>
           <strong>Client activity.</strong> When a client opens a link, downloads a file or sends a file request, we

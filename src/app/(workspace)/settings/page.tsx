@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { PageSkeleton } from "@/components/workspace/PageSkeleton";
 import { getDashboardStats } from "@/lib/dashboard";
+import { driveStatus } from "@/lib/drive";
 import { signInMethods } from "@/lib/profile";
 import { requireUser } from "@/lib/session";
 import { formatSize } from "@/lib/storage-limits";
+import { DriveBackup } from "@/components/workspace/DriveBackup";
 import { ThemeToggle } from "@/components/workspace/ThemeToggle";
 import { DeleteAccount, OtherDevices } from "@/components/workspace/SettingsForms";
 import styles from "@/components/workspace/Workspace.module.css";
@@ -15,7 +17,7 @@ export const metadata: Metadata = { title: "Settings" };
 
 async function SettingsPanels() {
   const user = await requireUser();
-  const [methods, stats] = await Promise.all([signInMethods(user.id), getDashboardStats(user.id)]);
+  const [methods, stats, drive] = await Promise.all([signInMethods(user.id), getDashboardStats(user.id), driveStatus(user.id)]);
   const hasPassword = methods.includes("password");
   const storage = stats.storage.usedBytes === 0 ? "0 MB" : formatSize(stats.storage.usedBytes);
 
@@ -46,6 +48,20 @@ async function SettingsPanels() {
           Signed in somewhere you no longer use? This logs you out everywhere except this device.
         </p>
         <OtherDevices />
+      </section>
+
+      <section className={panels.panel} aria-labelledby="drive-title">
+        <h2 id="drive-title" className={panels.panelTitle}>
+          Back up to your Google Drive
+        </h2>
+        <p className={panels.panelText}>
+          Optional. Memocraft saves a copy of your files in a Memocraft folder in your own Google Drive, so you always hold
+          them yourself. It can only see the files and folders it makes there, nothing else in your Drive. Your client links
+          keep working either way, and deleting a file here never deletes your Drive copy. The copies use your Drive space.
+        </p>
+        <Suspense fallback={null}>
+          <DriveBackup initial={drive} />
+        </Suspense>
       </section>
 
       <section className={panels.panel} aria-labelledby="data-title">

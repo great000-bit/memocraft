@@ -206,3 +206,35 @@
   background: #e7f5ec;
   border: 1px solid #b9e0c6;
 }
+
+/* The optional Drive backup choice above the Google button. */
+.driveOption {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  text-align: left;
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.driveOption input {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  accent-color: var(--fixer, #0b6b5d);
+}
+
+.driveOption strong {
+  display: block;
+  font-weight: 500;
+}
+
+.driveOption small {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--text-muted, #5b6460);
+}

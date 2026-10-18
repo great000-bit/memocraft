@@ -140,6 +140,13 @@ export async function getObject(key: string): Promise<{ bytes: Uint8Array; type:
   }
 }
 
+// One slice of a stored object (both ends included), for copying a large file out in pieces.
+export async function getObjectRange(key: string, start: number, end: number): Promise<Uint8Array> {
+  const result = await s3().send(new GetObjectCommand({ Bucket: bucket(), Key: key, Range: `bytes=${start}-${end}` }));
+  if (!result.Body) throw new Error("Storage returned no data");
+  return result.Body.transformToByteArray();
+}
+
 export async function headObject(key: string): Promise<{ size: number } | null> {
   try {
     const result = await s3().send(new HeadObjectCommand({ Bucket: bucket(), Key: key }));

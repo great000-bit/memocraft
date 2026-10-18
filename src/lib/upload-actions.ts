@@ -2,8 +2,10 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { pool } from "./auth";
 import { isUuid } from "./deliveries";
+import { queueFile, runDriveBackup } from "./drive";
 import { limits } from "./delivery-limits";
 import { requireUser } from "./session";
 import {
@@ -251,6 +253,15 @@ export async function completeUpload(fileId: string): Promise<Result> {
   if (!updated.rowCount) return fail("This upload was replaced by a newer one.");
   await pool.query(`update "delivery" set "updatedAt" = now() where "id" = $1`, [row.deliveryId]);
   refresh(row.deliveryId);
+  // For people who turned on "Back up to my Drive": copy the new file after the response has gone out.
+  after(async () => {
+    try {
+      await queueFile(user.id, fileId);
+      await runDriveBackup(user.id, 30_000);
+    } catch (error) {
+      console.error("Drive backup could not start", error);
+    }
+  });
   return { ok: true };
 }
 

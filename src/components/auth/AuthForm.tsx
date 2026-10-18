@@ -3,6 +3,7 @@
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { driveRequest } from "@/lib/drive-scope";
 import styles from "./AuthForm.module.css";
 
 type AuthFormProps = {
@@ -35,6 +36,7 @@ export function AuthForm({ mode, googleEnabled = false }: AuthFormProps) {
   const pathname = usePathname();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [drive, setDrive] = useState(false);
 
   async function continueWithGoogle() {
     setError(null);
@@ -42,8 +44,10 @@ export function AuthForm({ mode, googleEnabled = false }: AuthFormProps) {
     try {
       const result = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/dashboard",
-        newUserCallbackURL: "/dashboard",
+        // With the Drive box ticked, Google also asks for permission to save into a Memocraft folder in their Drive.
+        ...(drive ? driveRequest : {}),
+        callbackURL: drive ? "/api/drive/connected?from=signin&to=/dashboard" : "/dashboard",
+        newUserCallbackURL: drive ? "/api/drive/connected?from=signin&to=/dashboard" : "/dashboard",
         // A failed attempt comes back to this page, where GoogleReturnNotice explains it.
         errorCallbackURL: pathname,
       });
@@ -71,6 +75,15 @@ export function AuthForm({ mode, googleEnabled = false }: AuthFormProps) {
           {error}
         </p>
       )}
+      <label className={styles.driveOption}>
+        <input type="checkbox" checked={drive} onChange={(event) => setDrive(event.target.checked)} />
+        <span>
+          <strong>Also back up my deliveries to my Google Drive</strong>
+          <small>
+            Optional. Memocraft can only see the files and folders it saves there. You can turn it off any time in Settings.
+          </small>
+        </span>
+      </label>
       <button type="button" className={styles.google} onClick={continueWithGoogle} disabled={pending}>
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path fill="#4285F4" d="M23 12.27c0-.8-.07-1.57-.2-2.3H12v4.35h6.17a5.28 5.28 0 0 1-2.29 3.46v2.87h3.7C21.74 18.65 23 15.7 23 12.27z" />
