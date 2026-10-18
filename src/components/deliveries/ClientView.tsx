@@ -23,11 +23,19 @@ function fileMark(file: DeliveryFile, publishedAt: Date | null): { kind: "new" |
 }
 
 function fileMeta(file: DeliveryFile): string {
+  if (file.enhancedBytes) return `${formatSize(file.enhancedBytes)} · JPG`;
   return `${file.sizeBytes ? formatSize(file.sizeBytes) : "Ready"}${file.ext ? ` · ${file.ext.toUpperCase()}` : ""}`;
 }
 
+// Downloads and saves hand out the enhanced copy of a photo that has one, so its name and size follow that copy.
+const enhancedName = (file: DeliveryFile) => downloadName(`${file.name.replace(/\.[A-Za-z0-9]{1,10}$/, "")} (enhanced)`, "jpg");
+
 // The photo library takes pictures and videos only, and only up to a size a phone can hold in memory.
 function saveTarget(slug: string, file: DeliveryFile): SaveTarget | null {
+  if (file.enhancedBytes) {
+    if (file.enhancedBytes > saveLimits.fileBytes) return null;
+    return { id: file.id, fileName: enhancedName(file), url: `/d/${slug}/files/${file.id}`, type: "image/jpeg", size: file.enhancedBytes };
+  }
   const type = saveType(file.mimeType, file.ext);
   if (!type || (file.sizeBytes ?? 0) > saveLimits.fileBytes) return null;
   return {
@@ -234,9 +242,26 @@ export function ClientView({
                           {askable && <AskAbout fileId={file.id} name={file.name} compact />}
                         </div>
                         <div className={styles.tileBody}>
-                          <p className={styles.tileName}>{file.name}</p>
+                          <p className={styles.tileName}>
+                            {file.name}
+                            {file.enhancedBytes !== null && (
+                              <span className={styles.chip} data-kind="enhanced">
+                                Enhanced
+                              </span>
+                            )}
+                          </p>
                           {file.note && <p className={styles.fileNote}>{file.note}</p>}
-                          <p className={styles.fileMeta}>{fileMeta(file)}</p>
+                          <p className={styles.fileMeta}>
+                            {fileMeta(file)}
+                            {file.enhancedBytes !== null && live && (
+                              <>
+                                {" · "}
+                                <a href={`/d/${delivery.slug}/files/${file.id}?original=1`} className={styles.originalLink}>
+                                  Original
+                                </a>
+                              </>
+                            )}
+                          </p>
                         </div>
                         <div className={styles.tileActions}>
                           <SaveFile target={targets.get(file.id)} live={live} label="Save" className={`${styles.download} ${styles.tileSave}`} />
