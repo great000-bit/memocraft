@@ -24,6 +24,10 @@ export type DeliveryFile = {
   replacedAt: Date | null;
   // Earlier versions kept in storage. Filled in for the owner's editor only.
   versions: FileVersion[];
+  // Size of the AI-enhanced copy, when there is one. Clients are given that copy first, labelled Enhanced.
+  enhancedBytes: number | null;
+  // An enhance in progress, or the reason the last one failed. The owner's editor only.
+  enhancing: { state: "running" } | { state: "failed"; error: string } | null;
 };
 
 export type FileVersion = {
@@ -139,8 +143,11 @@ async function loadSections(deliveryId: string, onlyAttached: boolean): Promise<
     downloads: string;
     addedAt: Date;
     replacedAt: Date | null;
+    enhancedBytes: string | null;
+    enhanceJob: { error?: string } | null;
   }>(
     `select f."id", f."sectionId", f."name", f."note", f."sizeBytes", f."mimeType", f."ext", f."thumbKey",
+            case when f."enhancedKey" is not null then f."enhancedBytes" end as "enhancedBytes", f."enhanceJob",
             f."createdAt" as "addedAt", f."replacedAt",
             f."storageKey" is not null as "attached", f."pending" is not null as "uploading",
             (select count(*) from "deliveryEvent" e where e."fileId" = f."id" and e."kind" = 'download') as "downloads"
@@ -187,6 +194,12 @@ async function loadSections(deliveryId: string, onlyAttached: boolean): Promise<
             ext: version.ext,
             replacedAt: version.replacedAt,
           })),
+        enhancedBytes: file.enhancedBytes === null ? null : Number(file.enhancedBytes),
+        enhancing: onlyAttached || !file.enhanceJob
+          ? null
+          : file.enhanceJob.error
+            ? { state: "failed" as const, error: file.enhanceJob.error }
+            : { state: "running" as const },
       })),
   }));
 }
@@ -281,11 +294,12 @@ export async function getPublishedFile(slug: string, fileId: string) {
     ext: string | null;
     mimeType: string | null;
     storageKey: string;
+    enhancedKey: string | null;
     deliveryId: string;
     ownerId: string;
     passwordHash: string | null;
   }>(
-    `select f."name", f."ext", f."mimeType", f."storageKey", d."id" as "deliveryId", d."ownerId", d."passwordHash"
+    `select f."name", f."ext", f."mimeType", f."storageKey", f."enhancedKey", d."id" as "deliveryId", d."ownerId", d."passwordHash"
        from "deliveryFile" f
        join "deliverySection" s on s."id" = f."sectionId"
        join "delivery" d on d."id" = s."deliveryId"

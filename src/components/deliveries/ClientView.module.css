@@ -1042,3 +1042,15 @@
     transform: none;
   }
 }
+
+/* A photo the creative enhanced with AI: clients are told, and can still take the original. */
+.chip[data-kind="enhanced"] {
+  background: var(--proof-tint);
+  color: var(--proof-text);
+}
+
+.originalLink {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

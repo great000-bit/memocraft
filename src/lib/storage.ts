@@ -216,6 +216,14 @@ export function presignDownload(key: string, filename: string, type: string | nu
   );
 }
 
+// A short-lived inline link to a whole stored picture: for the enhance model to fetch its input, and for the owner to
+// look at an enhanced copy.
+export function presignView(key: string, type = "image/jpeg") {
+  return getSignedUrl(s3(), new GetObjectCommand({ Bucket: bucket(), Key: key, ResponseContentType: type }), {
+    expiresIn: DOWNLOAD_URL_SECONDS,
+  });
+}
+
 // A link to a thumbnail for the signed-in owner. Not a download: the browser shows it inline.
 export function presignThumb(key: string) {
   return getSignedUrl(
@@ -235,12 +243,13 @@ export function presignClientThumb(key: string) {
   );
 }
 
-// Removes everything a set of deleted file rows left in storage: attached objects, thumbnails and unfinished uploads.
+// Removes everything a set of deleted file rows left in storage: attached objects, thumbnails, enhanced copies and
+// unfinished uploads.
 export async function removeStored(
-  files: { storageKey: string | null; thumbKey?: string | null; pending: PendingUpload | null }[],
+  files: { storageKey: string | null; thumbKey?: string | null; enhancedKey?: string | null; pending: PendingUpload | null }[],
 ) {
   await deleteObjects(
-    files.flatMap((file) => [...(file.storageKey ? [file.storageKey] : []), ...(file.thumbKey ? [file.thumbKey] : [])]),
+    files.flatMap((file) => [file.storageKey, file.thumbKey, file.enhancedKey].filter((key): key is string => Boolean(key))),
   );
   for (const file of files) if (file.pending) await discardPending(file.pending);
 }
