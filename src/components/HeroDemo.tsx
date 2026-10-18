@@ -203,7 +203,7 @@ export function HeroDemo({ className = "" }: { className?: string }) {
               </div>
               <div className={`${styles.card} ${styles.cardTeal}`}>
                 <span>Storage</span>
-                <b>5 GB</b>
+                <b>10 GB</b>
               </div>
             </div>
             <div className={styles.empty}>
