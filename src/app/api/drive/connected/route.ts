@@ -6,9 +6,9 @@ import { driveGrant, enableBackup, hasDriveScope, recordNoBackup, runDriveBackup
 // Every sign-in lands here. Google has just shown the Drive permission, so this decides what happens next:
 //  - permission and refresh token held: the backup is switched on (unless the person turned it off before);
 //  - person said no on Google's screen: remember it and carry on, the app works without the backup;
-//  - an older account that has not granted it yet: Settings asks once, with the explicit consent screen.
+//  - an older account that has not granted it yet: carries on to the dashboard; the Settings card offers it.
 // A normal sign-in does not record new permissions on an existing account, only linking does, which is why
-// older accounts are sent to Settings.
+// older accounts have to use the Settings card.
 const destinations = new Set(["/dashboard", "/settings"]);
 
 export async function GET(request: Request) {
@@ -44,5 +44,6 @@ export async function GET(request: Request) {
     await recordNoBackup(userId);
     return go(to);
   }
-  return go("/settings", "connect");
+  // An older account that has not granted it yet still lands where it was heading; the Settings card offers the backup.
+  return go(to);
 }
