@@ -11,7 +11,7 @@ import styles from "./Enhancer.module.css";
 const ACCEPT = "image/jpeg,image/png,image/webp";
 const MAX_BYTES = 40 * 1024 * 1024;
 
-type Result = { before: string; after: string; blob: Blob; name: string };
+type Result = { before: string; after: string; blob: Blob; name: string; note: string | null };
 
 // The standalone Enhancer: pick any photo, it is made sharper and bigger inside this tab (nothing is uploaded), then
 // compare and save it. Delivery photos have the same tool on their card; this one is for any picture on the device.
@@ -25,6 +25,7 @@ export function EnhancerTool() {
   const [result, setResult] = useState<Result | null>(null);
   const [split, setSplit] = useState(50);
   const [over, setOver] = useState(false);
+  const [faces, setFaces] = useState(true);
 
   useEffect(() => () => cancel.current?.abort(), []);
   useEffect(
@@ -58,8 +59,11 @@ export function EnhancerTool() {
     setError(null);
     setWorking({ done: 0, total: 0, engine: "" });
     try {
-      const blob = await enhanceInBrowser(photo, { signal: controller.signal, sharpen, onProgress: setWorking });
-      setResult({ before: URL.createObjectURL(photo), after: URL.createObjectURL(blob), blob, name: photo.name });
+      const done = await enhanceInBrowser(photo, { signal: controller.signal, sharpen, faces, onProgress: setWorking });
+      const note =
+        done.faceProblem ??
+        (done.faces ? `Rebuilt ${done.faces === 1 ? "1 face" : `${done.faces} faces`}. A rebuilt face is a best guess, so check it.` : null);
+      setResult({ before: URL.createObjectURL(photo), after: URL.createObjectURL(done.blob), blob: done.blob, name: photo.name, note });
       setSplit(50);
     } catch (problem) {
       if (!(problem instanceof DOMException && problem.name === "AbortError")) {
@@ -105,6 +109,7 @@ export function EnhancerTool() {
             className={ed.compareSlider}
             aria-label="Show more of the original or the enhanced copy"
           />
+          {result.note && <p className={ed.enhanceHint}>{result.note}</p>}
           <div className={ed.enhanceActions}>
             <button type="button" className={`${ed.button} ${ed.enhanceButton}`} onClick={save}>
               Save enhanced photo · {formatSize(result.blob.size)}
@@ -116,7 +121,7 @@ export function EnhancerTool() {
         </>
       ) : working ? (
         <>
-          <EnhanceStatus done={working.done} total={working.total} />
+          <EnhanceStatus done={working.done} total={working.total} stage={working.stage} />
           <p className={ed.enhanceHint}>
             Keep this tab open. It takes about a minute.
           </p>
@@ -158,8 +163,8 @@ export function EnhancerTool() {
           </button>
           {blurry && (
             <p role="alert" className={ed.enhanceHint}>
-              This photo is out of focus. The enhancer cleans up noise and adds detail, but it cannot bring back a missed
-              focus, so the change may be small. Sharpening helps a little.
+              This photo is out of focus. Repair faces rebuilds the faces in it, but the rest of the photo stays soft:
+              nothing can bring back a missed focus. Sharpening helps a little.
             </p>
           )}
           {photo && (
@@ -172,8 +177,13 @@ export function EnhancerTool() {
                   Enhance anyway
                 </button>
               )}
+              <label className={ed.enhanceFaces}>
+                <input type="checkbox" checked={faces} onChange={(event) => setFaces(event.currentTarget.checked)} />
+                Repair faces
+              </label>
             </div>
           )}
+          {photo && <p className={ed.enhanceHint}>Repair faces rebuilds blurry faces. It downloads a 170 MB model the first time.</p>}
           {error && (
             <p role="alert" className={ed.jobError}>
               {error}

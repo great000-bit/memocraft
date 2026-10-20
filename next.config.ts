@@ -22,6 +22,11 @@ const nextConfig: NextConfig = {
         source,
         headers: [{ key: "Cross-Origin-Embedder-Policy", value: "credentialless" }],
       })),
+      // The face models never change under the same name, so the browser may keep them for good.
+      {
+        source: "/models/face/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
       // The service worker must never be served stale, or a fix to notifications would wait on the browser's cache.
       {
         source: "/sw.js",

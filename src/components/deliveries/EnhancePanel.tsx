@@ -33,7 +33,8 @@ export function EnhancePanel({
 }) {
   const router = useRouter();
   const [state, setState] = useState<EnhanceState>(initial);
-  const [faces, setFaces] = useState(false);
+  const [faces, setFaces] = useState(true);
+  const [faceNote, setFaceNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [compare, setCompare] = useState<{ before: string; after: string } | null>(null);
   const [compareError, setCompareError] = useState<string | null>(null);
@@ -58,12 +59,14 @@ export function EnhancePanel({
         setBlurry(true);
         return;
       }
-      const blob = await enhanceInBrowser(source, {
+      const { blob, faces: rebuilt, faceProblem } = await enhanceInBrowser(source, {
         signal: controller.signal,
+        faces,
         sharpen: options.sharpen,
         onProgress: (progress) => setWorking({ ...progress, saving: false }),
       });
       setWorking((current) => (current ? { ...current, saving: true } : current));
+      setFaceNote(faceProblem ?? (rebuilt ? `Rebuilt ${rebuilt === 1 ? "1 face" : `${rebuilt} faces`}. Check it before you send it.` : null));
       const upload = await prepareBrowserEnhance(fileId, blob.size);
       if (!upload.ok) throw new Error(upload.error);
       const put = await fetch(upload.url, { method: "PUT", body: blob, headers: { "Content-Type": "image/jpeg" }, signal: controller.signal });
@@ -147,6 +150,7 @@ export function EnhancePanel({
             Enhanced copy ready · {formatSize(state.bytes)}
           </p>
           <p className={styles.enhanceHint}>Your client gets this copy, marked Enhanced. They can still download the original.</p>
+          {faceNote && <p className={styles.enhanceHint}>{faceNote}</p>}
           <div className={styles.enhanceActions}>
             <button type="button" className={`${styles.button} ${styles.secondary}`} onClick={openCompare}>
               Compare
@@ -169,7 +173,7 @@ export function EnhancePanel({
         </>
       ) : working ? (
         <>
-          <EnhanceStatus done={working.done} total={working.total} saving={working.saving} />
+          <EnhanceStatus done={working.done} total={working.total} saving={working.saving} stage={working.stage} />
           {!working.saving && (
             <>
               <p className={styles.enhanceHint}>
@@ -199,6 +203,10 @@ export function EnhancePanel({
             >
               <span aria-hidden="true">✦</span> Enhance with AI
             </button>
+            <label className={styles.enhanceFaces}>
+              <input type="checkbox" checked={faces} onChange={(event) => setFaces(event.currentTarget.checked)} />
+              Repair faces
+            </label>
             {allowance.gemini && (
               <button
                 type="button"
@@ -219,16 +227,12 @@ export function EnhancePanel({
                 >
                   {busy ? "Starting…" : "Use the server model"}
                 </button>
-                <label className={styles.enhanceFaces}>
-                  <input type="checkbox" checked={faces} onChange={(event) => setFaces(event.currentTarget.checked)} />
-                  Repair faces
-                </label>
               </>
             )}
           </div>
           <p className={styles.enhanceHint}>
-            Free. Makes a soft or small photo sharper and bigger, on your own device, so the photo stays with you. Your
-            original stays as it is.
+            Free. Makes a soft or small photo sharper and bigger, on your own device, so the photo stays with you. Repair
+            faces rebuilds blurry faces (a 170 MB download the first time). Your original stays as it is.
             {allowance.server ? (left === 0 ? " No server enhances left this month." : ` ${left} of ${allowance.limit} server enhances left this month.`) : ""}
           </p>
           {allowance.gemini && (
@@ -240,8 +244,8 @@ export function EnhancePanel({
           {blurry && (
             <div role="alert" className={styles.enhanceHint}>
               <p>
-                This photo is out of focus. The enhancer cleans up noise and adds detail, but it cannot bring back a
-                missed focus, so the change may be small. Sharpening helps a little.
+                This photo is out of focus. Repair faces rebuilds the faces in it, but the rest of the photo stays soft:
+                nothing can bring back a missed focus. Sharpening helps a little.
               </p>
               <div className={styles.enhanceActions}>
                 <button type="button" className={`${styles.button} ${styles.secondary}`} onClick={() => runInBrowser({ skipCheck: true, sharpen: true })}>
