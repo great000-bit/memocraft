@@ -131,7 +131,7 @@
 }
 
 :global(.neu-scope) .stage {
-  border-color: rgb(255 255 255 / 0.7);
+  border-color: var(--neu-edge);
   background: var(--neu-face);
   box-shadow: var(--neu-raised);
 }

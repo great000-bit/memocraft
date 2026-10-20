@@ -28,7 +28,7 @@ async function Preview({ params }: Pick<PageProps<"/deliveries/[id]/preview">, "
           Back to editing
         </Link>
       </div>
-      <div className={`light-scope ${styles.previewFrame}`}>
+      <div className={`site-scope ${styles.previewFrame}`}>
         <ClientView delivery={delivery} senderName={brand.name ?? user.name} brand={brand} thumbs={thumbs} />
       </div>
     </>

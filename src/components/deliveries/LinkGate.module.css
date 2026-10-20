@@ -17,7 +17,7 @@
   place-items: center;
   border-radius: 18px;
   background: var(--fixer-tint);
-  color: var(--fixer);
+  color: var(--fixer-ink, var(--fixer));
 }
 
 .badge svg {
@@ -108,9 +108,9 @@
   border-radius: 12px;
   font-size: 15px;
   line-height: 22px;
-  color: #8f2a1a;
-  background: #fdeeea;
-  border: 1px solid #f1c3b9;
+  color: var(--error-text);
+  background: var(--error-tint);
+  border: 1px solid var(--error-line);
 }
 
 .submit {

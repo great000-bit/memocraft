@@ -19,9 +19,9 @@
   border-radius: calc(var(--w) * 0.148);
   /* One colour behind the status bar, the page and the home indicator, so the screen reads as one piece of glass.
      A mockup can change it with --screen. */
-  background: var(--screen, #fff);
+  background: var(--screen, #1a1f1e);
   transition: background-color 0.45s ease;
-  color: #1e1919;
+  color: #e6eae8;
   overflow: hidden;
   box-shadow: 0 0 0 calc(var(--w) * 0.022) #0b0b0c;
   display: flex;

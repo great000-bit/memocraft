@@ -126,7 +126,7 @@
 
 :global(.neu-scope) .outline,
 :global(.neu-scope) .secondary {
-  border: 1px solid rgb(255 255 255 / 0.7);
+  border: 1px solid var(--neu-edge);
   background: var(--neu-face);
   color: var(--text);
   box-shadow: var(--neu-raised-sm);

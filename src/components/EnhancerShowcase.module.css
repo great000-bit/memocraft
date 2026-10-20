@@ -8,7 +8,7 @@
   padding: clamp(28px, 5vw, 72px);
   border-radius: 36px;
   background:
-    radial-gradient(60% 70% at 85% 40%, rgb(11 107 93 / 0.14), transparent 70%),
+    radial-gradient(60% 70% at 85% 40%, rgb(63 190 168 / 0.16), transparent 70%),
     radial-gradient(40% 50% at 10% 100%, rgb(232 163 61 / 0.1), transparent 70%),
     var(--neu-face);
   box-shadow: var(--neu-raised);
@@ -23,8 +23,8 @@
   inset: 0;
   z-index: -1;
   background-image:
-    linear-gradient(rgb(11 107 93 / 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(11 107 93 / 0.07) 1px, transparent 1px);
+    linear-gradient(rgb(95 207 187 / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(95 207 187 / 0.06) 1px, transparent 1px);
   background-size: 44px 44px;
   mask-image: radial-gradient(70% 80% at 80% 50%, #000, transparent 75%);
 }
@@ -46,7 +46,7 @@
   box-shadow: var(--neu-raised-xs);
   font-size: 14px;
   font-weight: 700;
-  color: var(--fixer);
+  color: var(--fixer-ink, var(--fixer));
 }
 
 .kickerDot {
@@ -67,7 +67,7 @@
 
 .titleAccent {
   display: block;
-  color: var(--fixer);
+  color: var(--fixer-ink, var(--fixer));
 }
 
 .body {
@@ -156,11 +156,11 @@
   aspect-ratio: 4 / 5;
   border-radius: 28px;
   overflow: hidden;
-  background: #cfd8d3;
+  background: var(--sunken);
   box-shadow:
-    0 40px 80px -40px rgb(16 24 20 / 0.55),
-    0 0 0 1px rgb(255 255 255 / 0.6),
-    0 0 0 8px rgb(255 255 255 / 0.35);
+    0 40px 80px -40px rgb(0 0 0 / 0.8),
+    0 0 0 1px rgb(255 255 255 / 0.1),
+    0 0 0 8px rgb(255 255 255 / 0.04);
   cursor: ew-resize;
   touch-action: pan-y;
   user-select: none;
@@ -218,7 +218,7 @@
   height: 48px;
   margin: -24px 0 0 -24px;
   border-radius: 50%;
-  color: var(--fixer);
+  color: #0b6b5d;
   background: rgb(255 255 255 / 0.9);
   backdrop-filter: blur(10px);
   box-shadow: 0 10px 24px -8px rgb(0 0 0 / 0.45), inset 0 0 0 1px rgb(255 255 255 / 0.9);
@@ -255,7 +255,7 @@
 
 .tagAfter {
   right: 16px;
-  color: var(--fixer);
+  color: #0b6b5d;
   background: rgb(255 255 255 / 0.88);
 }
 
@@ -343,9 +343,9 @@
   max-width: calc(100% - 32px);
   padding: 10px 16px;
   border-radius: var(--radius-pill);
-  background: rgb(255 255 255 / 0.9);
+  background: var(--glass);
   backdrop-filter: blur(12px);
-  box-shadow: 0 12px 28px -12px rgb(0 0 0 / 0.4);
+  box-shadow: 0 12px 28px -12px rgb(0 0 0 / 0.6), inset 0 0 0 1px var(--neu-edge);
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;

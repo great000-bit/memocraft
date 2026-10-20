@@ -102,26 +102,8 @@ a {
   outline-offset: 2px;
 }
 
-/* Marketing pages always render light, on white, whatever the device theme. */
-.light-scope {
-  --bg: #ffffff;
-  --surface: #ffffff;
-  --sunken: #f5f4f1;
-  --line: #e4e2dd;
-  --control-border: #848c88;
-  --text: #1e1919;
-  --text-muted: #5c5856;
-  --text-subtle: #7a7674;
-  --fixer: #0b6b5d;
-  --fixer-hover: #09564b;
-  --fixer-tint: #eaf6f4;
-  --on-fixer: #ffffff;
-  --proof-text: #8a5208;
-  --proof-tint: #fcefd9;
-  --focus-ring: #8a5208;
-  --success: #1d7a3a;
-  --logo-ink: #1e1919;
-  color-scheme: light;
+/* Marketing, sign-in and client pages: always dark, on the same deep sage canvas as the workspace (tokens below). */
+.site-scope {
   background: var(--bg);
   color: var(--text);
   min-height: 100dvh;
@@ -151,10 +133,13 @@ a {
   min-height: 100dvh;
 }
 
-/* The signed-in workspace in dark: the same soft raised and pressed surfaces on a deep sage canvas. Lifted faces catch a
+/* Dark, everywhere: the site, sign-in, client pages and the workspace (unless someone switched their workspace to light).
+   The same soft raised and pressed surfaces on a deep sage canvas. Lifted faces catch a
    faint light on the top left and fall into a deep shadow on the bottom right. Text colours are checked against the
    canvas and the card faces (all at least 4.5:1). Teal and amber text use lighter tints of the brand colours; teal
    buttons keep white text. */
+.site-scope,
+.neu-scope,
 .app-scope:not([data-theme="light"]) {
   --bg: #1a1f1e;
   --surface: #232a28;
@@ -201,9 +186,9 @@ a {
   color-scheme: dark;
 }
 
-/* The page behind the workspace (seen when a phone overscrolls) matches it. */
-html:has(.app-scope:not([data-theme="light"])),
-html:has(.app-scope:not([data-theme="light"])) body {
+/* The page behind (seen when a phone overscrolls) matches it. */
+html:has(.site-scope, .app-scope:not([data-theme="light"])),
+html:has(.site-scope, .app-scope:not([data-theme="light"])) body {
   background: #1a1f1e;
   color-scheme: dark;
 }
