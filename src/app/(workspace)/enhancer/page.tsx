@@ -5,6 +5,7 @@ import { PageSkeleton } from "@/components/workspace/PageSkeleton";
 import { requireUser } from "@/lib/session";
 import panels from "@/components/workspace/Settings.module.css";
 import styles from "@/components/workspace/Workspace.module.css";
+import enhancer from "@/components/workspace/Enhancer.module.css";
 
 export const metadata: Metadata = { title: "Enhancer" };
 
@@ -15,7 +16,7 @@ async function Tool() {
 
 export default function EnhancerPage() {
   return (
-    <>
+    <div className={enhancer.page}>
       <div className={styles.headRow}>
         <h1 className={styles.heading}>Enhancer</h1>
       </div>
@@ -23,13 +24,13 @@ export default function EnhancerPage() {
         Make a soft or small photo sharper and four times bigger. It runs on your own device, so the photo is never
         uploaded, and it is free.
       </p>
-      <div className={panels.panels}>
+      <div className={`${panels.panels} ${enhancer.wide}`}>
         <section className={panels.panel}>
           <Suspense fallback={<PageSkeleton blocks={1} />}>
             <Tool />
           </Suspense>
         </section>
       </div>
-    </>
+    </div>
   );
 }

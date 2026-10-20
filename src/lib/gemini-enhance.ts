@@ -19,6 +19,13 @@ const PROMPT =
   "colours, lighting and the composition exactly as they are. Do not add, remove or change anything in the scene, " +
   "and do not add text. Return only the restored photograph.";
 
+// Google gives its image models no free requests, so without billing on the key's project every call ends here.
+export class GeminiQuotaError extends Error {
+  constructor() {
+    super("Gemini quota used up or not available on the free tier");
+  }
+}
+
 type Part = { text?: string; inlineData?: { mimeType?: string; data?: string }; inline_data?: { mime_type?: string; data?: string } };
 
 // The repaired picture as image bytes, or null when the model answered without one (for example, it declined).
@@ -34,6 +41,7 @@ export async function repairWithGemini(jpeg: Uint8Array): Promise<Uint8Array | n
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     cache: "no-store",
   });
+  if (response.status === 429) throw new GeminiQuotaError();
   if (!response.ok) throw new Error(`Gemini answered ${response.status}: ${(await response.text()).slice(0, 200)}`);
   const body = (await response.json()) as { candidates?: { content?: { parts?: Part[] } }[] };
   for (const part of body.candidates?.[0]?.content?.parts ?? []) {
