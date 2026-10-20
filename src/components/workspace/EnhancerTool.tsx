@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { enhanceInBrowser, looksBlurry, type BrowserProgress } from "@/lib/enhance-client";
 import { EnhanceStatus } from "@/components/EnhanceStatus";
+import { FeatureIcon } from "@/components/FeatureIcons";
 import { formatSize } from "@/lib/storage-limits";
 import ed from "@/components/deliveries/Editor.module.css";
 import styles from "./Enhancer.module.css";
@@ -129,7 +130,8 @@ export function EnhancerTool() {
         <>
           <button
             type="button"
-            className={styles.drop}
+            className={`${ed.drop} ${styles.drop}`}
+            data-size="big"
             data-over={over || undefined}
             onClick={() => input.current?.click()}
             onDragOver={(event) => {
@@ -143,8 +145,16 @@ export function EnhancerTool() {
               choose(event.dataTransfer.files[0]);
             }}
           >
-            <span className={styles.dropTitle}>{photo ? photo.name : "Drop a photo here, or choose one"}</span>
-            <span className={ed.enhanceHint}>{photo ? formatSize(photo.size) : "JPG, PNG or WebP, up to 40 MB"}</span>
+            <span className={ed.dropIcon} aria-hidden="true">
+              <FeatureIcon name="enhance" />
+            </span>
+            <span className={ed.dropText}>
+              <span className={ed.dropTitle}>{photo ? photo.name : "Drop a photo here"}</span>
+              <span className={ed.dropHint}>
+                {photo ? `${formatSize(photo.size)} · drop another to swap it` : "JPG, PNG or WebP, up to 40 MB. It stays on your device."}
+              </span>
+            </span>
+            <span className={`${ed.button} ${ed.primary} ${ed.dropButton}`}>{photo ? "Choose another" : "Choose a photo"}</span>
           </button>
           {blurry && (
             <p role="alert" className={ed.enhanceHint}>

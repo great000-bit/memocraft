@@ -1,28 +1,26 @@
+/* The Enhancer page: one centred card with a big drop box, like the delivery editor's. */
+.page {
+  max-width: 880px;
+  margin-inline: auto;
+}
+
+.page .wide {
+  max-width: none;
+}
+
 .tool {
   display: grid;
   gap: var(--space-4);
 }
 
 .drop {
-  display: grid;
-  gap: var(--space-2);
-  justify-items: center;
-  padding: var(--space-8) var(--space-4);
-  border: 2px dashed var(--neu-edge);
-  border-radius: 20px;
-  background: var(--neu-face);
+  width: 100%;
+  min-height: min(420px, 55vh);
   color: inherit;
   font: inherit;
-  cursor: pointer;
-  text-align: center;
 }
 
-.drop:hover,
-.drop[data-over] {
-  border-color: var(--accent, currentColor);
-}
-
-.dropTitle {
-  font-weight: 600;
+.drop .dropTitle,
+.drop span {
   overflow-wrap: anywhere;
 }

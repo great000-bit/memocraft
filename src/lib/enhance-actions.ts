@@ -17,7 +17,7 @@ import {
   startPrediction,
   type Prediction,
 } from "./enhance";
-import { geminiConfigured, monthlyGeminiLimit, repairWithGemini } from "./gemini-enhance";
+import { GeminiQuotaError, geminiConfigured, monthlyGeminiLimit, repairWithGemini } from "./gemini-enhance";
 import { BROWSER_ENHANCED_MAX_BYTES, browserEnhancedKey, isBrowserEnhancedKey } from "./enhance-browser";
 import { requireUser } from "./session";
 import { deleteObjects, getObject, getObjectRange, headObject, presignPut, presignView, putObject, storageConfigured } from "./storage";
@@ -153,8 +153,16 @@ export async function repairWithGeminiAction(fileId: string): Promise<EnhanceSta
     refresh(file.deliveryId);
     return { state: "ready", bytes: jpeg.byteLength };
   } catch (error) {
-    console.error("Gemini repair failed", error);
     await deleteObjects([key]);
+    if (error instanceof GeminiQuotaError) {
+      // Not the creative's fault and not a run they used: take it off their monthly count.
+      await pool.query(`delete from "enhanceRun" where "predictionId" = $1`, [runId]);
+      return {
+        state: "failed",
+        error: "Gemini is not available right now: Google needs billing turned on for this key. Your original is untouched.",
+      };
+    }
+    console.error("Gemini repair failed", error);
     return { state: "failed", error: "Gemini repair did not work on this photo. Your original is untouched. Try again in a moment." };
   }
 }
