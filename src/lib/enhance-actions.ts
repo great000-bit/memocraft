@@ -17,6 +17,7 @@ import {
   startPrediction,
   type Prediction,
 } from "./enhance";
+import { geminiConfigured, monthlyGeminiLimit, repairWithGemini } from "./gemini-enhance";
 import { BROWSER_ENHANCED_MAX_BYTES, browserEnhancedKey, isBrowserEnhancedKey } from "./enhance-browser";
 import { requireUser } from "./session";
 import { deleteObjects, getObject, getObjectRange, headObject, presignPut, presignView, putObject, storageConfigured } from "./storage";
@@ -88,11 +89,74 @@ async function runsThisMonth(ownerId: string): Promise<number> {
 }
 
 // The in-browser enhancer is free and has no monthly allowance; the server one (Replicate) only exists when its token is set.
-export async function enhanceAllowance(): Promise<{ used: number; limit: number; on: boolean; server: boolean }> {
+export async function enhanceAllowance(): Promise<{ used: number; limit: number; on: boolean; server: boolean; gemini: boolean; geminiLeft: number }> {
   const user = await requireUser();
   const on = storageConfigured();
   const server = on && enhanceConfigured();
-  return { used: server ? await runsThisMonth(user.id) : 0, limit: monthlyEnhanceLimit(), on, server };
+  const gemini = on && geminiConfigured();
+  const geminiLeft = gemini ? Math.max(0, monthlyGeminiLimit() - (await geminiRunsThisMonth(user.id))) : 0;
+  return { used: server ? await runsThisMonth(user.id) : 0, limit: monthlyEnhanceLimit(), on, server, gemini, geminiLeft };
+}
+
+async function geminiRunsThisMonth(ownerId: string): Promise<number> {
+  const { rows } = await pool.query<{ count: string }>(
+    `select count(*) from "enhanceRun" where "userId" = $1 and "predictionId" like 'gemini-%'
+        and "at" >= date_trunc('month', now() at time zone 'utc') at time zone 'utc'`,
+    [ownerId],
+  );
+  return Number(rows[0].count);
+}
+
+// Face and detail repair with Gemini: the photo is sent to Google and the answer comes back in the same request.
+export async function repairWithGeminiAction(fileId: string): Promise<EnhanceState> {
+  const user = await requireUser();
+  const file = await loadOwned(fileId, user.id);
+  if (!file || !file.storageKey) return { state: "failed", error: "This photo was not found." };
+  if (!geminiConfigured() || !storageConfigured()) return { state: "failed", error: "Gemini repair is not switched on yet." };
+  if (file.enhanceJob && !file.enhanceJob.error) return { state: "running" };
+  if (!ENHANCEABLE_TYPES.includes(file.mimeType ?? "")) return { state: "failed", error: "Repair works on JPEG, PNG, WebP and TIFF photos." };
+  if (Number(file.sizeBytes ?? 0) > ENHANCE_SOURCE_MAX_BYTES) {
+    return { state: "failed", error: `Repair works on photos up to ${formatSize(ENHANCE_SOURCE_MAX_BYTES)}.` };
+  }
+  const limit = monthlyGeminiLimit();
+  if ((await geminiRunsThisMonth(user.id)) >= limit) {
+    return { state: "failed", error: `You have used all ${limit} Gemini repairs for this month. They come back on the 1st.` };
+  }
+  if ((await storageUsed(user.id)) + 8 * 1024 * 1024 > storageLimits.accountBytes) {
+    return { state: "failed", error: "Your storage is full. Remove a file to make room for the repaired copy." };
+  }
+  const runId = `gemini-${randomBytes(8).toString("hex")}`;
+  const key = `enhanced/${fileId}/${randomBytes(8).toString("hex")}.jpg`;
+  try {
+    const original = await getObject(file.storageKey);
+    if (!original) return { state: "failed", error: "The original could not be read from storage. Try again." };
+    const input = await prepareInput(original.bytes, 2_000_000);
+    // The run is counted before the call, so a failing loop cannot spend the free quota unnoticed.
+    await pool.query(`insert into "enhanceRun" ("userId", "fileId", "predictionId") values ($1, $2, $3)`, [user.id, fileId, runId]);
+    const repaired = await repairWithGemini(input.bytes);
+    if (!repaired) return { state: "failed", error: "Gemini did not return a picture for this photo. Your original is untouched. Try again." };
+    const jpeg = await finishOutput(repaired);
+    await putObject(key, jpeg, "image/jpeg");
+    const old = await pool.query<{ enhancedKey: string | null }>(`select "enhancedKey" from "deliveryFile" where "id" = $1`, [fileId]);
+    const saved = await pool.query(
+      `update "deliveryFile" set "enhancedKey" = $2, "enhancedBytes" = $3, "enhanceJob" = null
+        where "id" = $1 and ("enhanceJob" is null or "enhanceJob" ? 'error')`,
+      [fileId, key, jpeg.byteLength],
+    );
+    if (!saved.rowCount) {
+      await deleteObjects([key]);
+      return { state: "failed", error: "The photo changed while it was repaired. Try again." };
+    }
+    const previous = old.rows[0]?.enhancedKey;
+    if (previous && previous !== key) await deleteObjects([previous]);
+    await pool.query(`update "delivery" set "updatedAt" = now() where "id" = $1`, [file.deliveryId]);
+    refresh(file.deliveryId);
+    return { state: "ready", bytes: jpeg.byteLength };
+  } catch (error) {
+    console.error("Gemini repair failed", error);
+    await deleteObjects([key]);
+    return { state: "failed", error: "Gemini repair did not work on this photo. Your original is untouched. Try again in a moment." };
+  }
 }
 
 type BrowserUpload = { ok: true; key: string; url: string } | { ok: false; error: string };

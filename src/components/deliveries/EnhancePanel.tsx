@@ -8,6 +8,7 @@ import {
   finishBrowserEnhance,
   prepareBrowserEnhance,
   removeEnhanced,
+  repairWithGeminiAction,
   startEnhance,
   type EnhanceState,
 } from "@/lib/enhance-actions";
@@ -28,7 +29,7 @@ export function EnhancePanel({
 }: {
   fileId: string;
   initial: EnhanceState;
-  allowance: { used: number; limit: number; server: boolean };
+  allowance: { used: number; limit: number; server: boolean; gemini: boolean; geminiLeft: number };
 }) {
   const router = useRouter();
   const [state, setState] = useState<EnhanceState>(initial);
@@ -41,6 +42,7 @@ export function EnhancePanel({
   const cancel = useRef<AbortController | null>(null);
   // Set when the photo is too soft for the model to help much: the creative decides whether to carry on.
   const [blurry, setBlurry] = useState(false);
+  const [repairing, setRepairing] = useState(false);
 
   useEffect(() => () => cancel.current?.abort(), []);
 
@@ -111,6 +113,20 @@ export function EnhancePanel({
     }
   }
 
+  async function repairWithGemini() {
+    setRepairing(true);
+    setState({ state: "none" });
+    try {
+      const next = await repairWithGeminiAction(fileId);
+      setState(next);
+      if (next.state !== "running") router.refresh();
+    } catch {
+      setState({ state: "failed", error: "Something went wrong. Try again in a moment." });
+    } finally {
+      setRepairing(false);
+    }
+  }
+
   async function openCompare() {
     setCompareError(null);
     const result = await enhanceCompareUrls(fileId).catch(() => null);
@@ -146,6 +162,11 @@ export function EnhancePanel({
           </div>
           {compareError && <p className={styles.jobError}>{compareError}</p>}
         </>
+      ) : repairing ? (
+        <>
+          <EnhanceStatus done={0} total={0} waiting />
+          <p className={styles.enhanceHint}>Keep this tab open. Gemini usually takes 10 to 30 seconds.</p>
+        </>
       ) : working ? (
         <>
           <EnhanceStatus done={working.done} total={working.total} saving={working.saving} />
@@ -178,6 +199,16 @@ export function EnhancePanel({
             >
               <span aria-hidden="true">✦</span> Enhance with AI
             </button>
+            {allowance.gemini && (
+              <button
+                type="button"
+                className={`${styles.button} ${styles.secondary}`}
+                disabled={busy || allowance.geminiLeft === 0}
+                onClick={repairWithGemini}
+              >
+                Repair faces with Gemini
+              </button>
+            )}
             {allowance.server && (
               <>
                 <button
@@ -200,6 +231,12 @@ export function EnhancePanel({
             original stays as it is.
             {allowance.server ? (left === 0 ? " No server enhances left this month." : ` ${left} of ${allowance.limit} server enhances left this month.`) : ""}
           </p>
+          {allowance.gemini && (
+            <p className={styles.enhanceHint}>
+              Repair faces with Gemini sends this photo to Google and redraws it, so a face can look different from the
+              real person. Check it before you send it. {allowance.geminiLeft} left this month.
+            </p>
+          )}
           {blurry && (
             <div role="alert" className={styles.enhanceHint}>
               <p>
