@@ -17,6 +17,8 @@ export const monthlyEnhanceLimit = () => Math.max(0, Number(env.ENHANCE_MONTHLY_
 // The model runs out of GPU memory a little above 2 megapixels, so bigger photos are scaled down first. For a blurry
 // photo nothing real is lost: the model rebuilds the detail at the larger size.
 const INPUT_MAX_PIXELS = 2_000_000;
+// The in-browser model works on a smaller picture, so a phone can finish it. Four times this is the result (about 13 MP).
+export const BROWSER_INPUT_MAX_PIXELS = 800_000;
 // The result aims for this long edge, and never more than 16 megapixels.
 const OUTPUT_LONG_EDGE = 4096;
 const OUTPUT_MAX_PIXELS = 16_000_000;
@@ -71,14 +73,17 @@ export function outputUrl(prediction: Prediction): string | null {
 
 // The picture the model is given: upright, at most 2 megapixels, as a high-quality JPEG. Also returns how much to
 // scale it up so the result lands near 4096 px on its long edge.
-export async function prepareInput(original: Uint8Array): Promise<{ bytes: Uint8Array; scale: number; width: number; height: number }> {
+export async function prepareInput(
+  original: Uint8Array,
+  maxPixels = INPUT_MAX_PIXELS,
+): Promise<{ bytes: Uint8Array; scale: number; width: number; height: number }> {
   const image = sharp(original, { limitInputPixels: 300_000_000 }).rotate();
   const meta = await image.metadata();
   const upright = (meta.orientation ?? 1) >= 5;
   let width = (upright ? meta.height : meta.width) ?? 0;
   let height = (upright ? meta.width : meta.height) ?? 0;
   if (!width || !height) throw new Error("Could not read the picture size");
-  const shrink = Math.min(1, Math.sqrt(INPUT_MAX_PIXELS / (width * height)));
+  const shrink = Math.min(1, Math.sqrt(maxPixels / (width * height)));
   width = Math.max(1, Math.floor(width * shrink));
   height = Math.max(1, Math.floor(height * shrink));
   const bytes = await image

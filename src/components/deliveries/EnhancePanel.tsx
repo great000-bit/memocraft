@@ -2,7 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { checkEnhance, enhanceCompareUrls, removeEnhanced, startEnhance, type EnhanceState } from "@/lib/enhance-actions";
+import {
+  checkEnhance,
+  enhanceCompareUrls,
+  finishBrowserEnhance,
+  prepareBrowserEnhance,
+  removeEnhanced,
+  startEnhance,
+  type EnhanceState,
+} from "@/lib/enhance-actions";
+import { enhanceInBrowser, type BrowserProgress } from "@/lib/enhance-client";
 import { formatSize } from "@/lib/storage-limits";
 import styles from "./Editor.module.css";
 
@@ -18,7 +27,7 @@ export function EnhancePanel({
 }: {
   fileId: string;
   initial: EnhanceState;
-  allowance: { used: number; limit: number };
+  allowance: { used: number; limit: number; server: boolean };
 }) {
   const router = useRouter();
   const [state, setState] = useState<EnhanceState>(initial);
@@ -26,6 +35,39 @@ export function EnhancePanel({
   const [busy, setBusy] = useState(false);
   const [compare, setCompare] = useState<{ before: string; after: string } | null>(null);
   const [compareError, setCompareError] = useState<string | null>(null);
+  // The free enhancer works inside this tab: `working` is set from the first step until the copy is saved.
+  const [working, setWorking] = useState<(BrowserProgress & { saving: boolean }) | null>(null);
+  const cancel = useRef<AbortController | null>(null);
+
+  useEffect(() => () => cancel.current?.abort(), []);
+
+  async function runInBrowser() {
+    const controller = new AbortController();
+    cancel.current = controller;
+    setWorking({ done: 0, total: 0, engine: "", saving: false });
+    setState({ state: "none" });
+    try {
+      const blob = await enhanceInBrowser(`/api/enhance/source/${fileId}`, {
+        signal: controller.signal,
+        onProgress: (progress) => setWorking({ ...progress, saving: false }),
+      });
+      setWorking((current) => (current ? { ...current, saving: true } : current));
+      const upload = await prepareBrowserEnhance(fileId, blob.size);
+      if (!upload.ok) throw new Error(upload.error);
+      const put = await fetch(upload.url, { method: "PUT", body: blob, headers: { "Content-Type": "image/jpeg" }, signal: controller.signal });
+      if (!put.ok) throw new Error("The enhanced copy did not upload. Try again.");
+      const next = await finishBrowserEnhance(fileId, upload.key);
+      setState(next);
+      router.refresh();
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === "AbortError")) {
+        setState({ state: "failed", error: error instanceof Error ? error.message : "Something went wrong. Try again." });
+      }
+    } finally {
+      cancel.current = null;
+      setWorking(null);
+    }
+  }
 
   useEffect(() => {
     if (state.state !== "running") return;
@@ -94,6 +136,31 @@ export function EnhancePanel({
           </div>
           {compareError && <p className={styles.jobError}>{compareError}</p>}
         </>
+      ) : working ? (
+        <>
+          <p className={styles.enhanceTitle} aria-live="polite">
+            <span className={styles.enhanceSpin} aria-hidden="true" />
+            {working.saving
+              ? "Saving the enhanced copy…"
+              : working.total
+                ? `Enhancing on your device… ${Math.round((working.done / working.total) * 100)}%`
+                : "Getting ready…"}
+          </p>
+          {!working.saving && (
+            <>
+              <progress className={styles.enhanceBar} max={working.total || 1} value={working.done} aria-label="Enhance progress" />
+              <p className={styles.enhanceHint}>
+                Keep this tab open.
+                {working.engine === "cpu" ? " This device is using its processor, so it takes a few minutes." : ""}
+              </p>
+              <div className={styles.enhanceActions}>
+                <button type="button" className={`${styles.button} ${styles.ghost}`} onClick={() => cancel.current?.abort()}>
+                  Cancel
+                </button>
+              </div>
+            </>
+          )}
+        </>
       ) : state.state === "running" ? (
         <p className={styles.enhanceTitle} aria-live="polite">
           <span className={styles.enhanceSpin} aria-hidden="true" />
@@ -105,19 +172,32 @@ export function EnhancePanel({
             <button
               type="button"
               className={`${styles.button} ${styles.enhanceButton}`}
-              disabled={busy || left === 0}
-              onClick={() => run(() => startEnhance(fileId, faces))}
+              disabled={busy}
+              onClick={runInBrowser}
             >
-              <span aria-hidden="true">✦</span> {busy ? "Starting…" : "Enhance with AI"}
+              <span aria-hidden="true">✦</span> Enhance with AI
             </button>
-            <label className={styles.enhanceFaces}>
-              <input type="checkbox" checked={faces} onChange={(event) => setFaces(event.currentTarget.checked)} />
-              Repair faces
-            </label>
+            {allowance.server && (
+              <>
+                <button
+                  type="button"
+                  className={`${styles.button} ${styles.secondary}`}
+                  disabled={busy || left === 0}
+                  onClick={() => run(() => startEnhance(fileId, faces))}
+                >
+                  {busy ? "Starting…" : "Use the server model"}
+                </button>
+                <label className={styles.enhanceFaces}>
+                  <input type="checkbox" checked={faces} onChange={(event) => setFaces(event.currentTarget.checked)} />
+                  Repair faces
+                </label>
+              </>
+            )}
           </div>
           <p className={styles.enhanceHint}>
-            Makes a soft or small photo sharper and bigger. Your original stays as it is.{" "}
-            {left === 0 ? "No enhances left this month." : `${left} of ${allowance.limit} left this month.`}
+            Free. Makes a soft or small photo sharper and bigger, on your own device, so the photo stays with you. Your
+            original stays as it is.
+            {allowance.server ? (left === 0 ? " No server enhances left this month." : ` ${left} of ${allowance.limit} server enhances left this month.`) : ""}
           </p>
           {state.state === "failed" && (
             <p role="alert" className={styles.jobError}>
