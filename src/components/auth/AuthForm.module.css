@@ -73,9 +73,9 @@
   border-radius: 10px;
   font-size: 15px;
   line-height: 22px;
-  color: #8f2a1a;
-  background: #fdeeea;
-  border: 1px solid #f1c3b9;
+  color: var(--error-text);
+  background: var(--error-tint);
+  border: 1px solid var(--error-line);
 }
 
 .submit {
@@ -134,7 +134,7 @@
 .forgot {
   font-size: 14px;
   font-weight: 600;
-  color: var(--fixer);
+  color: var(--fixer-ink, var(--fixer));
   text-decoration: none;
 }
 
@@ -202,7 +202,7 @@
   border-radius: 10px;
   font-size: 15px;
   line-height: 22px;
-  color: #14502a;
-  background: #e7f5ec;
-  border: 1px solid #b9e0c6;
+  color: var(--success);
+  background: var(--success-tint);
+  border: 1px solid color-mix(in srgb, var(--success) 40%, transparent);
 }

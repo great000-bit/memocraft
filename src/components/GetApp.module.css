@@ -19,11 +19,11 @@
   border-radius: 28px;
   background: var(--neu-face, #ffffff);
   color: var(--text);
-  box-shadow: 0 40px 80px -30px rgb(23 26 25 / 0.45), 0 2px 6px rgb(23 26 25 / 0.06);
+  box-shadow: 0 40px 80px -30px rgb(0 0 0 / 0.7), 0 0 0 1px var(--neu-edge, transparent);
 }
 
 .sheet::backdrop {
-  background: rgb(23 26 25 / 0.36);
+  background: rgb(0 0 0 / 0.55);
   backdrop-filter: blur(3px);
 }
 
@@ -110,7 +110,7 @@
   place-items: center;
   border-radius: 14px;
   background: var(--bg);
-  color: var(--fixer);
+  color: var(--fixer-ink, var(--fixer));
   box-shadow: var(--neu-inset-sm, inset 0 0 0 1px var(--line));
 }
 

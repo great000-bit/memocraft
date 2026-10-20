@@ -11,7 +11,7 @@
 
 /* Hero: one centred column, like a product launch page. A badge, the headline with its answer in teal, two buttons,
    then the client's phone rising out of a soft teal band with proof of delivery floating round it. Light all the
-   way: white at the top into sage and a gentle teal glow, with a faint grid behind. */
+   way down: the deep sage canvas into a dark teal band and a soft teal glow, with a faint grid behind. */
 .hero {
   position: relative;
   overflow: hidden;
@@ -20,8 +20,8 @@
   gap: 40px;
   padding: var(--space-12) var(--space-4) 0;
   background:
-    radial-gradient(60% 55% at 50% 100%, rgb(11 107 93 / 0.2), transparent 70%),
-    linear-gradient(180deg, var(--bg) 0%, var(--bg) 45%, #dcebe6 100%);
+    radial-gradient(60% 55% at 50% 100%, rgb(63 190 168 / 0.22), transparent 70%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg) 45%, #123a33 100%);
   isolation: isolate;
 }
 
@@ -30,8 +30,8 @@
   inset: 0;
   z-index: -1;
   background-image:
-    linear-gradient(rgb(11 107 93 / 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(11 107 93 / 0.07) 1px, transparent 1px);
+    linear-gradient(rgb(95 207 187 / 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(95 207 187 / 0.07) 1px, transparent 1px);
   background-size: 72px 72px;
   background-position: center top;
   -webkit-mask-image: radial-gradient(70% 60% at 50% 30%, #000 20%, transparent 75%);
@@ -55,7 +55,7 @@
 }
 
 .displayAccent {
-  color: var(--fixer);
+  color: var(--fixer-ink, var(--fixer));
   white-space: nowrap;
 }
 
@@ -109,9 +109,9 @@
 .float {
   position: absolute;
   z-index: 3;
-  background: #ffffff;
-  border: 1px solid rgb(255 255 255 / 0.9);
-  box-shadow: 0 18px 40px -16px rgb(11 107 93 / 0.38);
+  background: var(--surface);
+  border: 1px solid var(--neu-edge);
+  box-shadow: 0 18px 40px -16px rgb(0 0 0 / 0.6);
 }
 
 .floatPill {
@@ -381,7 +381,7 @@
 .kicker {
   font-size: 14px;
   font-weight: 700;
-  color: var(--fixer);
+  color: var(--fixer-ink, var(--fixer));
 }
 
 .h2 {
@@ -502,7 +502,7 @@
   color: var(--text-subtle);
 }
 
-/* Dark panel: it starts inset and widens as it scrolls into view */
+/* Privacy panel: it starts inset and widens as it scrolls into view */
 .panelSection {
   --gutter: clamp(var(--space-8), 5.5vw, 110px);
   --grow: min(40px, calc(var(--gutter) - 12px));
@@ -512,15 +512,6 @@
 }
 
 .panel {
-  --bg: #0f1211;
-  --surface: #1f2422;
-  --sunken: #262c29;
-  --line: #343b38;
-  --control-border: #6f7773;
-  --text: #f1f3f2;
-  --text-muted: #a3aba7;
-  --fixer: #5fbbae;
-  color-scheme: dark;
   display: grid;
   justify-items: center;
   gap: var(--space-6);
@@ -589,11 +580,6 @@
 }
 
 .cCard {
-  --surface: #ffffff;
-  --text: #1e1919;
-  --text-muted: #5c5856;
-  --line: #e4e2dd;
-  --fixer: #0b6b5d;
   position: absolute;
   bottom: -90px;
   display: grid;
@@ -601,9 +587,9 @@
   gap: var(--space-4);
   padding: var(--space-6);
   border-radius: 24px 24px 0 0;
-  background: #ffffff;
-  color: #1e1919;
-  box-shadow: 0 -20px 60px -20px rgb(0 0 0 / 0.5);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 -20px 60px -20px rgb(0 0 0 / 0.7);
 }
 
 .cCover {
@@ -644,7 +630,7 @@
   padding: 4px 10px;
   border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--fixer) 14%, transparent);
-  color: var(--fixer);
+  color: var(--fixer-ink, var(--fixer));
   font-size: 12px;
   font-weight: 700;
 }
@@ -653,7 +639,7 @@
   left: 19%;
   top: 0;
   width: 40%;
-  background: #f7f5f2;
+  background: var(--surface);
 }
 
 .galleryHead {
@@ -679,7 +665,7 @@
   flex: none;
   padding: 8px 14px;
   border-radius: 10px;
-  background: #ffffff;
+  background: var(--sunken);
   border: 1px solid var(--line);
   font-size: 14px;
   font-weight: 600;
@@ -706,7 +692,7 @@
   gap: var(--space-3);
   padding: var(--space-3);
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--sunken);
   font-size: 14px;
   color: var(--text-muted);
 }
@@ -778,7 +764,7 @@
   height: 40px;
   border-radius: var(--radius-pill);
   background: var(--fixer-tint);
-  color: var(--fixer);
+  color: var(--fixer-ink, var(--fixer));
   font-size: 13px;
   font-weight: 700;
 }
@@ -789,8 +775,8 @@
 }
 
 .avatar[data-tone="sand"] {
-  background: #eceeed;
-  color: #1e1919;
+  background: var(--sunken);
+  color: var(--text);
 }
 
 .personName {
@@ -945,7 +931,7 @@
 .card[data-tone="mint"],
 .stepCard[data-tone="mint"] {
   background: var(--fixer-tint);
-  --card-ink: var(--fixer);
+  --card-ink: var(--fixer-ink, var(--fixer));
 }
 
 .card[data-tone="amber"],
@@ -1070,7 +1056,7 @@
   height: 48px;
   border-radius: var(--radius-pill);
   background: var(--fixer-tint);
-  color: var(--fixer);
+  color: var(--fixer-ink, var(--fixer));
 }
 
 .chips {
@@ -1286,7 +1272,7 @@
 
 .float,
 .floatPill {
-  border-color: rgb(255 255 255 / 0.7);
+  border-color: var(--neu-edge);
   background: var(--neu-face);
   box-shadow: var(--neu-raised);
 }
@@ -1316,7 +1302,7 @@
 .stepCard,
 .card[data-tone],
 .stepCard[data-tone] {
-  border: 1px solid rgb(255 255 255 / 0.7);
+  border: 1px solid var(--neu-edge);
   background: var(--neu-face);
   box-shadow: var(--neu-raised);
 }
@@ -1342,18 +1328,9 @@
   box-shadow: 0 -12px 24px -18px var(--neu-dark);
 }
 
-/* The privacy panel is part of the same soft surface now: lifted out of the page, not a black slab. */
+/* The privacy panel is part of the same soft surface: lifted out of the page. */
 .panel {
-  --bg: #f3f5f4;
-  --surface: #ffffff;
-  --sunken: #edf0ee;
-  --line: #e3e8e5;
-  --control-border: #848c88;
-  --text: #1e1919;
-  --text-muted: #5c5856;
-  --fixer: #0b6b5d;
-  color-scheme: light;
-  border: 1px solid rgb(255 255 255 / 0.7);
+  border: 1px solid var(--neu-edge);
   background: var(--neu-face);
   box-shadow: var(--neu-raised);
 }
@@ -1361,7 +1338,7 @@
 .panelIcon {
   border-radius: 50%;
   background: var(--bg);
-  color: var(--fixer);
+  color: var(--fixer-ink, var(--fixer));
   box-shadow: var(--neu-inset-sm);
 }
 
@@ -1370,7 +1347,7 @@
 }
 
 .tags li {
-  border-color: rgb(255 255 255 / 0.7);
+  border-color: var(--neu-edge);
   background: var(--neu-face);
   box-shadow: var(--neu-raised-sm);
 }

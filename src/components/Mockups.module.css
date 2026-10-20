@@ -83,7 +83,7 @@
 
 .toc .active {
   background: var(--fixer-tint);
-  color: var(--fixer);
+  color: var(--fixer-ink, var(--fixer));
   font-weight: 600;
 }
 
@@ -235,7 +235,7 @@
   position: absolute;
   inset: auto 0 0;
   height: 120px;
-  background: linear-gradient(rgb(255 255 255 / 0), #fff 58%);
+  background: linear-gradient(transparent, var(--screen, #1a1f1e) 58%);
   pointer-events: none;
 }
 
@@ -291,8 +291,8 @@
 }
 
 .phoneAsk {
-  color: #1e1919;
-  background: #fff;
+  color: var(--text);
+  background: var(--surface);
   border: 1px solid var(--control-border);
 }
 
