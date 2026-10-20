@@ -5,7 +5,7 @@ import { notifyOwner } from "./push";
 import { pool } from "./auth";
 import { getPublishedRef, isUuid } from "./deliveries";
 import { limits } from "./delivery-limits";
-import { emailConfigured, sendInBackground } from "./email";
+import { requestEmailsOn, sendInBackground } from "./email";
 import { requestEmail } from "./email-templates";
 import { passesPassword } from "./link-access";
 import { requireUser } from "./session";
@@ -65,7 +65,7 @@ export async function submitRequest(slug: string, formData: FormData): Promise<R
   revalidatePath("/dashboard");
   revalidatePath(`/deliveries/${ref.id}`);
   notifyOwner(ref.id, "request", fileName);
-  if (emailConfigured()) await emailOwner(ref.id, fileName, message);
+  if (requestEmailsOn()) await emailOwner(ref.id, fileName, message);
   return { ok: true };
 }
 

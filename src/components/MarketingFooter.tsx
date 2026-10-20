@@ -19,6 +19,7 @@ const columns = [
     links: [
       { label: "Create an account", href: "/signup" },
       { label: "Log in", href: "/login" },
+      { label: "Contact", href: "/contact" },
       { label: "Privacy", href: "/privacy" },
       { label: "Terms", href: "/terms" },
     ],

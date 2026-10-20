@@ -5,7 +5,14 @@ import { after } from "next/server";
 // cannot happen. RESEND_API_URL exists so tests can point at a local stand-in.
 export const emailConfigured = () => Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
 
-export type OutgoingEmail = { to: string; subject: string; text: string; html: string };
+export type OutgoingEmail = { to: string; subject: string; text: string; html: string; replyTo?: string };
+
+// Emails to clients about a request stay off even once email is set up: the founder chose to keep them off. Setting
+// REQUEST_EMAILS=on switches them back on. Welcome and contact emails only need email itself.
+export const requestEmailsOn = () => emailConfigured() && process.env.REQUEST_EMAILS === "on";
+
+// Where contact-form messages and new-signup notes go. Read on the server only, so the address never reaches a page.
+export const contactInbox = () => process.env.CONTACT_TO_EMAIL?.trim() || null;
 
 export async function sendEmail(message: OutgoingEmail): Promise<void> {
   const key = process.env.RESEND_API_KEY;
@@ -14,7 +21,14 @@ export async function sendEmail(message: OutgoingEmail): Promise<void> {
   const response = await fetch(`${process.env.RESEND_API_URL || "https://api.resend.com"}/emails`, {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from, to: [message.to], subject: message.subject, text: message.text, html: message.html }),
+    body: JSON.stringify({
+      from,
+      to: [message.to],
+      subject: message.subject,
+      text: message.text,
+      html: message.html,
+      ...(message.replyTo ? { reply_to: message.replyTo } : {}),
+    }),
   });
   if (!response.ok) throw new Error(`The email service answered ${response.status}.`);
 }

@@ -25,6 +25,7 @@ const mobileLinks = [
   ...solutions.map(({ label, href }) => ({ label, href })),
   { label: "Questions", href: "/#faq" },
   { label: "Example", href: "/#example" },
+  { label: "Contact", href: "/contact" },
   { label: "Log in", href: "/login" },
 ];
 
@@ -72,6 +73,9 @@ export function SiteNav() {
           </a>
           <Link href="/#example" className={styles.link}>
             Example
+          </Link>
+          <Link href="/contact" className={styles.link}>
+            Contact
           </Link>
         </nav>
 
