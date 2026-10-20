@@ -1,8 +1,8 @@
 // Runs the Real-ESRGAN photo upscaler (public/models/realesr-general-x4v3.onnx) inside the visitor's browser, so no
 // photo leaves their device and nothing is paid per run. ONNX Runtime is served from /ort (copied there at install).
 //
-// The page first sends { type: "init" } and gets back { type: "ready", engine, threads }, so it can size the photo to
-// what this device can do in about a minute. Then it sends   { type: "run", width, height, pixels }   (RGBA bytes,
+// The page first sends { type: "init" } and gets back { type: "ready", engine, threads, msPerTile }, so it can size
+// the photo to what this device can do in about a minute (msPerTile is measured on a warm-up tile). Then it sends   { type: "run", width, height, pixels }   (RGBA bytes,
 // transferred) and gets back    { type: "progress", done, total, engine }   as tiles finish,
 //                  { type: "done", width, height, pixels, engine }   (4x larger RGBA bytes, transferred)
 //                  { type: "error", message }
@@ -74,6 +74,15 @@ async function ensureSession() {
   }
 }
 
+// Times one tile on a plain grey picture, after one throwaway run that pays for start-up costs.
+async function measureTile() {
+  const input = new Float32Array(3 * SIDE * SIDE).fill(0.5);
+  await runTile(input);
+  const started = performance.now();
+  await runTile(input);
+  return performance.now() - started;
+}
+
 async function enhance({ width, height, pixels: buffer }) {
   const pixels = new Uint8ClampedArray(buffer);
   await ensureSession();
@@ -128,7 +137,13 @@ self.onmessage = async (event) => {
   try {
     if (event.data?.type === "init") {
       await ensureSession();
-      self.postMessage({ type: "ready", engine, threads });
+      let msPerTile = 0;
+      try {
+        msPerTile = await measureTile();
+      } catch {
+        // A device that cannot even time a tile still runs; the page then uses its cautious size.
+      }
+      self.postMessage({ type: "ready", engine, threads, msPerTile });
     } else if (event.data?.type === "run") {
       await enhance(event.data);
     }

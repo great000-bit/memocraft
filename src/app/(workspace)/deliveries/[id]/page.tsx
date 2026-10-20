@@ -8,6 +8,8 @@ import { getActivity } from "@/lib/delivery-events";
 import { listRequests } from "@/lib/requests";
 import { requireUser } from "@/lib/session";
 
+export const maxDuration = 60;
+
 export const metadata: Metadata = { title: "Edit delivery" };
 
 async function Editor({ params }: Pick<PageProps<"/deliveries/[id]">, "params">) {

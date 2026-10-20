@@ -18,6 +18,21 @@ const hooks: [string, string][] = [
   ["Made for your", "client’s phone."],
   ["Finished work,", "delivered beautifully."],
   ["Your name first.", "Your files, delivered."],
+  ["Stop chasing.", "Start delivering."],
+  ["Hand over the work,", "not the headache."],
+  ["Clients see", "the final version."],
+  ["Proof they opened it.", "Peace of mind for you."],
+  ["No account needed.", "Just a link."],
+  ["From the shoot", "to their phone."],
+  ["Skip the email chain.", "Own the handover."],
+  ["Delivery day,", "done right."],
+  ["A link your client", "will actually open."],
+  ["Say it’s delivered", "and mean it."],
+  ["Files in.", "Link out."],
+  ["Nothing lost", "in the inbox."],
+  ["Look professional.", "Before they open a file."],
+  ["The last step", "deserves care."],
+  ["Know who opened it,", "and when."],
 ];
 
 // Every hook is in the page and the stylesheet shows one. Before the first paint a small script picks which, never

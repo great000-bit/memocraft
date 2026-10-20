@@ -7,7 +7,7 @@ export const CHECK_EDGE = 1024;
 const TILE = 32;
 // Below this, even the sharpest part of the picture is soft. Tuned on real photos and blurred copies of them: sharp
 // photos scored 700 and up, a clearly blurred copy (a 2 px blur at check size) 7 to 105, a slight blur 85 and up.
-const BLURRY_BELOW = 80;
+export const BLURRY_BELOW = 80;
 // Tiles flatter than this (sky, a plain background, the empty part of a logo) say nothing about focus.
 const FLAT_BELOW = 6;
 // With fewer tiles that have detail, the picture is a flat graphic and is not judged at all.

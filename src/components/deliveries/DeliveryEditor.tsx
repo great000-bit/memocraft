@@ -74,7 +74,7 @@ function Step({
   );
 }
 
-type Allowance = { used: number; limit: number; server: boolean } | null;
+type Allowance = { used: number; limit: number; server: boolean; gemini: boolean; geminiLeft: number } | null;
 
 function enhanceState(file: DeliveryFile) {
   if (file.enhancing) return file.enhancing;
@@ -222,7 +222,7 @@ export async function DeliveryEditor({
   const thumbs = await ownerThumbnailLinks(delivery);
   // Enhance shows once storage is set up; the server model (Replicate) is offered only with its token.
   const enhance = await enhanceAllowance();
-  const allowance: Allowance = enhance.on ? { used: enhance.used, limit: enhance.limit, server: enhance.server } : null;
+  const allowance: Allowance = enhance.on ? { used: enhance.used, limit: enhance.limit, server: enhance.server, gemini: enhance.gemini, geminiLeft: enhance.geminiLeft } : null;
   const grouped = delivery.sections.length > 1;
   const fileCount = delivery.sections.reduce((sum, section) => sum + section.files.length, 0);
   const only = delivery.sections[0];

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ActivityMock, PhoneMock, SectionsMock } from "./Mockups";
+import { ActivityMock, EnhanceMock, PhoneMock, SectionsMock } from "./Mockups";
 import styles from "./FeatureTabs.module.css";
 
 const DURATION = 6000;
@@ -16,6 +16,11 @@ const tabs = [
     title: "One link that stays current",
     body: "Fix a file and the same link shows the new version, marked Updated. No \u201cfinal_v3_REAL\u201d zip in anyone\u2019s inbox, and you see when it was opened.",
     visual: <ActivityMock />,
+  },
+  {
+    title: "A free photo enhancer",
+    body: "Soft or small photo? Make it sharper and four times bigger before you send it. It runs on your own device, so the photo is never uploaded, and it costs nothing.",
+    visual: <EnhanceMock />,
   },
   {
     title: "Made for your client’s phone",

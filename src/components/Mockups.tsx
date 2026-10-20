@@ -81,6 +81,32 @@ export function SectionsMock() {
   );
 }
 
+export function EnhanceMock() {
+  return (
+    <div className={styles.card} role="img" aria-label="A soft photo next to the same photo after the free enhancer">
+      <div className={styles.activityHead}>
+        <p className={styles.rowTitle}>Enhancer</p>
+        <span className={styles.badge}>Free</span>
+      </div>
+      <div className={styles.enhancePair}>
+        <figure className={styles.enhanceSide}>
+          <i className={`${styles.enhancePhoto} ${styles.enhanceSoft}`} aria-hidden="true">
+            <Photo name="printLaugh" sizes="240px" />
+          </i>
+          <figcaption>Before</figcaption>
+        </figure>
+        <figure className={styles.enhanceSide}>
+          <i className={styles.enhancePhoto} aria-hidden="true">
+            <Photo name="printLaugh" sizes="240px" />
+          </i>
+          <figcaption>Enhanced</figcaption>
+        </figure>
+      </div>
+      <p className={styles.note}>Sharper and 4x bigger, made on your own device. The photo is never uploaded.</p>
+    </div>
+  );
+}
+
 export function ActivityMock() {
   return (
     <div className={styles.card} role="img" aria-label="Delivery activity: link opened, files downloaded, file updated">
