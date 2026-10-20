@@ -89,7 +89,7 @@ export function GetAppButton() {
   const prompt = useRef<InstallPrompt | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const [device, setDevice] = useState<Device>("computer");
-  const [host, setHost] = useState("memocraft-alpha.vercel.app");
+  const [host, setHost] = useState("www.memocraft.space");
 
   useEffect(() => {
     const onPrompt = (event: Event) => {

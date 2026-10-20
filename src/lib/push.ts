@@ -15,7 +15,7 @@ function ready() {
   if (!keysSet) {
     // The push services may contact this address about misuse; the app's own https address is enough.
     const site = process.env.BETTER_AUTH_URL ?? "";
-    const subject = process.env.VAPID_SUBJECT || (site.startsWith("https://") ? site : "https://memocraft-alpha.vercel.app");
+    const subject = process.env.VAPID_SUBJECT || (site.startsWith("https://") ? site : "https://www.memocraft.space");
     try {
       webpush.setVapidDetails(subject, process.env.VAPID_PUBLIC_KEY!, process.env.VAPID_PRIVATE_KEY!);
     } catch (error) {
