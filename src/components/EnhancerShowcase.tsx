@@ -138,8 +138,8 @@ export function EnhancerShowcase() {
           }}
         >
           <Image
-            src={photos.lensBefore.src}
-            alt="The original photo: the man's face is soft and out of focus"
+            src={photos.portraitBefore.src}
+            alt="The original portrait: soft and out of focus"
             fill
             sizes="(min-width: 960px) 560px, 92vw"
             className={styles.photo}
@@ -147,8 +147,8 @@ export function EnhancerShowcase() {
           />
           <div className={styles.after}>
             <Image
-              src={photos.lensAfter.src}
-              alt="The same photo after the enhancer: the face is sharp, with clear eyes and skin detail"
+              src={photos.portraitAfter.src}
+              alt="The same portrait, sharp, with clear eyes, curls and the knit of her sweater"
               fill
               sizes="(min-width: 960px) 560px, 92vw"
               className={styles.photo}
@@ -192,7 +192,7 @@ export function EnhancerShowcase() {
             onChange={(e) => take(Number(e.target.value))}
           />
         </div>
-        <p className={styles.caption}>Drag to compare. A real photo, enhanced in the browser.</p>
+        <p className={styles.caption}>Drag to compare.</p>
       </div>
     </div>
   );
