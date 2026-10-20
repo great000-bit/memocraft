@@ -1120,10 +1120,20 @@
 }
 
 .tags li {
-  padding: var(--space-3) var(--space-6);
   border-radius: var(--radius-pill);
   border: 1px solid var(--control-border);
   font-weight: 600;
+}
+
+.tags li a {
+  display: block;
+  padding: var(--space-3) var(--space-6);
+  border-radius: inherit;
+  text-decoration: none;
+}
+
+.tags li a:hover {
+  color: var(--fixer-ink, var(--fixer));
 }
 
 /* Closing call to action */

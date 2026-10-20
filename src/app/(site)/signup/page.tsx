@@ -6,7 +6,11 @@ import { AuthShell } from "@/components/auth/AuthShell";
 import { RedirectIfSignedIn } from "@/components/auth/RedirectIfSignedIn";
 import { googleConfigured } from "@/lib/providers";
 
-export const metadata: Metadata = { title: "Create your Memocraft account" };
+export const metadata: Metadata = {
+  title: "Create your free Memocraft account",
+  description: "Sign in with Google and send your first client delivery free: one link, files that explain themselves, proof they opened it.",
+  alternates: { canonical: "/signup" },
+};
 
 export default function SignupPage() {
   return (

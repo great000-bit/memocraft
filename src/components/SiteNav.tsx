@@ -5,24 +5,26 @@ import { MobileMenu } from "./MobileMenu";
 import styles from "./SiteNav.module.css";
 
 const products = [
-  { label: "Deliveries", href: "#features", note: "One link for every client" },
-  { label: "Client links", href: "#features", note: "Pause, expire or protect any link" },
-  { label: "File requests", href: "#features", note: "Let clients ask for what's missing" },
-  { label: "Proof of delivery", href: "#proof", note: "See who opened and downloaded" },
+  { label: "Deliveries", href: "/#features", note: "One link for every client" },
+  { label: "Client links", href: "/#features", note: "Pause, expire or protect any link" },
+  { label: "File requests", href: "/#features", note: "Let clients ask for what's missing" },
+  { label: "Proof of delivery", href: "/#proof", note: "See who opened and downloaded" },
 ];
 
 const solutions = [
-  { label: "Photographers", href: "#who" },
-  { label: "Designers", href: "#who" },
-  { label: "Filmmakers", href: "#who" },
-  { label: "Brand studios", href: "#who" },
+  { label: "Photographers", href: "/for/photographers" },
+  { label: "Videographers", href: "/for/videographers" },
+  { label: "Designers", href: "/for/designers" },
+  { label: "Filmmakers", href: "/for/filmmakers" },
+  { label: "Brand studios", href: "/for/brand-studios" },
 ];
 
 const mobileLinks = [
   ...products.map(({ label, href }) => ({ label, href })),
-  { label: "Solutions", href: "#who" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "Example", href: "#example" },
+  { label: "Photo enhancer", href: "/photo-enhancer" },
+  ...solutions.map(({ label, href }) => ({ label, href })),
+  { label: "Questions", href: "/#faq" },
+  { label: "Example", href: "/#example" },
   { label: "Log in", href: "/login" },
 ];
 
@@ -65,12 +67,12 @@ export function SiteNav() {
             </div>
           </details>
 
-          <a href="#pricing" className={styles.link}>
-            Pricing
+          <a href="/photo-enhancer" className={styles.link}>
+            Photo enhancer
           </a>
-          <a href="#example" className={styles.link}>
+          <Link href="/#example" className={styles.link}>
             Example
-          </a>
+          </Link>
         </nav>
 
         <div className={styles.actions}>

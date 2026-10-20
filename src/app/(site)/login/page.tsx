@@ -6,7 +6,7 @@ import { AuthShell } from "@/components/auth/AuthShell";
 import { RedirectIfSignedIn } from "@/components/auth/RedirectIfSignedIn";
 import { googleConfigured } from "@/lib/providers";
 
-export const metadata: Metadata = { title: "Log in to Memocraft" };
+export const metadata: Metadata = { title: "Log in", robots: { index: false, follow: true } };
 
 export default function LoginPage() {
   return (

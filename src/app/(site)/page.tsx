@@ -1,17 +1,71 @@
+import type { Metadata } from "next";
+import Link from "next/link";
 import { Button } from "@/components/Button";
 import { GetAppButton } from "@/components/GetAppButton";
 import { FeatureIcon, type FeatureIconName } from "@/components/FeatureIcons";
 import { EnhancerShowcase } from "@/components/EnhancerShowcase";
 import { FeatureTabs } from "@/components/FeatureTabs";
 import { HeroHook } from "@/components/HeroHook";
-import { Logo, LogoMark } from "@/components/Logo";
+import { Faq, faqJsonLd } from "@/components/Faq";
+import { JsonLd } from "@/components/JsonLd";
+import { LogoMark } from "@/components/Logo";
+import { MarketingFooter } from "@/components/MarketingFooter";
 import { HeroDemo } from "@/components/HeroDemo";
 import { SmoothScroll } from "@/components/SmoothScroll";
 import { Photo } from "@/components/Photo";
 import type { PhotoKey } from "@/components/photos";
 import { Reveal } from "@/components/Reveal";
 import { SiteNav } from "@/components/SiteNav";
+import { audiences as trades, homeFaqs, SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_URL, socialFor } from "@/lib/site";
 import styles from "./page.module.css";
+
+export const metadata: Metadata = {
+  title: { absolute: `${SITE_NAME}: client file delivery with proof of download` },
+  description: SITE_DESCRIPTION,
+  alternates: { canonical: "/" },
+  ...socialFor("/", `${SITE_NAME}: ${SITE_TAGLINE}`, SITE_DESCRIPTION),
+};
+
+const schema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#organization`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: `${SITE_URL}/icons/icon-512.png`,
+      description: SITE_DESCRIPTION,
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: SITE_NAME,
+      description: SITE_DESCRIPTION,
+      publisher: { "@id": `${SITE_URL}/#organization` },
+      inLanguage: "en",
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": `${SITE_URL}/#app`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web, iOS, Android",
+      description: SITE_DESCRIPTION,
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD", description: "Free to start, no card" },
+      featureList: [
+        "One link for every client delivery",
+        "Proof of delivery: when files were opened and downloaded",
+        "Save photos straight to a phone",
+        "Password, expiry and pause controls",
+        "File requests from clients",
+        "Free in-browser photo enhancer",
+      ],
+    },
+  ],
+};
 
 const audiences = ["Photographers", "Designers", "Filmmakers", "Brand studios", "Illustrators", "Videographers"];
 
@@ -26,20 +80,11 @@ const extras: { title: string; body: string; icon: FeatureIconName; tone: "mint"
 
 const galleryTiles: PhotoKey[] = ["printLaugh", "capFists", "purplePhone", "beretPhone"];
 
-const footer = [
-  { head: "Products", links: ["Deliveries", "Client links", "File requests", "Proof of delivery"] },
-  { head: "Solutions", links: ["Photographers", "Designers", "Filmmakers", "Brand studios"] },
-  { head: "Company", links: ["About", "Pricing", "Contact"] },
-];
-
-const legalLinks = [
-  { label: "Privacy", href: "/privacy" },
-  { label: "Terms", href: "/terms" },
-];
-
 export default function Home() {
   return (
     <div className={`neu-scope ${styles.page}`}>
+      <JsonLd data={schema} />
+      <JsonLd data={faqJsonLd(homeFaqs)} />
       <SmoothScroll />
       <SiteNav />
 
@@ -47,6 +92,7 @@ export default function Home() {
         <section className={styles.hero}>
           <div className={styles.heroGrid} aria-hidden="true" />
           <Reveal immediate className={styles.heroText}>
+            <h1 className="sr-only">Send photos, videos and design files to clients with one link, and see when they open and download them</h1>
             <HeroHook className={styles.display} accentClassName={styles.displayAccent} />
             <p className={styles.heroLede}>Every finished file, labelled, in one link. You see when it&rsquo;s opened.</p>
             <div className={styles.ctas}>
@@ -304,10 +350,22 @@ export default function Home() {
           </Reveal>
           <Reveal delay={100}>
             <ul className={styles.tags}>
-              {audiences.map((a) => (
-                <li key={a}>{a}</li>
+              {trades.map((a) => (
+                <li key={a.slug}>
+                  <Link href={`/for/${a.slug}`}>{a.name}</Link>
+                </li>
               ))}
             </ul>
+          </Reveal>
+        </section>
+
+        <section className={styles.section} id="faq">
+          <Reveal className={styles.sectionHead}>
+            <p className={styles.kicker}>Questions</p>
+            <h2 className={styles.h2}>Answers before you ask</h2>
+          </Reveal>
+          <Reveal delay={100}>
+            <Faq items={homeFaqs} open={1} />
           </Reveal>
         </section>
 
@@ -324,33 +382,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className={styles.footer}>
-        <div className={styles.footerInner}>
-          <div className={styles.footerBrand}>
-            <Logo className={styles.footerLogo} />
-            <p className={styles.small}>Deliver work your clients understand.</p>
-          </div>
-          {footer.map((col) => (
-            <div key={col.head} className={styles.footerCol}>
-              <p className={styles.footerHead}>{col.head}</p>
-              <ul>
-                {col.links.map((l) => (
-                  <li key={l}>
-                    <a href="#">{l}</a>
-                  </li>
-                ))}
-                {col.head === "Company" &&
-                  legalLinks.map((l) => (
-                    <li key={l.label}>
-                      <a href={l.href}>{l.label}</a>
-                    </li>
-                  ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-        <p className={`${styles.small} ${styles.copy}`}>&copy; 2026 Memocraft</p>
-      </footer>
+      <MarketingFooter />
     </div>
   );
 }

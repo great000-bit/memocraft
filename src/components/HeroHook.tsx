@@ -35,6 +35,8 @@ const hooks: [string, string][] = [
   ["Know who opened it,", "and when."],
 ];
 
+// The visible hook is a tagline, not the page's heading: it is hidden from assistive tech and the real <h1> (in the page,
+// visually hidden) says plainly what Memocraft is, so search engines and screen readers get one stable heading.
 // Every hook is in the page and the stylesheet shows one. Before the first paint a small script picks which, never
 // the same as the visitor's last one, so there is no flash of a different headline. Without the script, or after a
 // soft navigation, the first hook shows.
@@ -42,13 +44,13 @@ const pick = `try{var h=document.currentScript.parentElement,n=${hooks.length},k
 
 export function HeroHook({ className = "", accentClassName = "" }: { className?: string; accentClassName?: string }) {
   return (
-    <h1 className={`${className} ${styles.hooks}`} suppressHydrationWarning>
+    <p aria-hidden="true" className={`${className} ${styles.hooks}`} suppressHydrationWarning>
       <InlineScript html={pick} />
       {hooks.map(([lead, accent], index) => (
         <span key={index} className={styles.hook}>
           {lead} <span className={accentClassName}>{accent}</span>
         </span>
       ))}
-    </h1>
+    </p>
   );
 }

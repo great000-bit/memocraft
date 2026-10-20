@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { photos } from "./photos";
 import styles from "./EnhancerShowcase.module.css";
@@ -17,7 +18,7 @@ const phaseLabel: Record<Phase, string> = {
 // The landing page's before and after: a real soft photo and what the free enhancer made of it. Scrolling it into view
 // plays the run once (the line sweeps across while the face is found and rebuilt), then the line is the visitor's to
 // drag. Reduced motion skips the run and starts half way.
-export function EnhancerShowcase() {
+export function EnhancerShowcase({ heading: Heading = "h2" }: { heading?: "h1" | "h2" }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const [phase, setPhase] = useState<Phase>("waiting");
   const [pos, setPos] = useState(50);
@@ -94,10 +95,10 @@ export function EnhancerShowcase() {
           <span className={styles.kickerDot} aria-hidden="true" />
           Free photo enhancer
         </p>
-        <h2 className={styles.title}>
+        <Heading className={styles.title}>
           Missed the focus?
           <span className={styles.titleAccent}> Keep the shot.</span>
-        </h2>
+        </Heading>
         <p className={styles.body}>
           Drop in a soft photo. Memocraft finds every face, rebuilds the detail and makes the whole picture four times
           bigger. It runs on your own device, so the photo never leaves it.
@@ -116,12 +117,12 @@ export function EnhancerShowcase() {
             <dd>with every account</dd>
           </div>
         </dl>
-        <a className={styles.cta} href="/signup">
+        <Link className={styles.cta} href="/signup">
           Try the enhancer
           <span className={styles.ctaArrow} aria-hidden="true">
             &rarr;
           </span>
-        </a>
+        </Link>
       </div>
 
       <div className={styles.stageWrap}>

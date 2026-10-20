@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Archivo, Instrument_Sans, JetBrains_Mono } from "next/font/google";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 // Archivo's width axis gives the wide grotesk headings of the Dropbox-style layout.
@@ -22,11 +23,40 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Memocraft: did they get the files? Now you\u2019ll know",
-  description:
-    "Send one link for every delivery. Files that explain themselves, proof your client opened and saved them, and downloads made for their phone. Free to start.",
+  metadataBase: new URL(SITE_URL),
+  title: { default: `${SITE_NAME}: client file delivery with proof of download`, template: `%s | ${SITE_NAME}` },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [
+    "client file delivery",
+    "photo delivery",
+    "send photos to clients",
+    "client gallery",
+    "proof of delivery",
+    "send large files",
+    "deliver files to clients",
+    "photographer client delivery",
+    "free photo enhancer",
+  ],
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: "photography",
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    locale: "en_US",
+    title: `${SITE_NAME}: ${SITE_TAGLINE}`,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME}: ${SITE_TAGLINE}`,
+    description: SITE_DESCRIPTION,
+  },
+  robots: { index: true, follow: true, googleBot: { "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
   // Added to an iPhone's Home Screen, Memocraft opens full screen like an app, with its own icon.
-  appleWebApp: { capable: true, title: "Memocraft", statusBarStyle: "black-translucent" },
+  appleWebApp: { capable: true, title: SITE_NAME, statusBarStyle: "black-translucent" },
   icons: { apple: "/icons/apple-touch-icon.png" },
 };
 
