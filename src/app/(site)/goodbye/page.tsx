@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage } from "@/components/legal/LegalPage";
 
-export const metadata: Metadata = { title: "Account deleted | Memocraft", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Account deleted", robots: { index: false, follow: false } };
 
 // Where someone lands after deleting their account.
 export default function GoodbyePage() {
