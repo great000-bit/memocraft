@@ -1,0 +1,456 @@
+/* The enhancer's before and after on the landing page. A raised sage panel with a soft teal glow: the copy on one side,
+   a tall photo you can wipe across on the other. */
+.wrap {
+  position: relative;
+  display: grid;
+  gap: var(--space-12);
+  align-items: center;
+  padding: clamp(28px, 5vw, 72px);
+  border-radius: 36px;
+  background:
+    radial-gradient(60% 70% at 85% 40%, rgb(11 107 93 / 0.14), transparent 70%),
+    radial-gradient(40% 50% at 10% 100%, rgb(232 163 61 / 0.1), transparent 70%),
+    var(--neu-face);
+  box-shadow: var(--neu-raised);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* A faint grid behind everything, fading out towards the copy. */
+.wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgb(11 107 93 / 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(11 107 93 / 0.07) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(70% 80% at 80% 50%, #000, transparent 75%);
+}
+
+.copy {
+  display: grid;
+  gap: var(--space-6);
+  justify-items: start;
+  max-width: 520px;
+}
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--neu-face);
+  box-shadow: var(--neu-raised-xs);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--fixer);
+}
+
+.kickerDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--proof);
+  box-shadow: 0 0 0 4px rgb(232 163 61 / 0.2);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(34px, 4.2vw, 60px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+
+.titleAccent {
+  display: block;
+  color: var(--fixer);
+}
+
+.body {
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 28px;
+}
+
+.specs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.specs > div {
+  display: grid;
+  gap: 2px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--neu-face);
+  box-shadow: var(--neu-inset-sm);
+}
+
+.specs dt {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.specs dd {
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--text-muted);
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 52px;
+  padding: 0 26px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(180deg, #0e7a6a, var(--fixer));
+  color: var(--on-fixer);
+  font-weight: 600;
+  font-size: 16px;
+  text-decoration: none;
+  box-shadow: 0 14px 28px -12px rgb(11 107 93 / 0.7), inset 0 1px 0 rgb(255 255 255 / 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px -12px rgb(11 107 93 / 0.8), inset 0 1px 0 rgb(255 255 255 / 0.25);
+}
+
+.cta:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.ctaArrow {
+  transition: transform 0.2s ease;
+}
+
+.cta:hover .ctaArrow {
+  transform: translateX(4px);
+}
+
+.stageWrap {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: center;
+}
+
+/* The photo. --pos is where the line sits: the original on its left, the enhanced photo on its right. */
+.stage {
+  --pos: 50%;
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  aspect-ratio: 4 / 5;
+  border-radius: 28px;
+  overflow: hidden;
+  background: #cfd8d3;
+  box-shadow:
+    0 40px 80px -40px rgb(16 24 20 / 0.55),
+    0 0 0 1px rgb(255 255 255 / 0.6),
+    0 0 0 8px rgb(255 255 255 / 0.35);
+  cursor: ew-resize;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.photo {
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.after {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(0 0 0 var(--pos));
+}
+
+/* The line and a soft glow that trails it while the run plays. */
+.stage::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--pos);
+  width: 2px;
+  margin-left: -1px;
+  background: #fff;
+  box-shadow: 0 0 12px rgb(255 255 255 / 0.8);
+  pointer-events: none;
+}
+
+.scan {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--pos);
+  width: 90px;
+  background: linear-gradient(90deg, rgb(95 207 187 / 0.45), transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.stage[data-phase="rebuilding"] .scan {
+  opacity: 1;
+}
+
+.handle {
+  position: absolute;
+  top: 50%;
+  left: var(--pos);
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
+  border-radius: 50%;
+  color: var(--fixer);
+  background: rgb(255 255 255 / 0.9);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 24px -8px rgb(0 0 0 / 0.45), inset 0 0 0 1px rgb(255 255 255 / 0.9);
+  pointer-events: none;
+  transition: transform 0.2s ease;
+}
+
+.stage:active .handle {
+  transform: scale(0.92);
+}
+
+.stage:has(.range:focus-visible) .handle {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.tag {
+  position: absolute;
+  top: 16px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  backdrop-filter: blur(10px);
+  pointer-events: none;
+}
+
+.tagBefore {
+  left: 16px;
+  color: #fff;
+  background: rgb(23 26 25 / 0.45);
+}
+
+.tagAfter {
+  right: 16px;
+  color: var(--fixer);
+  background: rgb(255 255 255 / 0.88);
+}
+
+/* Corner brackets round the face, like a camera finding focus. They pulse while the face is being found. */
+.face {
+  position: absolute;
+  left: 50%;
+  top: 10%;
+  width: 43%;
+  height: 47%;
+  opacity: 0;
+  transform: scale(1.12);
+  transition: opacity 0.35s ease, transform 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  pointer-events: none;
+}
+
+.stage:not([data-phase="waiting"]) .face {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.stage[data-phase="finding"] .face {
+  animation: pulse 0.9s ease-in-out infinite;
+}
+
+.face i {
+  position: absolute;
+  width: 22%;
+  height: 18%;
+  border: 3px solid var(--proof);
+  filter: drop-shadow(0 0 6px rgb(232 163 61 / 0.6));
+}
+
+.face i:nth-child(1) {
+  top: 0;
+  left: 0;
+  border-width: 3px 0 0 3px;
+  border-top-left-radius: 14px;
+}
+
+.face i:nth-child(2) {
+  top: 0;
+  right: 0;
+  border-width: 3px 3px 0 0;
+  border-top-right-radius: 14px;
+}
+
+.face i:nth-child(3) {
+  bottom: 0;
+  left: 0;
+  border-width: 0 0 3px 3px;
+  border-bottom-left-radius: 14px;
+}
+
+.face i:nth-child(4) {
+  bottom: 0;
+  right: 0;
+  border-width: 0 3px 3px 0;
+  border-bottom-right-radius: 14px;
+}
+
+.face b {
+  position: absolute;
+  left: 50%;
+  bottom: -14px;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--proof);
+  color: #171a19;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* The run's status, in the same rotating, shimmering voice as the real enhancer. */
+.status {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: calc(100% - 32px);
+  padding: 10px 16px;
+  border-radius: var(--radius-pill);
+  background: rgb(255 255 255 / 0.9);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 28px -12px rgb(0 0 0 / 0.4);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.statusSpark {
+  display: inline-block;
+  color: var(--proof);
+}
+
+.stage:not([data-phase="done"]) .statusSpark {
+  animation: spin 1.6s linear infinite;
+}
+
+.statusWord {
+  color: var(--text);
+  animation: swap 0.35s ease-out;
+}
+
+.stage:not([data-phase="done"]) .statusWord {
+  background: linear-gradient(90deg, var(--text) 35%, var(--proof) 50%, var(--text) 65%) 0 0 / 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 1.6s linear infinite, swap 0.35s ease-out;
+}
+
+.range {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.caption {
+  font-size: 13px;
+  color: var(--text-subtle);
+}
+
+@keyframes pulse {
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -150% 0;
+  }
+}
+
+@keyframes swap {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (min-width: 960px) {
+  .wrap {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: clamp(40px, 6vw, 96px);
+  }
+}
+
+@media (max-width: 479px) {
+  .specs dt {
+    font-size: 20px;
+  }
+
+  .specs > div {
+    padding: 12px;
+  }
+
+  .tag {
+    top: 12px;
+  }
+
+  .tagBefore {
+    left: 12px;
+  }
+
+  .tagAfter {
+    right: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .face,
+  .cta,
+  .ctaArrow {
+    transition: none;
+  }
+
+  .statusWord,
+  .statusSpark {
+    animation: none !important;
+  }
+}

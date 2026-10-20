@@ -8,6 +8,8 @@ export const photos = {
   beretPhone: { src: "/images/mock/beret-phone.webp", focus: "50% 15%" },
   limePhone: { src: "/images/mock/lime-phone.webp", focus: "50% 10%" },
   faceSculpture: { src: "/images/mock/face-sculpture.webp", focus: "50% 30%" },
+  lensBefore: { src: "/images/mock/lens-before.webp", focus: "60% 25%" },
+  lensAfter: { src: "/images/mock/lens-after.webp", focus: "60% 25%" },
   headphones: { src: "/images/mock/headphones-illustration.webp", focus: "70% 12%" },
 } as const;
 
