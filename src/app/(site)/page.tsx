@@ -1,6 +1,7 @@
 import { Button } from "@/components/Button";
 import { GetAppButton } from "@/components/GetAppButton";
 import { FeatureIcon, type FeatureIconName } from "@/components/FeatureIcons";
+import { EnhancerShowcase } from "@/components/EnhancerShowcase";
 import { FeatureTabs } from "@/components/FeatureTabs";
 import { HeroHook } from "@/components/HeroHook";
 import { Logo, LogoMark } from "@/components/Logo";
@@ -102,6 +103,12 @@ export default function Home() {
           </Reveal>
           <Reveal delay={100}>
             <FeatureTabs />
+          </Reveal>
+        </section>
+
+        <section className={styles.section} id="enhancer">
+          <Reveal effect="scale">
+            <EnhancerShowcase />
           </Reveal>
         </section>
 
