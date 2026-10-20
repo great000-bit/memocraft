@@ -18,7 +18,9 @@ const SIDE = TILE + PAD * 2;
 
 ort.env.wasm.wasmPaths = "/ort/";
 // Several threads need the page to be cross-origin isolated (see next.config.ts); without that it is one thread.
-const threads = self.crossOriginIsolated ? Math.max(1, Math.min(8, navigator.hardwareConcurrency || 2)) : 1;
+// "?safe=1" is the page's second try after the first failed: processor only, one thread.
+const safe = new URL(self.location.href).searchParams.has("safe");
+const threads = !safe && self.crossOriginIsolated ? Math.max(1, Math.min(8, navigator.hardwareConcurrency || 2)) : 1;
 ort.env.wasm.numThreads = threads;
 
 let session = null;
@@ -67,7 +69,7 @@ async function runTile(input) {
 async function ensureSession() {
   if (session) return;
   try {
-    if (!self.navigator.gpu) throw new Error("no WebGPU");
+    if (safe || !self.navigator.gpu) throw new Error("no WebGPU");
     await open("webgpu");
   } catch {
     await open("wasm");
