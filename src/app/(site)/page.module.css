@@ -378,6 +378,17 @@
   gap: var(--space-3);
 }
 
+/* Contact: the heading beside the form on wide screens, above it on phones. */
+.contact {
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .contact {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+}
+
 .kicker {
   font-size: 14px;
   font-weight: 700;

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/Button";
+import { ContactForm } from "@/components/ContactForm";
 import { GetAppButton } from "@/components/GetAppButton";
 import { FeatureIcon, type FeatureIconName } from "@/components/FeatureIcons";
 import { EnhancerShowcase } from "@/components/EnhancerShowcase";
@@ -366,6 +367,17 @@ export default function Home() {
           </Reveal>
           <Reveal delay={100}>
             <Faq items={homeFaqs} open={1} />
+          </Reveal>
+        </section>
+
+        <section className={`${styles.section} ${styles.contact}`} id="contact">
+          <Reveal className={styles.sectionHead}>
+            <p className={styles.kicker}>Contact</p>
+            <h2 className={styles.h2}>Questions? Talk to us</h2>
+            <p className={styles.body}>Something you want to know before you start, an idea, or something that did not work. We reply by email.</p>
+          </Reveal>
+          <Reveal delay={100}>
+            <ContactForm />
           </Reveal>
         </section>
 

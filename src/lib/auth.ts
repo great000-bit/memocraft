@@ -2,8 +2,8 @@ import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 import { Pool } from "pg";
 import type { PoolClient, PoolConfig } from "pg";
-import { emailConfigured, sendInBackground } from "./email";
-import { verifyEmailEmail } from "./email-templates";
+import { contactInbox, emailConfigured, sendInBackground } from "./email";
+import { signupAlertEmail, verifyEmailEmail, welcomeEmail } from "./email-templates";
 import { isGooglePicture } from "./avatar";
 import { googleConfigured } from "./providers";
 
@@ -82,6 +82,20 @@ async function fillGooglePicture(userId: string) {
   }
 }
 
+// A new account gets a welcome email, and the founder a one-line note, once email is set up. Both go out after the
+// sign-in answers and a failure is only logged, so an email problem can never stop someone signing up.
+function welcomeNewUser(user: { name: string; email: string }) {
+  const base = process.env.BETTER_AUTH_URL;
+  if (!emailConfigured() || !base) return;
+  try {
+    sendInBackground(welcomeEmail(user.email, user.name, base));
+    const inbox = contactInbox();
+    if (inbox && process.env.SIGNUP_ALERTS !== "off") sendInBackground(signupAlertEmail(inbox, user));
+  } catch (error) {
+    console.warn("Could not queue the welcome email:", error instanceof Error ? error.message : error);
+  }
+}
+
 // Preview deployments live on their own hostnames, so they are trusted as origins too.
 const trustedOrigins = [process.env.VERCEL_URL, process.env.VERCEL_BRANCH_URL, process.env.VERCEL_PROJECT_PRODUCTION_URL]
   .filter((host): host is string => Boolean(host))
@@ -123,6 +137,7 @@ export const auth = betterAuth({
     },
   },
   databaseHooks: {
+    user: { create: { after: async (user) => welcomeNewUser(user) } },
     session: { create: { after: async (session) => fillGooglePicture(session.userId) } },
   },
   advanced: { cookiePrefix: "memocraft" },
