@@ -11,7 +11,8 @@ import {
   startEnhance,
   type EnhanceState,
 } from "@/lib/enhance-actions";
-import { enhanceInBrowser, type BrowserProgress } from "@/lib/enhance-client";
+import { enhanceInBrowser, loadSource, looksBlurry, type BrowserProgress } from "@/lib/enhance-client";
+import { EnhanceStatus } from "@/components/EnhanceStatus";
 import { formatSize } from "@/lib/storage-limits";
 import styles from "./Editor.module.css";
 
@@ -38,17 +39,26 @@ export function EnhancePanel({
   // The free enhancer works inside this tab: `working` is set from the first step until the copy is saved.
   const [working, setWorking] = useState<(BrowserProgress & { saving: boolean }) | null>(null);
   const cancel = useRef<AbortController | null>(null);
+  // Set when the photo is too soft for the model to help much: the creative decides whether to carry on.
+  const [blurry, setBlurry] = useState(false);
 
   useEffect(() => () => cancel.current?.abort(), []);
 
-  async function runInBrowser() {
+  async function runInBrowser(options: { skipCheck?: boolean; sharpen?: boolean } = {}) {
     const controller = new AbortController();
     cancel.current = controller;
+    setBlurry(false);
     setWorking({ done: 0, total: 0, engine: "", saving: false });
     setState({ state: "none" });
     try {
-      const blob = await enhanceInBrowser(`/api/enhance/source/${fileId}`, {
+      const source = await loadSource(`/api/enhance/source/${fileId}`, controller.signal);
+      if (!options.skipCheck && (await looksBlurry(source).catch(() => false))) {
+        setBlurry(true);
+        return;
+      }
+      const blob = await enhanceInBrowser(source, {
         signal: controller.signal,
+        sharpen: options.sharpen,
         onProgress: (progress) => setWorking({ ...progress, saving: false }),
       });
       setWorking((current) => (current ? { ...current, saving: true } : current));
@@ -138,20 +148,11 @@ export function EnhancePanel({
         </>
       ) : working ? (
         <>
-          <p className={styles.enhanceTitle} aria-live="polite">
-            <span className={styles.enhanceSpin} aria-hidden="true" />
-            {working.saving
-              ? "Saving the enhanced copy…"
-              : working.total
-                ? `Enhancing on your device… ${Math.round((working.done / working.total) * 100)}%`
-                : "Getting ready…"}
-          </p>
+          <EnhanceStatus done={working.done} total={working.total} saving={working.saving} />
           {!working.saving && (
             <>
-              <progress className={styles.enhanceBar} max={working.total || 1} value={working.done} aria-label="Enhance progress" />
               <p className={styles.enhanceHint}>
-                Keep this tab open.
-                {working.engine === "cpu" ? " This device is using its processor, so it takes a few minutes." : ""}
+                Keep this tab open. It takes about a minute.
               </p>
               <div className={styles.enhanceActions}>
                 <button type="button" className={`${styles.button} ${styles.ghost}`} onClick={() => cancel.current?.abort()}>
@@ -173,7 +174,7 @@ export function EnhancePanel({
               type="button"
               className={`${styles.button} ${styles.enhanceButton}`}
               disabled={busy}
-              onClick={runInBrowser}
+              onClick={() => runInBrowser()}
             >
               <span aria-hidden="true">✦</span> Enhance with AI
             </button>
@@ -199,6 +200,25 @@ export function EnhancePanel({
             original stays as it is.
             {allowance.server ? (left === 0 ? " No server enhances left this month." : ` ${left} of ${allowance.limit} server enhances left this month.`) : ""}
           </p>
+          {blurry && (
+            <div role="alert" className={styles.enhanceHint}>
+              <p>
+                This photo is out of focus. The enhancer cleans up noise and adds detail, but it cannot bring back a
+                missed focus, so the change may be small. Sharpening helps a little.
+              </p>
+              <div className={styles.enhanceActions}>
+                <button type="button" className={`${styles.button} ${styles.secondary}`} onClick={() => runInBrowser({ skipCheck: true, sharpen: true })}>
+                  Enhance and sharpen
+                </button>
+                <button type="button" className={`${styles.button} ${styles.ghost}`} onClick={() => runInBrowser({ skipCheck: true })}>
+                  Enhance anyway
+                </button>
+                <button type="button" className={`${styles.button} ${styles.ghost}`} onClick={() => setBlurry(false)}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
           {state.state === "failed" && (
             <p role="alert" className={styles.jobError}>
               {state.error}

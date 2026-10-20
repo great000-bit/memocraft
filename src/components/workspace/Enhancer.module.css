@@ -1,0 +1,28 @@
+.tool {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.drop {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: center;
+  padding: var(--space-8) var(--space-4);
+  border: 2px dashed var(--neu-edge);
+  border-radius: 20px;
+  background: var(--neu-face);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: center;
+}
+
+.drop:hover,
+.drop[data-over] {
+  border-color: var(--accent, currentColor);
+}
+
+.dropTitle {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}

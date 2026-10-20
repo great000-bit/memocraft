@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
       { key: "Cross-Origin-Embedder-Policy", value: "credentialless" },
     ];
     return [
-      ...["/dashboard", "/deliveries", "/requests", "/notifications", "/profile", "/settings"].flatMap((base) => [
+      ...["/dashboard", "/deliveries", "/enhancer", "/requests", "/notifications", "/profile", "/settings"].flatMap((base) => [
         { source: base, headers: isolated },
         { source: `${base}/:path*`, headers: isolated },
       ]),

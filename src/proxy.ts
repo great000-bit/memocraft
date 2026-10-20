@@ -28,6 +28,7 @@ export const config = {
     "/dashboard/:path*",
     "/deliveries/:path*",
     "/requests/:path*",
+    "/enhancer/:path*",
     "/notifications/:path*",
     "/profile/:path*",
     "/settings/:path*",

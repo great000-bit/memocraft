@@ -10,6 +10,7 @@ import styles from "./Workspace.module.css";
 const items: { label: string; icon: FeatureIconName; href?: string }[] = [
   { label: "Home", icon: "home", href: "/dashboard" },
   { label: "Deliveries", icon: "upload", href: "/deliveries" },
+  { label: "Enhancer", icon: "enhance", href: "/enhancer" },
   { label: "Requests", icon: "request", href: "/requests" },
   { label: "Notifications", icon: "bell", href: "/notifications" },
   { label: "Team", icon: "people" },
