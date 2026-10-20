@@ -17,8 +17,9 @@ import {
   startPrediction,
   type Prediction,
 } from "./enhance";
+import { BROWSER_ENHANCED_MAX_BYTES, browserEnhancedKey, isBrowserEnhancedKey } from "./enhance-browser";
 import { requireUser } from "./session";
-import { deleteObjects, getObject, presignView, putObject, storageConfigured } from "./storage";
+import { deleteObjects, getObject, getObjectRange, headObject, presignPut, presignView, putObject, storageConfigured } from "./storage";
 import { formatSize, storageLimits } from "./storage-limits";
 import { storageUsed } from "./storage-usage";
 
@@ -86,10 +87,55 @@ async function runsThisMonth(ownerId: string): Promise<number> {
   return Number(rows[0].count);
 }
 
-export async function enhanceAllowance(): Promise<{ used: number; limit: number; on: boolean }> {
+// The in-browser enhancer is free and has no monthly allowance; the server one (Replicate) only exists when its token is set.
+export async function enhanceAllowance(): Promise<{ used: number; limit: number; on: boolean; server: boolean }> {
   const user = await requireUser();
-  const on = enhanceConfigured() && storageConfigured();
-  return { used: on ? await runsThisMonth(user.id) : 0, limit: monthlyEnhanceLimit(), on };
+  const on = storageConfigured();
+  const server = on && enhanceConfigured();
+  return { used: server ? await runsThisMonth(user.id) : 0, limit: monthlyEnhanceLimit(), on, server };
+}
+
+type BrowserUpload = { ok: true; key: string; url: string } | { ok: false; error: string };
+
+// Step before the browser uploads the copy it made: checks the photo is the caller's and there is room, and
+// hands back a one-use upload link for exactly that size.
+export async function prepareBrowserEnhance(fileId: string, size: number): Promise<BrowserUpload> {
+  const user = await requireUser();
+  const file = await loadOwned(fileId, user.id);
+  if (!file || !file.storageKey || !storageConfigured()) return { ok: false, error: "This photo was not found." };
+  if (file.enhanceJob && !file.enhanceJob.error) return { ok: false, error: "An enhance is already running on this photo." };
+  if (!Number.isInteger(size) || size < 1 || size > BROWSER_ENHANCED_MAX_BYTES) return { ok: false, error: "The enhanced copy is the wrong size." };
+  if ((await storageUsed(user.id)) + size > storageLimits.accountBytes) {
+    return { ok: false, error: "Your storage is full. Remove a file to make room for the enhanced copy." };
+  }
+  const key = browserEnhancedKey(fileId);
+  return { ok: true, key, url: await presignPut(key, "image/jpeg", size) };
+}
+
+// Step after the upload: keeps the copy the browser stored, in place of any earlier one.
+export async function finishBrowserEnhance(fileId: string, key: string): Promise<EnhanceState> {
+  const user = await requireUser();
+  const file = await loadOwned(fileId, user.id);
+  if (!file) return { state: "failed", error: "This photo was not found." };
+  const discard = async (error: string): Promise<EnhanceState> => {
+    if (isBrowserEnhancedKey(fileId, key)) await deleteObjects([key]);
+    return { state: "failed", error };
+  };
+  if (!isBrowserEnhancedKey(fileId, key)) return { state: "failed", error: "The enhanced copy was not recognised." };
+  const stored = await headObject(key);
+  if (!stored || stored.size < 1 || stored.size > BROWSER_ENHANCED_MAX_BYTES) return discard("The enhanced copy did not upload. Try again.");
+  const head = await getObjectRange(key, 0, 2).catch(() => new Uint8Array());
+  if (head[0] !== 0xff || head[1] !== 0xd8 || head[2] !== 0xff) return discard("The enhanced copy was not a picture. Try again.");
+  const saved = await pool.query(
+    `update "deliveryFile" set "enhancedKey" = $2, "enhancedBytes" = $3, "enhanceJob" = null
+      where "id" = $1 and ("enhanceJob" is null or "enhanceJob" ? 'error')`,
+    [fileId, key, stored.size],
+  );
+  if (!saved.rowCount) return discard("The photo changed while it was enhanced. Try again.");
+  if (file.enhancedKey && file.enhancedKey !== key) await deleteObjects([file.enhancedKey]);
+  await pool.query(`update "delivery" set "updatedAt" = now() where "id" = $1`, [file.deliveryId]);
+  refresh(file.deliveryId);
+  return { state: "ready", bytes: stored.size };
 }
 
 export async function startEnhance(fileId: string, faces: boolean): Promise<EnhanceState> {

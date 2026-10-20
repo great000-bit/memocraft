@@ -1529,6 +1529,12 @@ textarea.heading {
   line-height: 22px;
 }
 
+.enhanceBar {
+  width: 100%;
+  height: 6px;
+  accent-color: #e8a33d;
+}
+
 .enhanceSpark {
   color: var(--proof-text);
 }

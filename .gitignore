@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# in-browser enhancer runtime, copied from onnxruntime-web by scripts/copy-ort.mjs
+/public/ort/
