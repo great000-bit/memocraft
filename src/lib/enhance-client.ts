@@ -96,33 +96,53 @@ export async function enhanceInBrowser(
   const { onProgress, signal, sharpen } = options;
   const bitmap = await createImageBitmap(source);
 
-  const worker = new Worker("/enhance-worker.js");
+  // The fast set-up (graphics chip, several threads) is tried first. If the worker cannot start or fails before it
+  // runs, it is tried once more in safe mode: processor only, one thread.
+  const attempt = async (safe: boolean) => {
+    const worker = new Worker(safe ? "/enhance-worker.js?safe=1" : "/enhance-worker.js");
+    try {
+      return await new Promise<{ width: number; height: number; pixels: ArrayBuffer }>((resolve, reject) => {
+        const stop = () => reject(new DOMException("Cancelled", "AbortError"));
+        if (signal.aborted) return stop();
+        signal.addEventListener("abort", stop, { once: true });
+        worker.onmessage = (event: MessageEvent) => {
+          const data = event.data;
+          if (data.type === "ready") {
+            // The model is loaded: now the photo is sized to this device and sent over.
+            const budget = pixelBudget(data.msPerTile);
+            const shrink = Math.min(1, Math.sqrt(budget / (bitmap.width * bitmap.height)));
+            const width = Math.max(1, Math.round(bitmap.width * shrink));
+            const height = Math.max(1, Math.round(bitmap.height * shrink));
+            const input = drawable(width, height);
+            input.context.imageSmoothingQuality = "high";
+            input.context.drawImage(bitmap, 0, 0, width, height);
+            const pixels = input.context.getImageData(0, 0, width, height);
+            onProgress({ done: 0, total: 0, engine: data.engine });
+            worker.postMessage({ type: "run", width, height, pixels: pixels.data.buffer }, [pixels.data.buffer]);
+          } else if (data.type === "progress") onProgress({ done: data.done, total: data.total, engine: data.engine });
+          else if (data.type === "done") resolve(data);
+          else if (data.type === "error") reject(new Error(data.message));
+        };
+        worker.onerror = (event) => {
+          const detail = [event.message, event.filename && `in ${event.filename}`].filter(Boolean).join(" ");
+          reject(new Error(`The enhancer could not start in this browser${detail ? ` (${detail})` : ""}.`));
+        };
+        worker.postMessage({ type: "init" });
+      });
+    } finally {
+      worker.terminate();
+    }
+  };
+
   try {
-    const result = await new Promise<{ width: number; height: number; pixels: ArrayBuffer }>((resolve, reject) => {
-      const stop = () => reject(new DOMException("Cancelled", "AbortError"));
-      if (signal.aborted) return stop();
-      signal.addEventListener("abort", stop, { once: true });
-      worker.onmessage = (event: MessageEvent) => {
-        const data = event.data;
-        if (data.type === "ready") {
-          // The model is loaded: now the photo is sized to this device and sent over.
-          const budget = pixelBudget(data.msPerTile);
-          const shrink = Math.min(1, Math.sqrt(budget / (bitmap.width * bitmap.height)));
-          const width = Math.max(1, Math.round(bitmap.width * shrink));
-          const height = Math.max(1, Math.round(bitmap.height * shrink));
-          const input = drawable(width, height);
-          input.context.imageSmoothingQuality = "high";
-          input.context.drawImage(bitmap, 0, 0, width, height);
-          const pixels = input.context.getImageData(0, 0, width, height);
-          onProgress({ done: 0, total: 0, engine: data.engine });
-          worker.postMessage({ type: "run", width, height, pixels: pixels.data.buffer }, [pixels.data.buffer]);
-        } else if (data.type === "progress") onProgress({ done: data.done, total: data.total, engine: data.engine });
-        else if (data.type === "done") resolve(data);
-        else if (data.type === "error") reject(new Error(data.message));
-      };
-      worker.onerror = () => reject(new Error("The enhancer could not start in this browser."));
-      worker.postMessage({ type: "init" });
-    });
+    let result;
+    try {
+      result = await attempt(false);
+    } catch (error) {
+      if (signal.aborted || (error instanceof DOMException && error.name === "AbortError")) throw error;
+      onProgress({ done: 0, total: 0, engine: "cpu" });
+      result = await attempt(true);
+    }
 
     const output = drawable(result.width, result.height);
     const bytes = new Uint8ClampedArray(result.pixels);
@@ -132,7 +152,6 @@ export async function enhanceInBrowser(
     if (!blob) throw new Error("The enhanced picture could not be saved.");
     return blob;
   } finally {
-    worker.terminate();
     bitmap.close();
   }
 }
