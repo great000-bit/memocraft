@@ -91,13 +91,13 @@ export function EnhanceMock() {
       <div className={styles.enhancePair}>
         <figure className={styles.enhanceSide}>
           <i className={styles.enhancePhoto} aria-hidden="true">
-            <Photo name="lensBefore" sizes="240px" />
+            <Photo name="portraitBefore" sizes="240px" />
           </i>
           <figcaption>Before</figcaption>
         </figure>
         <figure className={styles.enhanceSide}>
           <i className={styles.enhancePhoto} aria-hidden="true">
-            <Photo name="lensAfter" sizes="240px" />
+            <Photo name="portraitAfter" sizes="240px" />
           </i>
           <figcaption>Enhanced</figcaption>
         </figure>
