@@ -4,9 +4,25 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
-  // The service worker must never be served stale, or a fix to notifications would wait on the browser's cache.
+  // The in-browser enhancer runs its model on several threads, which the browser allows only on a cross-origin isolated
+  // page. "credentialless" keeps the pictures and uploads that come from the storage bucket working. The workspace is
+  // isolated as a whole because moving between its pages in the app never loads a new document.
   async headers() {
+    const isolated = [
+      { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+      { key: "Cross-Origin-Embedder-Policy", value: "credentialless" },
+    ];
     return [
+      ...["/dashboard", "/deliveries", "/requests", "/notifications", "/profile", "/settings"].flatMap((base) => [
+        { source: base, headers: isolated },
+        { source: `${base}/:path*`, headers: isolated },
+      ]),
+      // Worker scripts must carry the policy themselves: the enhancer's own and the runtime's helper threads.
+      ...["/enhance-worker.js", "/ort/:path*"].map((source) => ({
+        source,
+        headers: [{ key: "Cross-Origin-Embedder-Policy", value: "credentialless" }],
+      })),
+      // The service worker must never be served stale, or a fix to notifications would wait on the browser's cache.
       {
         source: "/sw.js",
         headers: [

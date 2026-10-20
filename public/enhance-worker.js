@@ -1,8 +1,9 @@
 // Runs the Real-ESRGAN photo upscaler (public/models/realesr-general-x4v3.onnx) inside the visitor's browser, so no
 // photo leaves their device and nothing is paid per run. ONNX Runtime is served from /ort (copied there at install).
 //
-// The page sends   { type: "run", width, height, pixels }   (pixels = RGBA bytes, transferred)
-// and gets back    { type: "progress", done, total, engine }   as tiles finish,
+// The page first sends { type: "init" } and gets back { type: "ready", engine, threads }, so it can size the photo to
+// what this device can do in about a minute. Then it sends   { type: "run", width, height, pixels }   (RGBA bytes,
+// transferred) and gets back    { type: "progress", done, total, engine }   as tiles finish,
 //                  { type: "done", width, height, pixels, engine }   (4x larger RGBA bytes, transferred)
 //                  { type: "error", message }
 //
@@ -11,12 +12,14 @@
 importScripts("/ort/ort.min.js");
 
 const SCALE = 4;
-const TILE = 128; // pixels of the picture each tile keeps
+const TILE = 192; // pixels of the picture each tile keeps
 const PAD = 12; // extra pixels read around a tile, thrown away after
 const SIDE = TILE + PAD * 2;
 
 ort.env.wasm.wasmPaths = "/ort/";
-ort.env.wasm.numThreads = self.crossOriginIsolated ? Math.min(4, navigator.hardwareConcurrency || 2) : 1;
+// Several threads need the page to be cross-origin isolated (see next.config.ts); without that it is one thread.
+const threads = self.crossOriginIsolated ? Math.max(1, Math.min(8, navigator.hardwareConcurrency || 2)) : 1;
+ort.env.wasm.numThreads = threads;
 
 let session = null;
 let engine = "";
@@ -61,16 +64,19 @@ async function runTile(input) {
   return result.output.data;
 }
 
+async function ensureSession() {
+  if (session) return;
+  try {
+    if (!self.navigator.gpu) throw new Error("no WebGPU");
+    await open("webgpu");
+  } catch {
+    await open("wasm");
+  }
+}
+
 async function enhance({ width, height, pixels: buffer }) {
   const pixels = new Uint8ClampedArray(buffer);
-  if (!session) {
-    try {
-      if (!self.navigator.gpu) throw new Error("no WebGPU");
-      await open("webgpu");
-    } catch {
-      await open("wasm");
-    }
-  }
+  await ensureSession();
 
   const outWidth = width * SCALE;
   const outHeight = height * SCALE;
@@ -119,9 +125,13 @@ async function enhance({ width, height, pixels: buffer }) {
 }
 
 self.onmessage = async (event) => {
-  if (event.data?.type !== "run") return;
   try {
-    await enhance(event.data);
+    if (event.data?.type === "init") {
+      await ensureSession();
+      self.postMessage({ type: "ready", engine, threads });
+    } else if (event.data?.type === "run") {
+      await enhance(event.data);
+    }
   } catch (error) {
     self.postMessage({ type: "error", message: String(error?.message || error) });
   }
