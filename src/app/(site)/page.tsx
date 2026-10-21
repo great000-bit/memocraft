@@ -97,9 +97,14 @@ export default function Home() {
             <HeroHook className={styles.display} accentClassName={styles.displayAccent} />
             <p className={styles.heroLede}>Every finished file, labelled, in one link. You see when it&rsquo;s opened.</p>
             <div className={styles.ctas}>
-              <Button href="/signup" size="lg">
+              <Link href="/signup" className={styles.prompt}>
                 Send your first delivery free
-              </Button>
+                <span className={styles.promptSend} aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 19V5M5 12l7-7 7 7" />
+                  </svg>
+                </span>
+              </Link>
               <GetAppButton />
             </div>
             <p className={styles.fine}>No card. No zip files. Your clients never make an account.</p>
