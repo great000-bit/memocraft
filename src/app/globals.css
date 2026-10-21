@@ -199,10 +199,11 @@ a {
   color-scheme: dark;
 }
 
-/* Marketing, sign-in and client pages sit on pure black. Cards and panels are flat, thin-bordered black panels (no raised or
-   pressed shadows); the workspace keeps its soft surfaces. */
+/* Everything sits on the landing page's pure black: marketing, sign-in, client pages and the dark workspace. Cards and panels
+   are flat, thin-bordered black panels (no raised or pressed shadows). A workspace switched to light keeps its soft surfaces. */
 .site-scope,
-.neu-scope {
+.neu-scope,
+.app-scope:not([data-theme="light"]) {
   --bg: #000000;
   --surface: #0b0c0c;
   --sunken: #050606;
@@ -218,21 +219,24 @@ a {
   --modal-face: #0b0c0c;
 }
 
+/* The workspace's frosted bars, hover wells and loading shimmer, tuned to the black. */
+.app-scope:not([data-theme="light"]) {
+  --glass: rgb(11 12 12 / 0.82);
+  --input-hover: #111313;
+  --skeleton-lo: #0d0f0f;
+  --skeleton-hi: #171a19;
+}
+
 /* The page behind (seen when a phone overscrolls) matches it. */
 html:has(.site-scope, .app-scope:not([data-theme="light"])),
 html:has(.site-scope, .app-scope:not([data-theme="light"])) body {
-  background: #1a1f1e;
-  color-scheme: dark;
-}
-
-html:has(.site-scope),
-html:has(.site-scope) body {
   background: #000000;
+  color-scheme: dark;
 }
 
 /* On phones the raised surfaces use shorter shadows: the same look at that size, with far less to paint while scrolling. */
 @media (max-width: 719px) {
-  .app-scope {
+  .app-scope[data-theme="light"] {
     --neu-raised: 5px 5px 12px var(--neu-dark), -5px -5px 12px var(--neu-light);
     --neu-raised-sm: 3px 3px 8px var(--neu-dark), -3px -3px 8px var(--neu-light);
   }

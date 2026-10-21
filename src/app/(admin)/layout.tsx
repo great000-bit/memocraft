@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export const viewport: Viewport = { themeColor: "#1a1f1e" };
+export const viewport: Viewport = { themeColor: "#000000" };
 
 // The check runs before anything is sent, so anyone who is not an admin gets a real 404 and never sees the shell.
 // That makes the console wait for the session on every visit, which is fine for one person's tool.

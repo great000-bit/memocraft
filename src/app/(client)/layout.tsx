@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 };
 
 // The phone's status bar matches the dark page.
-export const viewport: Viewport = { themeColor: "#1a1f1e" };
+export const viewport: Viewport = { themeColor: "#000000" };
 
 // Always dark, like the rest of the app.
 export default function ClientLayout({ children }: LayoutProps<"/">) {
