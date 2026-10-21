@@ -19,11 +19,22 @@ const nextConfig: NextConfig = {
         { source: base, headers: isolated },
         { source: `${base}/:path*`, headers: isolated },
       ]),
+      // Public files are served with no browser caching by default, so every visit re-asked for them. The mock photos and icons
+      // keep a week (and refresh quietly after that); the enhancer's runtime files keep a day, because their names carry no version.
+      ...["/images/:path*", "/icons/:path*"].map((source) => ({
+        source,
+        headers: [{ key: "Cache-Control", value: "public, max-age=604800, stale-while-revalidate=86400" }],
+      })),
       // Worker scripts must carry the policy themselves: the enhancer's own and the runtime's helper threads.
       ...["/enhance-worker.js", "/ort/:path*"].map((source) => ({
         source,
         headers: [{ key: "Cross-Origin-Embedder-Policy", value: "credentialless" }],
       })),
+      // The runtime files never change under the same version; the worker script ships with each deploy, so it is left out.
+      {
+        source: "/ort/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+      },
       // The face models never change under the same name, so the browser may keep them for good.
       {
         source: "/models/face/:path*",
