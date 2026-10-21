@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  // The "N" badge Next shows on the local dev server only; production builds never have it.
+  devIndicators: false,
   cacheComponents: true,
   partialPrefetching: true,
   // The in-browser enhancer runs its model on several threads, which the browser allows only on a cross-origin isolated
