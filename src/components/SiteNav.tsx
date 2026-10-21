@@ -80,11 +80,8 @@ export function SiteNav() {
         </nav>
 
         <div className={styles.actions}>
-          <Button href="/login" variant="quiet">
+          <Button href="/login" variant="primary" arrow={false}>
             Log in
-          </Button>
-          <Button href="/signup" variant="primary">
-            Get started
           </Button>
         </div>
         <MobileMenu links={mobileLinks} />

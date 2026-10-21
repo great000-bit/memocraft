@@ -113,36 +113,42 @@
   }
 }
 
-/* On the landing page's soft canvas the buttons are lifted out of the surface and press in when tapped. */
-:global(.neu-scope) .primary {
-  box-shadow:
-    6px 8px 16px rgb(11 107 93 / 0.3),
-    -5px -5px 12px var(--neu-light);
+/* Marketing, sign-in and client pages: flat pills with no glow, like ChatGPT's landing page. The main button is white on black,
+   the other is a thin outline. */
+:global(.neu-scope) .button,
+:global(.site-scope) .button {
+  border-radius: 999px;
 }
 
-:global(.neu-scope) .primary:active {
-  box-shadow: inset 3px 3px 8px rgb(0 0 0 / 0.25);
+:global(.neu-scope) .primary,
+:global(.site-scope) .primary {
+  background: #ffffff;
+  color: #000000;
+  box-shadow: none;
+}
+
+:global(.neu-scope) .primary:hover,
+:global(.site-scope) .primary:hover {
+  background: #e6e6e6;
 }
 
 :global(.neu-scope) .outline,
-:global(.neu-scope) .secondary {
-  border: 1px solid var(--neu-edge);
-  background: var(--neu-face);
+:global(.neu-scope) .secondary,
+:global(.site-scope) .outline,
+:global(.site-scope) .secondary {
+  border: 1px solid rgb(255 255 255 / 0.22);
+  background: transparent;
   color: var(--text);
-  box-shadow: var(--neu-raised-sm);
+  box-shadow: none;
 }
 
 :global(.neu-scope) .outline:hover,
-:global(.neu-scope) .secondary:hover {
-  background: var(--neu-face);
-  color: var(--fixer-ink, var(--fixer));
-  box-shadow: var(--neu-raised-xs);
-}
-
-:global(.neu-scope) .outline:active,
-:global(.neu-scope) .secondary:active {
-  background: var(--bg);
-  box-shadow: var(--neu-inset-sm);
+:global(.neu-scope) .secondary:hover,
+:global(.site-scope) .outline:hover,
+:global(.site-scope) .secondary:hover {
+  border-color: rgb(255 255 255 / 0.4);
+  background: rgb(255 255 255 / 0.08);
+  color: var(--text);
 }
 
 /* In the workspace, buttons are pills with the same slow sheen as the walkthrough on the landing page. */

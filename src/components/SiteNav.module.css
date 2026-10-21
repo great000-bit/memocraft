@@ -2,12 +2,10 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  background: var(--bg);
-  border-bottom: 1px solid transparent;
-}
-
-.header:has(details[open]) {
-  border-bottom-color: var(--line);
+  background: rgb(0 0 0 / 0.55);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  border-bottom: 1px solid rgb(255 255 255 / 0.08);
 }
 
 .inner {
@@ -92,10 +90,12 @@
   display: grid;
   gap: 2px;
   padding: var(--space-2);
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background: rgb(18 20 19 / 0.78);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid rgb(255 255 255 / 0.1);
   border-radius: var(--radius-lg);
-  box-shadow: 0 24px 48px -16px rgb(0 0 0 / 0.18);
+  box-shadow: none;
   animation: drop 200ms ease both;
 }
 
@@ -133,11 +133,7 @@
   gap: var(--space-2);
 }
 
-.actions a:first-child {
-  display: none;
-}
-
-/* On a phone the header holds the logo, Get started and the menu button, so Get started drops its arrow. */
+/* On a phone the header holds the logo, Log in and the menu button. */
 @media (max-width: 719px) {
   .logo {
     height: 21px;
@@ -147,10 +143,6 @@
     min-height: 40px;
     padding: 0 var(--space-4);
     font-size: 15px;
-  }
-
-  .actions svg {
-    display: none;
   }
 }
 
@@ -169,10 +161,6 @@
 
   .nav {
     display: flex;
-  }
-
-  .actions a:first-child {
-    display: inline-flex;
   }
 }
 
@@ -230,9 +218,11 @@
   right: 0;
   display: grid;
   padding: var(--space-2) var(--space-4) var(--space-6);
-  background: var(--bg);
-  border-bottom: 1px solid var(--line);
-  box-shadow: 0 24px 32px -24px rgb(0 0 0 / 0.2);
+  background: rgb(8 9 9 / 0.86);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  backdrop-filter: blur(24px) saturate(1.4);
+  border-bottom: 1px solid rgb(255 255 255 / 0.08);
+  box-shadow: none;
   animation: drop 200ms ease both;
 }
 

@@ -199,11 +199,22 @@ a {
   color-scheme: dark;
 }
 
+/* Marketing, sign-in and client pages sit on pure black. Cards and panels keep their sage faces. */
+.site-scope,
+.neu-scope {
+  --bg: #000000;
+}
+
 /* The page behind (seen when a phone overscrolls) matches it. */
 html:has(.site-scope, .app-scope:not([data-theme="light"])),
 html:has(.site-scope, .app-scope:not([data-theme="light"])) body {
   background: #1a1f1e;
   color-scheme: dark;
+}
+
+html:has(.site-scope),
+html:has(.site-scope) body {
+  background: #000000;
 }
 
 /* On phones the raised surfaces use shorter shadows: the same look at that size, with far less to paint while scrolling. */

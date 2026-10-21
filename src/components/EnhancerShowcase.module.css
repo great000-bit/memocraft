@@ -7,10 +7,7 @@
   align-items: center;
   padding: clamp(28px, 5vw, 72px);
   border-radius: 36px;
-  background:
-    radial-gradient(60% 70% at 85% 40%, rgb(63 190 168 / 0.16), transparent 70%),
-    radial-gradient(40% 50% at 10% 100%, rgb(232 163 61 / 0.1), transparent 70%),
-    var(--neu-face);
+  background: var(--neu-face);
   box-shadow: var(--neu-raised);
   overflow: hidden;
   isolation: isolate;
@@ -22,11 +19,7 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background-image:
-    linear-gradient(rgb(95 207 187 / 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(95 207 187 / 0.06) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: radial-gradient(70% 80% at 80% 50%, #000, transparent 75%);
+  display: none;
 }
 
 .copy {
@@ -114,18 +107,16 @@
   min-height: 52px;
   padding: 0 26px;
   border-radius: var(--radius-pill);
-  background: linear-gradient(180deg, #0e7a6a, var(--fixer));
-  color: var(--on-fixer);
+  background: #ffffff;
+  color: #000000;
   font-weight: 600;
   font-size: 16px;
   text-decoration: none;
-  box-shadow: 0 14px 28px -12px rgb(11 107 93 / 0.7), inset 0 1px 0 rgb(255 255 255 / 0.25);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: background-color 0.15s ease;
 }
 
 .cta:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 18px 34px -12px rgb(11 107 93 / 0.8), inset 0 1px 0 rgb(255 255 255 / 0.25);
+  background: #e6e6e6;
 }
 
 .cta:focus-visible {
