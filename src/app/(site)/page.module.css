@@ -18,7 +18,7 @@
   display: grid;
   justify-items: center;
   gap: 40px;
-  padding: var(--space-12) var(--space-4) 0;
+  padding: 96px var(--space-4) 0;
   background: #000000;
   isolation: isolate;
 }
@@ -40,10 +40,10 @@
 }
 
 .display {
-  font-size: clamp(36px, 4.8vw, 68px);
-  line-height: 1.06;
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
   font-weight: 600;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.035em;
 }
 
 .displayAccent {
@@ -70,6 +70,46 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: var(--space-3);
+}
+
+/* The hero's call to action, drawn like a chat prompt bar: a wide pill with a quiet line and a round white send button. */
+.prompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  width: min(100%, 640px);
+  min-height: 64px;
+  padding: 8px 8px 8px 28px;
+  border-radius: 999px;
+  background: #0f1110;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.14);
+  color: var(--text-muted);
+  font-size: 18px;
+  text-decoration: none;
+  text-align: left;
+  transition: box-shadow 0.15s ease, color 0.15s ease;
+}
+
+.prompt:hover {
+  color: var(--text);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.32);
+}
+
+.prompt:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.promptSend {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #000000;
 }
 
 .fine {
@@ -361,7 +401,7 @@
 .section {
   display: grid;
   gap: var(--space-12);
-  padding-block: 112px;
+  padding-block: 160px;
 }
 
 .sectionHead {
@@ -387,10 +427,10 @@
 }
 
 .h2 {
-  font-size: clamp(28px, 2.6vw, 40px);
-  line-height: 1.12;
+  font-size: clamp(32px, 3.6vw, 56px);
+  line-height: 1.06;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   max-width: 18em;
 }
 

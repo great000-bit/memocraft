@@ -199,10 +199,23 @@ a {
   color-scheme: dark;
 }
 
-/* Marketing, sign-in and client pages sit on pure black. Cards and panels keep their sage faces. */
+/* Marketing, sign-in and client pages sit on pure black. Cards and panels are flat, thin-bordered black panels (no raised or
+   pressed shadows); the workspace keeps its soft surfaces. */
 .site-scope,
 .neu-scope {
   --bg: #000000;
+  --surface: #0b0c0c;
+  --sunken: #050606;
+  --line: #262a29;
+  --neu-face: #0b0c0c;
+  --neu-edge: rgb(255 255 255 / 0.08);
+  --neu-raised: 0 0 0 1px rgb(255 255 255 / 0.1);
+  --neu-raised-sm: 0 0 0 1px rgb(255 255 255 / 0.1);
+  --neu-raised-xs: 0 0 0 1px rgb(255 255 255 / 0.1);
+  --neu-inset: 0 0 0 1px rgb(255 255 255 / 0.12);
+  --neu-inset-sm: 0 0 0 1px rgb(255 255 255 / 0.1);
+  --shadow-card: none;
+  --modal-face: #0b0c0c;
 }
 
 /* The page behind (seen when a phone overscrolls) matches it. */
@@ -219,8 +232,7 @@ html:has(.site-scope) body {
 
 /* On phones the raised surfaces use shorter shadows: the same look at that size, with far less to paint while scrolling. */
 @media (max-width: 719px) {
-  .app-scope,
-  .neu-scope {
+  .app-scope {
     --neu-raised: 5px 5px 12px var(--neu-dark), -5px -5px 12px var(--neu-light);
     --neu-raised-sm: 3px 3px 8px var(--neu-dark), -3px -3px 8px var(--neu-light);
   }
