@@ -5,7 +5,7 @@ const GB = 1024 * MB;
 
 export const storageLimits = {
   maxFileBytes: 2 * GB,
-  accountBytes: 10 * GB,
+  accountBytes: 100 * GB,
   // At or below this size a file goes up in one request; above it, in parts that can each be retried.
   singleUploadMaxBytes: 64 * MB,
   minPartBytes: 16 * MB,
