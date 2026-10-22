@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 // The phone's status bar and the installed app's frame match the dark workspace.
-export const viewport: Viewport = { themeColor: "#1a1f1e" };
+export const viewport: Viewport = { themeColor: "#000000" };
 
 // Only shown when email can actually be sent, and only until the address is confirmed.
 async function VerifyNotice() {
