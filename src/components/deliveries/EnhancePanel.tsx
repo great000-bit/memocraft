@@ -169,7 +169,7 @@ export function EnhancePanel({
       ) : repairing ? (
         <>
           <EnhanceStatus done={0} total={0} waiting />
-          <p className={styles.enhanceHint}>Keep this tab open. Gemini usually takes 10 to 30 seconds.</p>
+          <p className={styles.enhanceHint}>Keep this tab open. This usually takes 10 to 30 seconds.</p>
         </>
       ) : working ? (
         <>
@@ -214,7 +214,7 @@ export function EnhancePanel({
                 disabled={busy || allowance.geminiLeft === 0}
                 onClick={repairWithGemini}
               >
-                Repair faces with Gemini
+                Repair faces with Memocraft
               </button>
             )}
             {allowance.server && (
@@ -237,7 +237,7 @@ export function EnhancePanel({
           </p>
           {allowance.gemini && (
             <p className={styles.enhanceHint}>
-              Repair faces with Gemini sends this photo to Google and redraws it, so a face can look different from the
+              Repair faces with Memocraft sends this photo to our cloud AI (run by Google) and redraws it, so a face can look different from the
               real person. Check it before you send it. {allowance.geminiLeft} left this month.
             </p>
           )}
