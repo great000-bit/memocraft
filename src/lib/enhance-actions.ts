@@ -112,7 +112,7 @@ export async function repairWithGeminiAction(fileId: string): Promise<EnhanceSta
   const user = await requireUser();
   const file = await loadOwned(fileId, user.id);
   if (!file || !file.storageKey) return { state: "failed", error: "This photo was not found." };
-  if (!geminiConfigured() || !storageConfigured()) return { state: "failed", error: "Gemini repair is not switched on yet." };
+  if (!geminiConfigured() || !storageConfigured()) return { state: "failed", error: "Memocraft repair is not switched on yet." };
   if (file.enhanceJob && !file.enhanceJob.error) return { state: "running" };
   if (!ENHANCEABLE_TYPES.includes(file.mimeType ?? "")) return { state: "failed", error: "Repair works on JPEG, PNG, WebP and TIFF photos." };
   if (Number(file.sizeBytes ?? 0) > ENHANCE_SOURCE_MAX_BYTES) {
@@ -120,7 +120,7 @@ export async function repairWithGeminiAction(fileId: string): Promise<EnhanceSta
   }
   const limit = monthlyGeminiLimit();
   if ((await geminiRunsThisMonth(user.id)) >= limit) {
-    return { state: "failed", error: `You have used all ${limit} Gemini repairs for this month. They come back on the 1st.` };
+    return { state: "failed", error: `You have used all ${limit} Memocraft repairs for this month. They come back on the 1st.` };
   }
   if ((await storageUsed(user.id)) + 8 * 1024 * 1024 > storageLimits.accountBytes) {
     return { state: "failed", error: "Your storage is full. Remove a file to make room for the repaired copy." };
@@ -134,7 +134,7 @@ export async function repairWithGeminiAction(fileId: string): Promise<EnhanceSta
     // The run is counted before the call, so a failing loop cannot spend the free quota unnoticed.
     await pool.query(`insert into "enhanceRun" ("userId", "fileId", "predictionId") values ($1, $2, $3)`, [user.id, fileId, runId]);
     const repaired = await repairWithGemini(input.bytes);
-    if (!repaired) return { state: "failed", error: "Gemini did not return a picture for this photo. Your original is untouched. Try again." };
+    if (!repaired) return { state: "failed", error: "The repair did not return a picture for this photo. Your original is untouched. Try again." };
     const jpeg = await finishOutput(repaired);
     await putObject(key, jpeg, "image/jpeg");
     const old = await pool.query<{ enhancedKey: string | null }>(`select "enhancedKey" from "deliveryFile" where "id" = $1`, [fileId]);
@@ -159,11 +159,11 @@ export async function repairWithGeminiAction(fileId: string): Promise<EnhanceSta
       await pool.query(`delete from "enhanceRun" where "predictionId" = $1`, [runId]);
       return {
         state: "failed",
-        error: "Gemini is not available right now: Google needs billing turned on for this key. Your original is untouched.",
+        error: "Memocraft repair is not available right now: Google needs billing turned on for this key. Your original is untouched.",
       };
     }
     console.error("Gemini repair failed", error);
-    return { state: "failed", error: "Gemini repair did not work on this photo. Your original is untouched. Try again in a moment." };
+    return { state: "failed", error: "The repair did not work on this photo. Your original is untouched. Try again in a moment." };
   }
 }
 
