@@ -456,31 +456,29 @@
   color: #3d2603;
 }
 
-/* Star, download and share on the picture's bottom corner. With a mouse they come up on hover; on a touch screen they
-   are always there, on a soft shade so they read on a bright picture. A starred picture keeps its star in view. */
+/* Star, download and share on the picture's bottom corner, always in view on every screen: each on its own small
+   teal circle so it reads on a bright or a dark picture. A starred picture's star turns amber. */
 .tools {
   position: absolute;
   inset: auto 0 0;
   display: flex;
   justify-content: flex-end;
-  gap: 2px;
-  padding: 28px 6px 6px;
-  background: linear-gradient(to top, rgb(0 0 0 / 0.55), transparent);
-  transition: opacity 180ms ease;
+  gap: 6px;
+  padding: 8px;
 }
 
 .tool {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border: 0;
   border-radius: var(--radius-pill);
-  background: transparent;
+  background: var(--fixer);
   color: #fff;
   cursor: pointer;
-  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.5));
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
   transition:
     background-color 150ms ease,
     color 150ms ease,
@@ -488,12 +486,12 @@
 }
 
 .tool svg {
-  width: 21px;
-  height: 21px;
+  width: 17px;
+  height: 17px;
 }
 
 .tool:hover {
-  background: rgb(255 255 255 / 0.16);
+  background: #129480;
 }
 
 .tool:active {
@@ -502,7 +500,7 @@
 
 .tool:focus-visible {
   outline: 2px solid var(--focus-ring);
-  outline-offset: 0;
+  outline-offset: 2px;
 }
 
 .tool[data-on] {
@@ -511,7 +509,7 @@
 
 .tool:disabled,
 .toolOff {
-  opacity: 0.4;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
@@ -521,11 +519,12 @@
 }
 
 .tool[data-phase="ready"] {
-  background: var(--fixer);
+  background: var(--proof);
+  color: #3d2603;
 }
 
 .tool[data-phase="saved"] {
-  color: var(--fixer-ink);
+  background: #129480;
 }
 
 @keyframes pulse {
@@ -534,31 +533,23 @@
   }
 }
 
-@media (hover: hover) {
+@container page (min-width: 1000px) {
   .tools {
-    opacity: 0;
+    padding: 10px;
   }
 
-  .tools[data-starred] {
-    opacity: 1;
-    background: none;
+  .tool {
+    width: 34px;
+    height: 34px;
   }
 
-  .tools[data-starred] .tool:not([data-on]) {
-    opacity: 0;
+  .tool svg {
+    width: 18px;
+    height: 18px;
   }
+}
 
-  .tileCard:hover .tools,
-  .tile:focus-within .tools {
-    opacity: 1;
-    background: linear-gradient(to top, rgb(0 0 0 / 0.55), transparent);
-  }
-
-  .tileCard:hover .tools .tool:not([data-on]),
-  .tile:focus-within .tools .tool:not([data-on]) {
-    opacity: 1;
-  }
-
+@media (hover: hover) {
   .tileCard:hover img {
     transform: scale(1.025);
   }
