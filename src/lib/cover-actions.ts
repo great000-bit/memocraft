@@ -9,7 +9,7 @@ import { limits } from "./delivery-limits";
 import { isUuid } from "./deliveries";
 import type { ActionResult } from "./delivery-actions";
 import { editableOwnerId, viewOnlyError } from "./team";
-import { deleteObjects, getObject, presignThumb, putObject, storageConfigured } from "./storage";
+import { deleteObjects, getObject, headObject, presignPut, presignThumb, putObject, storageConfigured } from "./storage";
 
 export type CoverInput = {
   template: CoverTemplateId;
@@ -19,6 +19,7 @@ export type CoverInput = {
   button: string;
   focusX: number;
   focusY: number;
+  opacity: number;
 };
 
 const fail = (error: string): ActionResult => ({ ok: false, error });
@@ -48,7 +49,8 @@ export async function saveCover(deliveryId: string, input: CoverInput): Promise<
   if (typeof subtitle !== "string") return fail(subtitle.error);
   const button = line(input.button, coverLimits.button, "The button");
   if (typeof button !== "string") return fail(button.error);
-  const words = { template: input.template, kicker, subtitle, button, focusX: percent(input.focusX), focusY: percent(input.focusY) };
+  const words = { template: input.template, kicker, subtitle, button, focusX: percent(input.focusX), focusY: percent(input.focusY),
+    opacity: Math.max(coverLimits.opacityMin, percent(input.opacity)) };
   const result = await pool.query(
     `update "delivery" set "title" = $1, "cover" = coalesce("cover", '{}'::jsonb) || $2::jsonb, "updatedAt" = now()
       where "id" = $3 and "ownerId" = $4`,
@@ -115,10 +117,52 @@ export async function setCoverPhoto(deliveryId: string, fileId: string): Promise
   const result = await pool.query(
     `update "delivery" set "cover" = coalesce("cover", '{}'::jsonb) || $1::jsonb, "updatedAt" = now()
       where "id" = $2 and "ownerId" = $3`,
-    [JSON.stringify({ fileId, key }), deliveryId, ownerId],
+    [JSON.stringify({ fileId, key, source: "file" }), deliveryId, ownerId],
   );
   if (!result.rowCount) return { ok: false, error: "This delivery was not found." };
   if (file.oldKey && file.oldKey !== key) await deleteObjects([file.oldKey]);
   const shown = key ?? file.thumbKey;
   return { ok: true, url: shown && storageConfigured() ? await presignThumb(shown) : null };
+}
+
+const uploadPrefix = (deliveryId: string) => `deliveries/${deliveryId}/cover/up-`;
+
+// A background picture of the creative's own, from their computer or phone. The browser turns it upright and shrinks it
+// to the cover's size first, then sends it straight to storage; finishCoverUpload checks it arrived and puts it on.
+export async function startCoverUpload(deliveryId: string, size: number): Promise<{ ok: true; key: string; url: string } | { ok: false; error: string }> {
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return { ok: false, error: viewOnlyError };
+  if (!isUuid(deliveryId)) return { ok: false, error: "This delivery was not found." };
+  if (!storageConfigured()) return { ok: false, error: "Storage is not set up, so pictures cannot be added yet." };
+  if (!Number.isInteger(size) || size <= 0 || size > coverLimits.uploadBytes) return { ok: false, error: "That picture is too large. Try a smaller one." };
+  const owned = await pool.query(`select 1 from "delivery" where "id" = $1 and "ownerId" = $2`, [deliveryId, ownerId]);
+  if (!owned.rowCount) return { ok: false, error: "This delivery was not found." };
+  const key = `${uploadPrefix(deliveryId)}${randomBytes(8).toString("hex")}.jpg`;
+  return { ok: true, key, url: await presignPut(key, "image/jpeg", size) };
+}
+
+export async function finishCoverUpload(deliveryId: string, key: string): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return { ok: false, error: viewOnlyError };
+  if (!isUuid(deliveryId) || typeof key !== "string" || !new RegExp(`^${uploadPrefix(deliveryId)}[0-9a-f]{16}\\.jpg$`).test(key)) {
+    return { ok: false, error: "That upload was not found." };
+  }
+  const stored = await headObject(key);
+  if (!stored || stored.size > coverLimits.uploadBytes) {
+    if (stored) await deleteObjects([key]);
+    return { ok: false, error: "The picture did not arrive. Try again." };
+  }
+  const { rows } = await pool.query<{ oldKey: string | null }>(
+    `update "delivery" d set "cover" = coalesce(d."cover", '{}'::jsonb) || $1::jsonb, "updatedAt" = now()
+       from (select "cover"->>'key' as "oldKey" from "delivery" where "id" = $2 and "ownerId" = $3) old
+      where d."id" = $2 and d."ownerId" = $3
+      returning old."oldKey"`,
+    [JSON.stringify({ fileId: null, key, source: "upload" }), deliveryId, ownerId],
+  );
+  if (!rows[0]) {
+    await deleteObjects([key]);
+    return { ok: false, error: "This delivery was not found." };
+  }
+  if (rows[0].oldKey && rows[0].oldKey !== key) await deleteObjects([rows[0].oldKey]);
+  return { ok: true, url: await presignThumb(key) };
 }

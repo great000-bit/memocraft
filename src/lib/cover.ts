@@ -38,6 +38,10 @@ export type Cover = {
   // Where the photo is held when cropped, as percentages across and down.
   focusX: number;
   focusY: number;
+  // How strongly the background picture shows over the black, from 10 to 100 percent.
+  opacity: number;
+  // "upload" when the creative put in a picture of their own instead of one of the delivery's photos.
+  source: "file" | "upload";
   fileId: string | null;
   key: string | null;
 };
@@ -45,13 +49,13 @@ export type Cover = {
 // The words a creative types. The title is the delivery's own title.
 export type CoverText = { title: string; kicker: string; subtitle: string; button: string };
 
-export const coverLimits = { kicker: 80, subtitle: 80, button: 30 } as const;
+export const coverLimits = { kicker: 80, subtitle: 80, button: 30, opacityMin: 10, uploadBytes: 12 * 1024 * 1024 } as const;
 
 const coverDate = new Intl.DateTimeFormat("en", { dateStyle: "long", timeZone: "UTC" });
 
 // A delivery that has never been through the designer still opens on a finished cover: the classic template, who it
 // is for, and the date.
-export function coverDefaults(delivery: { clientName: string | null; publishedAt: Date | null; updatedAt: Date }): Omit<Cover, "fileId" | "key"> {
+export function coverDefaults(delivery: { clientName: string | null; publishedAt: Date | null; updatedAt: Date }): Omit<Cover, "fileId" | "key" | "source"> {
   return {
     template: "classic",
     kicker: delivery.clientName ? `For ${delivery.clientName}` : "",
@@ -59,6 +63,7 @@ export function coverDefaults(delivery: { clientName: string | null; publishedAt
     button: "View gallery",
     focusX: 50,
     focusY: 40,
+    opacity: 100,
   };
 }
 
@@ -76,6 +81,8 @@ export function readCover(stored: unknown, delivery: { clientName: string | null
     button: text(raw.button, base.button),
     focusX: percent(raw.focusX, base.focusX),
     focusY: percent(raw.focusY, base.focusY),
+    opacity: Math.max(coverLimits.opacityMin, percent(raw.opacity, base.opacity)),
+    source: raw.source === "upload" ? "upload" : "file",
     fileId: typeof raw.fileId === "string" ? raw.fileId : null,
     key: typeof raw.key === "string" ? raw.key : null,
   };

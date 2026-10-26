@@ -269,9 +269,11 @@ export async function DeliveryEditor({
           button: delivery.cover.button ?? "",
           focusX: delivery.cover.focusX,
           focusY: delivery.cover.focusY,
+          opacity: delivery.cover.opacity,
         }}
         photos={photos}
         coverFileId={delivery.cover.fileId}
+        coverUploaded={delivery.cover.source === "upload" && Boolean(delivery.cover.key)}
         coverSrc={coverSrc}
         brand={brand}
         senderName={senderName}

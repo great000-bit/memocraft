@@ -23,13 +23,13 @@ export const ownerThumbnailLinks = (delivery: Delivery) => signAll(delivery, pre
 // needs no network, so each picture goes straight to storage instead of through a server check of its own first.
 export const clientThumbnailLinks = (delivery: Delivery) => signAll(delivery, presignClientThumb);
 
-// The cover's picture: the large copy made for it, else the chosen photo's preview, else the first photo's. The large
+// The cover's picture: a picture the creative uploaded for it, or the large copy made from a photo, else the chosen photo's preview, else the first photo's. The large
 // copy is only used while the photo it came from is still in the delivery.
 async function coverLink(delivery: Delivery, thumbs: Record<string, string>, sign: (key: string) => Promise<string>): Promise<string | null> {
   const { fileId, key } = delivery.cover;
   const chosen = fileId ? withThumbnail(delivery).find((file) => file.id === fileId) ?? null : null;
   const stillThere = fileId && delivery.sections.some((section) => section.files.some((file) => file.id === fileId && file.attached));
-  if (key && stillThere && storageConfigured()) {
+  if (key && (stillThere || delivery.cover.source === "upload") && storageConfigured()) {
     try {
       return await sign(key);
     } catch {

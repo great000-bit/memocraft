@@ -187,6 +187,7 @@ export function ClientView({
           .map((fileId) => thumbs[fileId])}
         focusX={cover.focusX}
         focusY={cover.focusY}
+        opacity={cover.opacity}
         brand={brand}
         senderName={senderName}
         fileCount={files.length}
