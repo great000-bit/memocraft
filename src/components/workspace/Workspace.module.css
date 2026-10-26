@@ -334,6 +334,13 @@
   gap: var(--space-3);
 }
 
+/* Memo Explorer is a window that fills the screen, so its page drops the reading width and most of the bottom space. */
+.main:has([data-wide]) {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 1760px;
+  padding-bottom: var(--space-4);
+}
+
 /* The call to action next to the heading is lifted off the page the same way as the cards. */
 .headRow > a {
   box-shadow:

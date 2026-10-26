@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import {
   AbortMultipartUploadCommand,
   CompleteMultipartUploadCommand,
+  CopyObjectCommand,
   CreateMultipartUploadCommand,
   DeleteObjectsCommand,
   GetObjectCommand,
@@ -47,6 +48,10 @@ const bucket = () => env.STORAGE_BUCKET as string;
 // A fresh random segment per upload, so a replacement never overwrites the file it replaces.
 export const newObjectKey = (deliveryId: string, fileId: string) =>
   `deliveries/${deliveryId}/${fileId}/${randomBytes(8).toString("hex")}`;
+
+// Files kept in Memo Explorer, apart from any delivery.
+export const newLibraryKey = (ownerId: string, fileId: string) =>
+  `library/${encodeURIComponent(ownerId)}/${fileId}/${randomBytes(8).toString("hex")}`;
 
 const UPLOAD_URL_SECONDS = 60 * 60 * 6;
 const DOWNLOAD_URL_SECONDS = 60 * 10;
@@ -145,6 +150,12 @@ export async function getObjectRange(key: string, start: number, end: number): P
   const result = await s3().send(new GetObjectCommand({ Bucket: bucket(), Key: key, Range: `bytes=${start}-${end}` }));
   if (!result.Body) throw new Error("Storage returned no data");
   return result.Body.transformToByteArray();
+}
+
+// A copy made inside storage, so a file can be put in a delivery (or back in the library) without going through the
+// server. Single-request copies go up to 5 GB, above the largest file an upload allows.
+export async function copyObject(from: string, to: string) {
+  await s3().send(new CopyObjectCommand({ Bucket: bucket(), Key: to, CopySource: `${bucket()}/${encodeURIComponent(from).replace(/%2F/g, "/")}` }));
 }
 
 export async function headObject(key: string): Promise<{ size: number } | null> {

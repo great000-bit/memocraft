@@ -56,6 +56,11 @@ export async function deleteAccount(_previous: AccountResult | null, formData: F
     [user.id],
   );
 
+  const library = await pool.query<StoredFile>(
+    `select "storageKey", "thumbKey", null as "enhancedKey", "pending" from "libraryFile" where "ownerId" = $1`,
+    [user.id],
+  );
+
   // One statement, so either everything goes or nothing does. Leftover reset and verification links (they are
   // keyed by the email address or hold the user id) go with it.
   try {
@@ -71,6 +76,7 @@ export async function deleteAccount(_previous: AccountResult | null, formData: F
 
   await removeStored([
     ...files.rows,
+    ...library.rows,
     ...versions.rows.map((version) => ({ storageKey: version.storageKey, thumbKey: version.thumbKey, enhancedKey: null, pending: null })),
   ]);
   await deleteObjects([avatarKey(user.id), studioLogoKey(user.id)]);

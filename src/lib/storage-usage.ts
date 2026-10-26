@@ -1,6 +1,6 @@
 import { pool } from "./auth";
 
-// Bytes an account holds: attached files, enhanced copies, earlier versions kept from replaced files, and uploads
+// Bytes an account holds: Memo Explorer files, attached files, enhanced copies, earlier versions kept from replaced files, and uploads
 // started in the last day. A file being replaced still counts, because its current copy becomes a version when the
 // new one arrives.
 export async function storageUsed(ownerId: string): Promise<number> {
@@ -16,5 +16,12 @@ export async function storageUsed(ownerId: string): Promise<number> {
       where d."ownerId" = $1`,
     [ownerId],
   );
-  return Number(usage.rows[0].used);
+  const library = await pool.query<{ used: string }>(
+    `select coalesce(sum(case when "storageKey" is not null then "sizeBytes" end), 0)
+          + coalesce(sum(case when "pending" is not null and ("pending"->>'at')::timestamptz > now() - interval '24 hours'
+                              then ("pending"->>'size')::bigint end), 0) as "used"
+       from "libraryFile" where "ownerId" = $1`,
+    [ownerId],
+  );
+  return Number(usage.rows[0].used) + Number(library.rows[0].used);
 }
