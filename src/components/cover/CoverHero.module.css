@@ -42,6 +42,7 @@
   height: 100%;
   object-fit: cover;
   object-position: var(--fx) var(--fy);
+  opacity: var(--po, 1);
 }
 
 /* A delivery with no photo still gets a finished cover: the brand's teal and amber light on black. */

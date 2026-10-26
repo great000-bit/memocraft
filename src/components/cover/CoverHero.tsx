@@ -12,6 +12,8 @@ export type CoverHeroProps = {
   pictures?: string[];
   focusX?: number;
   focusY?: number;
+  // How strongly the background picture shows, 10 to 100.
+  opacity?: number;
   brand: Brand;
   senderName: string;
   fileCount: number;
@@ -47,6 +49,7 @@ export function CoverHero({
   pictures = [],
   focusX = 50,
   focusY = 40,
+  opacity = 100,
   brand,
   senderName,
   fileCount,
@@ -55,7 +58,7 @@ export function CoverHero({
   headingId,
 }: CoverHeroProps) {
   const Heading = headingId ? "h1" : "p";
-  const style = { "--fx": `${focusX}%`, "--fy": `${focusY}%` } as CSSProperties;
+  const style = { "--fx": `${focusX}%`, "--fy": `${focusY}%`, "--po": opacity / 100 } as CSSProperties;
   const others = pictures.filter((picture) => picture !== photo);
 
   const renderPhoto = ({ className, src = photo }: { className?: string; src?: string | null }) =>

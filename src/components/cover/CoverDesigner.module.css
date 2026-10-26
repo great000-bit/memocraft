@@ -356,3 +356,62 @@
     left 160ms ease,
     top 160ms ease;
 }
+
+/* The first tile in the picture row: upload a picture of your own. */
+.upload {
+  position: relative;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--control-border);
+  box-shadow: none;
+  color: var(--text);
+}
+
+.upload img {
+  position: absolute;
+  inset: 0;
+  opacity: 0.45;
+}
+
+.uploadLabel {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.uploadLabel svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.slider {
+  display: grid;
+  gap: 8px;
+  max-width: 420px;
+  margin-top: var(--space-2);
+}
+
+.sliderHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.sliderValue {
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.slider input {
+  width: 100%;
+  accent-color: var(--proof);
+}
