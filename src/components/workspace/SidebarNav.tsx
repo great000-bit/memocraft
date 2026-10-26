@@ -14,7 +14,7 @@ const items: { label: string; icon: FeatureIconName; href?: string }[] = [
   { label: "Enhancer", icon: "enhance", href: "/enhancer" },
   { label: "Requests", icon: "request", href: "/requests" },
   { label: "Notifications", icon: "bell", href: "/notifications" },
-  { label: "Team", icon: "people" },
+  { label: "Team", icon: "people", href: "/team" },
   { label: "Profile", icon: "profile", href: "/profile" },
   { label: "Settings", icon: "settings", href: "/settings" },
 ];

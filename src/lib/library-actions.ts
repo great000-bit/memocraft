@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { pool } from "./auth";
 import { createDeliveryRow, isUuid } from "./deliveries";
 import { limits } from "./delivery-limits";
-import { requireUser } from "./session";
+import { editableOwnerId, viewOnlyError } from "./team";
 import {
   completeMultipart,
   copyObject,
@@ -76,23 +76,25 @@ async function ownsFolder(ownerId: string, folderId: string | null, kind: "folde
 }
 
 export async function createFolder(parentId: string | null, rawName: string, kind: "folder" | "collection" = "folder"): Promise<Created> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   if (kind !== "folder" && kind !== "collection") return fail("That cannot be made here.");
   const name = cleanName(rawName, kind === "folder" ? "The folder name" : "The collection name");
   if ("error" in name) return fail(name.error);
   // Collections sit at the top level; folders sit in My files or inside another folder.
   const parent = kind === "collection" ? null : parentId;
-  if (!(await ownsFolder(user.id, parent))) return fail("That folder was not found.");
+  if (!(await ownsFolder(ownerId, parent))) return fail("That folder was not found.");
   const { rows } = await pool.query<{ id: string }>(
     `insert into "libraryFolder" ("ownerId", "parentId", "kind", "name") values ($1, $2, $3, $4) returning "id"`,
-    [user.id, parent, kind, name.value],
+    [ownerId, parent, kind, name.value],
   );
   refresh();
   return { ok: true, id: rows[0].id };
 }
 
 export async function renameItem(type: "folder" | "file", id: string, rawName: string): Promise<Result> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   if (!isUuid(id)) return fail("That was not found.");
   const name = cleanName(rawName, "The name");
   if ("error" in name) return fail(name.error);
@@ -100,7 +102,7 @@ export async function renameItem(type: "folder" | "file", id: string, rawName: s
   const result = await pool.query(`update "${table}" set "name" = $1, "updatedAt" = now() where "id" = $2 and "ownerId" = $3`, [
     name.value,
     id,
-    user.id,
+    ownerId,
   ]);
   if (!result.rowCount) return fail("That was not found.");
   refresh();
@@ -110,19 +112,20 @@ export async function renameItem(type: "folder" | "file", id: string, rawName: s
 export type Selection = { fileIds: string[]; folderIds: string[] };
 
 export async function setStarred(selection: Selection, starred: boolean): Promise<Result> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   const files = ids(selection.fileIds);
   const folders = ids(selection.folderIds);
   if (!files || !folders) return fail("Nothing was selected.");
   await pool.query(`update "libraryFile" set "starred" = $1 where "id" = any($2::uuid[]) and "ownerId" = $3`, [
     Boolean(starred),
     files,
-    user.id,
+    ownerId,
   ]);
   await pool.query(`update "libraryFolder" set "starred" = $1 where "id" = any($2::uuid[]) and "ownerId" = $3`, [
     Boolean(starred),
     folders,
-    user.id,
+    ownerId,
   ]);
   refresh();
   return done;
@@ -130,11 +133,12 @@ export async function setStarred(selection: Selection, starred: boolean): Promis
 
 // Moves files and folders into a folder (null = the top of My files). A folder can never go inside itself.
 export async function moveItems(selection: Selection, targetId: string | null): Promise<Result> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   const files = ids(selection.fileIds);
   const folders = ids(selection.folderIds);
   if (!files || !folders) return fail("Nothing was selected.");
-  if (!(await ownsFolder(user.id, targetId))) return fail("That folder was not found.");
+  if (!(await ownsFolder(ownerId, targetId))) return fail("That folder was not found.");
   if (targetId && folders.length > 0) {
     const { rows } = await pool.query<{ id: string }>(
       `with recursive up as (
@@ -142,19 +146,19 @@ export async function moveItems(selection: Selection, targetId: string | null): 
          union all
          select f."id", f."parentId" from "libraryFolder" f join up on f."id" = up."parentId"
        ) select "id" from up`,
-      [targetId, user.id],
+      [targetId, ownerId],
     );
     if (rows.some((row) => folders.includes(row.id))) return fail("A folder cannot go inside itself.");
   }
   await pool.query(`update "libraryFile" set "folderId" = $1, "updatedAt" = now() where "id" = any($2::uuid[]) and "ownerId" = $3`, [
     targetId,
     files,
-    user.id,
+    ownerId,
   ]);
   await pool.query(
     `update "libraryFolder" set "parentId" = $1, "updatedAt" = now()
       where "id" = any($2::uuid[]) and "ownerId" = $3 and "kind" = 'folder'`,
-    [targetId, folders, user.id],
+    [targetId, folders, ownerId],
   );
   refresh();
   return done;
@@ -162,7 +166,8 @@ export async function moveItems(selection: Selection, targetId: string | null): 
 
 // Deletes files and folders for good, with everything inside the folders. Deleting a collection keeps its files.
 export async function deleteItems(selection: Selection): Promise<Result> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   const files = ids(selection.fileIds);
   const folders = ids(selection.folderIds);
   if (!files || !folders) return fail("Nothing was selected.");
@@ -174,16 +179,16 @@ export async function deleteItems(selection: Selection): Promise<Result> {
      )
      select "id", "storageKey", "thumbKey", "pending" from "libraryFile"
       where "ownerId" = $3 and ("id" = any($2::uuid[]) or "folderId" in (select "id" from tree))`,
-    [folders, files, user.id],
+    [folders, files, ownerId],
   );
   const client = await pool.connect();
   try {
     await client.query("begin");
     await client.query(`delete from "libraryFile" where "id" = any($1::uuid[]) and "ownerId" = $2`, [
       stored.rows.map((row) => row.id),
-      user.id,
+      ownerId,
     ]);
-    await client.query(`delete from "libraryFolder" where "id" = any($1::uuid[]) and "ownerId" = $2`, [folders, user.id]);
+    await client.query(`delete from "libraryFolder" where "id" = any($1::uuid[]) and "ownerId" = $2`, [folders, ownerId]);
     await client.query("commit");
   } catch (error) {
     await client.query("rollback");
@@ -198,15 +203,16 @@ export async function deleteItems(selection: Selection): Promise<Result> {
 }
 
 export async function addToCollection(collectionId: string, fileIds: string[]): Promise<Result> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   const files = ids(fileIds);
   if (!files) return fail("Nothing was selected.");
-  if (!(await ownsFolder(user.id, collectionId, "collection"))) return fail("That collection was not found.");
+  if (!(await ownsFolder(ownerId, collectionId, "collection"))) return fail("That collection was not found.");
   await pool.query(
     `insert into "libraryCollectionItem" ("collectionId", "fileId")
      select $1, "id" from "libraryFile" where "id" = any($2::uuid[]) and "ownerId" = $3
      on conflict do nothing`,
-    [collectionId, files, user.id],
+    [collectionId, files, ownerId],
   );
   await pool.query(`update "libraryFolder" set "updatedAt" = now() where "id" = $1`, [collectionId]);
   refresh();
@@ -214,10 +220,11 @@ export async function addToCollection(collectionId: string, fileIds: string[]): 
 }
 
 export async function removeFromCollection(collectionId: string, fileIds: string[]): Promise<Result> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   const files = ids(fileIds);
   if (!files) return fail("Nothing was selected.");
-  if (!(await ownsFolder(user.id, collectionId, "collection"))) return fail("That collection was not found.");
+  if (!(await ownsFolder(ownerId, collectionId, "collection"))) return fail("That collection was not found.");
   await pool.query(`delete from "libraryCollectionItem" where "collectionId" = $1 and "fileId" = any($2::uuid[])`, [collectionId, files]);
   refresh();
   return done;
@@ -248,11 +255,12 @@ async function roomFor(ownerId: string, bytes: number) {
 
 // Copies files that are already in deliveries into My files, so earlier work can be organised here too.
 export async function copyToLibrary(deliveryFileIds: string[], folderId: string | null): Promise<Result> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   const files = ids(deliveryFileIds);
   if (!files || files.length === 0 || files.length > sendMax) return fail("Nothing was selected.");
   if (!storageConfigured()) return fail("File storage is not connected yet.");
-  if (!(await ownsFolder(user.id, folderId))) return fail("That folder was not found.");
+  if (!(await ownsFolder(ownerId, folderId))) return fail("That folder was not found.");
   const { rows } = await pool.query<{
     name: string;
     ext: string | null;
@@ -266,20 +274,20 @@ export async function copyToLibrary(deliveryFileIds: string[], folderId: string 
        join "deliverySection" s on s."id" = f."sectionId"
        join "delivery" d on d."id" = s."deliveryId"
       where f."id" = any($1::uuid[]) and d."ownerId" = $2 and f."storageKey" is not null`,
-    [files, user.id],
+    [files, ownerId],
   );
   const total = rows.reduce((sum, row) => sum + Number(row.sizeBytes), 0);
-  if (!(await roomFor(user.id, total))) return fail(`This would pass your ${formatSize(storageLimits.accountBytes)} of storage.`);
+  if (!(await roomFor(ownerId, total))) return fail(`This would pass your ${formatSize(storageLimits.accountBytes)} of storage.`);
   try {
     await inBatches(rows, 6, async (row) => {
       const id = randomUUID();
-      const key = newLibraryKey(user.id, id);
+      const key = newLibraryKey(ownerId, id);
       await copyObject(row.storageKey, key);
       const thumbKey = row.thumbKey ? await copyThumb(row.thumbKey, `${key}-thumb`) : null;
       await pool.query(
         `insert into "libraryFile" ("id", "ownerId", "folderId", "name", "ext", "sizeBytes", "mimeType", "storageKey", "thumbKey")
          values ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-        [id, user.id, folderId, row.ext ? `${row.name}.${row.ext}` : row.name, row.ext, row.sizeBytes, row.mimeType, key, thumbKey],
+        [id, ownerId, folderId, row.ext ? `${row.name}.${row.ext}` : row.name, row.ext, row.sizeBytes, row.mimeType, key, thumbKey],
       );
     });
   } catch (error) {
@@ -296,7 +304,8 @@ export type SendInput = { title: string; sections: { title: string; fileIds: str
 // Makes a draft delivery from library files: each group becomes a section, and every file is copied inside storage,
 // so the delivery and the library can each change or delete their copy without touching the other.
 export async function sendAsDelivery(input: SendInput): Promise<Created> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   if (!storageConfigured()) return fail("File storage is not connected yet.");
   const title = cleanName(input?.title, "The delivery name");
   if ("error" in title) return fail(title.error);
@@ -321,13 +330,13 @@ export async function sendAsDelivery(input: SendInput): Promise<Created> {
   }>(
     `select "id", "name", "ext", "sizeBytes", "mimeType", "storageKey", "thumbKey" from "libraryFile"
       where "id" = any($1::uuid[]) and "ownerId" = $2 and "storageKey" is not null`,
-    [all, user.id],
+    [all, ownerId],
   );
   const byId = new Map(rows.map((row) => [row.id, row]));
   const total = rows.reduce((sum, row) => sum + Number(row.sizeBytes), 0);
-  if (!(await roomFor(user.id, total))) return fail(`This would pass your ${formatSize(storageLimits.accountBytes)} of storage.`);
+  if (!(await roomFor(ownerId, total))) return fail(`This would pass your ${formatSize(storageLimits.accountBytes)} of storage.`);
 
-  const deliveryId = await createDeliveryRow(user.id, title.value, null);
+  const deliveryId = await createDeliveryRow(ownerId, title.value, null);
   const first = await pool.query<{ id: string }>(`select "id" from "deliverySection" where "deliveryId" = $1 limit 1`, [deliveryId]);
   const made: string[] = [];
   try {
@@ -367,7 +376,7 @@ export async function sendAsDelivery(input: SendInput): Promise<Created> {
     }
   } catch (error) {
     console.error("Could not make a delivery from library files", error);
-    await pool.query(`delete from "delivery" where "id" = $1 and "ownerId" = $2`, [deliveryId, user.id]);
+    await pool.query(`delete from "delivery" where "id" = $1 and "ownerId" = $2`, [deliveryId, ownerId]);
     await deleteObjects(made);
     return fail("The files could not be copied into a delivery. Try again.");
   }
@@ -399,7 +408,8 @@ function partSizes(size: number): number[] {
 }
 
 export async function beginLibraryUpload(input: BeginLibraryUploadInput): Promise<BeginUploadResult> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   if (!storageConfigured()) return fail("File storage is not connected yet.");
   const size = input.size;
   if (!Number.isSafeInteger(size) || size < 1) return fail("This file is empty.");
@@ -407,16 +417,16 @@ export async function beginLibraryUpload(input: BeginLibraryUploadInput): Promis
   const raw = typeof input.name === "string" ? (input.name.split(/[\\/]/).pop() ?? "") : "";
   const name = cleanName(raw, "The file name");
   if ("error" in name) return fail(name.error);
-  if (!(await ownsFolder(user.id, input.folderId ?? null))) return fail("That folder was not found.");
+  if (!(await ownsFolder(ownerId, input.folderId ?? null))) return fail("That folder was not found.");
   const collectionId = input.collectionId ?? null;
-  if (collectionId && !(await ownsFolder(user.id, collectionId, "collection"))) return fail("That collection was not found.");
-  if (!(await roomFor(user.id, size))) {
+  if (collectionId && !(await ownsFolder(ownerId, collectionId, "collection"))) return fail("That collection was not found.");
+  if (!(await roomFor(ownerId, size))) {
     return fail(`This would pass your ${formatSize(storageLimits.accountBytes)} of storage. Remove a file or upload less.`);
   }
   const type = typePattern.test(input.type) ? input.type.toLowerCase() : "application/octet-stream";
 
   const fileId = randomUUID();
-  const key = newLibraryKey(user.id, fileId);
+  const key = newLibraryKey(ownerId, fileId);
   const multipart = size > storageLimits.singleUploadMaxBytes;
   const thumbSize =
     typeof input.thumbSize === "number" &&
@@ -443,7 +453,7 @@ export async function beginLibraryUpload(input: BeginLibraryUploadInput): Promis
     };
     await pool.query(`insert into "libraryFile" ("id", "ownerId", "folderId", "name", "ext", "pending") values ($1, $2, $3, $4, $5, $6)`, [
       fileId,
-      user.id,
+      ownerId,
       input.folderId ?? null,
       name.value,
       ext,
@@ -462,17 +472,18 @@ export async function beginLibraryUpload(input: BeginLibraryUploadInput): Promis
   } catch (error) {
     console.error("Could not start a library upload", error);
     if (uploadId) await discardPending({ key, uploadId, size, type, ext: null, at: "", thumbKey });
-    await pool.query(`delete from "libraryFile" where "id" = $1 and "ownerId" = $2`, [fileId, user.id]);
+    await pool.query(`delete from "libraryFile" where "id" = $1 and "ownerId" = $2`, [fileId, ownerId]);
     return fail("Storage did not respond. Try again in a moment.");
   }
 }
 
 export async function completeLibraryUpload(fileId: string): Promise<Result> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   if (!isUuid(fileId)) return fail("This file was not found.");
   const { rows } = await pool.query<{ pending: (PendingUpload & { collectionId?: string }) | null }>(
     `select "pending" from "libraryFile" where "id" = $1 and "ownerId" = $2`,
-    [fileId, user.id],
+    [fileId, ownerId],
   );
   const pending = rows[0]?.pending;
   if (!pending) return fail("There is no upload in progress for this file.");
@@ -507,7 +518,7 @@ export async function completeLibraryUpload(fileId: string): Promise<Result> {
       `insert into "libraryCollectionItem" ("collectionId", "fileId")
        select $1, $2 where exists (select 1 from "libraryFolder" where "id" = $1 and "ownerId" = $3)
        on conflict do nothing`,
-      [pending.collectionId, fileId, user.id],
+      [pending.collectionId, fileId, ownerId],
     );
   }
   refresh();
@@ -515,11 +526,12 @@ export async function completeLibraryUpload(fileId: string): Promise<Result> {
 }
 
 export async function abortLibraryUpload(fileId: string): Promise<Result> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   if (!isUuid(fileId)) return fail("This file was not found.");
   const { rows } = await pool.query<{ pending: PendingUpload | null; storageKey: string | null }>(
     `select "pending", "storageKey" from "libraryFile" where "id" = $1 and "ownerId" = $2`,
-    [fileId, user.id],
+    [fileId, ownerId],
   );
   if (!rows[0]) return fail("This file was not found.");
   if (rows[0].pending) await discardPending(rows[0].pending);

@@ -1,30 +1,32 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { PageSkeleton } from "@/components/workspace/PageSkeleton";
 import { DeliveryEditor } from "@/components/deliveries/DeliveryEditor";
 import { getDeliveryForOwner } from "@/lib/deliveries";
 import { getActivity } from "@/lib/delivery-events";
 import { listRequests } from "@/lib/requests";
-import { requireUser } from "@/lib/session";
-import { brandFrom, getStudio, ownerLogoPath } from "@/lib/studio";
+import { getWorkspace } from "@/lib/team";
+import { brandFrom, getStudio, workspaceLogoPath } from "@/lib/studio";
 
 export const maxDuration = 60;
 
 export const metadata: Metadata = { title: "Edit delivery" };
 
 async function Editor({ params }: Pick<PageProps<"/deliveries/[id]">, "params">) {
-  const user = await requireUser();
+  const workspace = await getWorkspace();
   const { id } = await params;
-  const delivery = await getDeliveryForOwner(id, user.id);
+  // A viewer on the team sees the delivery the way the client does, with nothing to change.
+  if (!workspace.canEdit) redirect(`/deliveries/${id}/preview`);
+  const delivery = await getDeliveryForOwner(id, workspace.ownerId);
   if (!delivery) notFound();
   const [activity, requests, studio] = await Promise.all([
-    getActivity(delivery.id, user.id),
-    listRequests(user.id, { deliveryId: delivery.id }),
-    getStudio(user.id),
+    getActivity(delivery.id, workspace.ownerId),
+    listRequests(workspace.ownerId, { deliveryId: delivery.id }),
+    getStudio(workspace.ownerId),
   ]);
-  const brand = brandFrom(studio, ownerLogoPath);
-  return <DeliveryEditor delivery={delivery} activity={activity} requests={requests} brand={brand} senderName={brand.name ?? user.name} />;
+  const brand = brandFrom(studio, workspaceLogoPath(workspace.ownerId));
+  return <DeliveryEditor delivery={delivery} activity={activity} requests={requests} brand={brand} senderName={brand.name ?? workspace.name} />;
 }
 
 export default function DeliveryPage({ params }: PageProps<"/deliveries/[id]">) {

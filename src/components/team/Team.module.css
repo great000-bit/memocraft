@@ -1,0 +1,187 @@
+/* Teams: the sidebar switch, the "you are in someone else's workspace" line, and the Team page's lists. */
+
+.switcher {
+  display: grid;
+  gap: 4px;
+  padding: 0 4px;
+}
+
+.switcher[data-pending] {
+  opacity: 0.6;
+}
+
+.switcherLabel {
+  padding: 0 var(--space-3);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.switcherSelect {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--sunken);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.switcherSelect:focus-visible {
+  outline: 2px solid var(--field-focus);
+  outline-offset: 2px;
+}
+
+/* Collapsed rail: there is no room for a select, the Team page still switches. */
+[data-collapsed="true"] .switcher {
+  display: none;
+}
+
+.banner {
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--sunken);
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--text-muted);
+}
+
+.banner strong {
+  color: var(--text);
+}
+
+.banner span {
+  flex: 1;
+  min-width: 0;
+}
+
+.bannerLink {
+  flex: none;
+  font-weight: 600;
+  color: var(--fixer-ink, var(--fixer));
+}
+
+.inviteRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: end;
+  gap: var(--space-2);
+}
+
+@media (max-width: 640px) {
+  .inviteRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.select {
+  min-height: 48px;
+  padding: 0 var(--space-3);
+  font: inherit;
+  font-size: 16px;
+  color: var(--text);
+  background: var(--sunken);
+  border: 1px solid transparent;
+  border-radius: 12px;
+}
+
+.select:focus-visible {
+  outline: 2px solid var(--field-focus);
+  outline-offset: 2px;
+}
+
+.people {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+
+.person {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line);
+}
+
+.person:first-child {
+  border-top: 0;
+}
+
+.who {
+  flex: 1 1 220px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.whoText {
+  min-width: 0;
+  display: grid;
+}
+
+.whoName {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.whoEmail {
+  font-size: 14px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge {
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--sunken);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.link {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.link input {
+  flex: 1;
+  min-width: 0;
+}
+
+.roles {
+  margin: 0;
+  padding-left: 1.2em;
+  display: grid;
+  gap: 4px;
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--text-muted);
+}

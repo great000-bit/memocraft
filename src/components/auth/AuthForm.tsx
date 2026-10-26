@@ -10,6 +10,8 @@ type AuthFormProps = {
   mode: "login" | "signup";
   // Set by the page from what the server has keys for, so a button never promises something that cannot work.
   googleEnabled?: boolean;
+  // Where to land after signing in, when not the dashboard. Only paths /api/drive/connected allows.
+  next?: string;
 };
 
 // Google sends people back here with ?error=<code> when it could not sign them in. The most likely cause is an
@@ -32,7 +34,7 @@ function GoogleReturnNotice() {
 }
 
 // Google is the only way in; the same button signs up a new creative. It talks to /api/auth so the attempt limits apply.
-export function AuthForm({ mode, googleEnabled = false }: AuthFormProps) {
+export function AuthForm({ mode, googleEnabled = false, next = "/dashboard" }: AuthFormProps) {
   const pathname = usePathname();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -45,8 +47,8 @@ export function AuthForm({ mode, googleEnabled = false }: AuthFormProps) {
         provider: "google",
         // Google also asks for permission to save copies into a Memocraft folder in their Drive.
         ...driveSignIn,
-        callbackURL: "/api/drive/connected?from=signin&to=/dashboard",
-        newUserCallbackURL: "/api/drive/connected?from=signin&to=/dashboard",
+        callbackURL: `/api/drive/connected?from=signin&to=${encodeURIComponent(next)}`,
+        newUserCallbackURL: `/api/drive/connected?from=signin&to=${encodeURIComponent(next)}`,
         // A failed attempt comes back to this page, where GoogleReturnNotice explains it.
         errorCallbackURL: pathname,
       });

@@ -6,7 +6,7 @@ import { pool } from "./auth";
 import { limits } from "./delivery-limits";
 import { createDeliveryRow, isUuid } from "./deliveries";
 import { hashPassword, passwordProblem } from "./link-access";
-import { requireUser } from "./session";
+import { editableOwnerId, viewOnlyError } from "./team";
 import { removeStored, type PendingUpload } from "./storage";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
@@ -50,27 +50,30 @@ function refresh(deliveryId: string) {
 }
 
 export async function createDelivery(_previous: ActionResult | null, formData: FormData): Promise<ActionResult> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   const title = clean(formData.get("title"), deliveryFields.title);
   if ("error" in title) return fail(title.error);
   const client = clean(formData.get("clientName"), deliveryFields.clientName);
   if ("error" in client) return fail(client.error);
-  const id = await createDeliveryRow(user.id, title.value as string, client.value);
+  const id = await createDeliveryRow(ownerId, title.value as string, client.value);
   // The editor opens with a "Delivery created" pop-up; it drops the flag from the address once it has shown.
   redirect(`/deliveries/${id}?created=1`);
 }
 
-// Every action below checks ownership in SQL: the row is only touched when it belongs to the signed-in user.
+// Every action below checks ownership in SQL: the row is only touched when it belongs to the workspace the signed-in
+// person is working in (their own, or a team they edit for).
 
 export async function saveDeliveryField(deliveryId: string, field: string, input: string): Promise<ActionResult> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   const rule = ruleFor(deliveryFields, field);
   if (!rule || !isUuid(deliveryId)) return fail("That field cannot be edited.");
   const cleaned = clean(input, rule);
   if ("error" in cleaned) return fail(cleaned.error);
   const result = await pool.query(
     `update "delivery" set "${rule.column}" = $1, "updatedAt" = now() where "id" = $2 and "ownerId" = $3`,
-    [cleaned.value, deliveryId, user.id],
+    [cleaned.value, deliveryId, ownerId],
   );
   if (!result.rowCount) return fail("This delivery was not found.");
   revalidatePath("/dashboard");
@@ -79,7 +82,8 @@ export async function saveDeliveryField(deliveryId: string, field: string, input
 }
 
 export async function saveSectionField(sectionId: string, field: string, input: string): Promise<ActionResult> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   const rule = ruleFor(sectionFields, field);
   if (!rule || !isUuid(sectionId)) return fail("That field cannot be edited.");
   const cleaned = clean(input, rule);
@@ -93,14 +97,15 @@ export async function saveSectionField(sectionId: string, field: string, input: 
        update "deliverySection" s set "${rule.column}" = $1 from target where s."id" = target."id" returning s."id"
      )
      update "delivery" d set "updatedAt" = now() from target where d."id" = target."deliveryId"`,
-    [cleaned.value, sectionId, user.id],
+    [cleaned.value, sectionId, ownerId],
   );
   if (!result.rowCount) return fail("This section was not found.");
   return done;
 }
 
 export async function saveFileField(fileId: string, field: string, input: string): Promise<ActionResult> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   const rule = ruleFor(fileFields, field);
   if (!rule || !isUuid(fileId)) return fail("That field cannot be edited.");
   const cleaned = clean(input, rule);
@@ -115,14 +120,15 @@ export async function saveFileField(fileId: string, field: string, input: string
        update "deliveryFile" f set "${rule.column}" = $1 from target where f."id" = target."id" returning f."id"
      )
      update "delivery" d set "updatedAt" = now() from target where d."id" = target."deliveryId"`,
-    [cleaned.value, fileId, user.id],
+    [cleaned.value, fileId, ownerId],
   );
   if (!result.rowCount) return fail("This file was not found.");
   return done;
 }
 
 export async function addSection(deliveryId: string): Promise<ActionResult> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   if (!isUuid(deliveryId)) return fail("This delivery was not found.");
   const result = await pool.query(
     `with owned as (select "id" from "delivery" where "id" = $1 and "ownerId" = $2),
@@ -133,7 +139,7 @@ export async function addSection(deliveryId: string): Promise<ActionResult> {
               from owned o returning "deliveryId"
           )
      update "delivery" d set "updatedAt" = now() from added where d."id" = added."deliveryId"`,
-    [deliveryId, user.id],
+    [deliveryId, ownerId],
   );
   if (!result.rowCount) return fail("This delivery was not found.");
   refresh(deliveryId);
@@ -148,12 +154,13 @@ type StoredVersion = { storageKey: string; thumbKey: string | null };
 const asStored = (version: StoredVersion): StoredFile => ({ storageKey: version.storageKey, thumbKey: version.thumbKey, pending: null });
 
 export async function deleteSection(sectionId: string): Promise<ActionResult> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   if (!isUuid(sectionId)) return fail("This section was not found.");
   const section = await pool.query<{ deliveryId: string }>(
     `select s."deliveryId" from "deliverySection" s join "delivery" d on d."id" = s."deliveryId"
       where s."id" = $1 and d."ownerId" = $2`,
-    [sectionId, user.id],
+    [sectionId, ownerId],
   );
   const deliveryId = section.rows[0]?.deliveryId;
   if (!deliveryId) return fail("This section was not found.");
@@ -174,7 +181,8 @@ export async function deleteSection(sectionId: string): Promise<ActionResult> {
 }
 
 export async function deleteFile(fileId: string): Promise<ActionResult> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   if (!isUuid(fileId)) return fail("This file was not found.");
   const file = await pool.query<StoredFile & { deliveryId: string }>(
     `select f."storageKey", f."thumbKey", f."enhancedKey", f."pending", s."deliveryId"
@@ -182,7 +190,7 @@ export async function deleteFile(fileId: string): Promise<ActionResult> {
        join "deliverySection" s on s."id" = f."sectionId"
        join "delivery" d on d."id" = s."deliveryId"
       where f."id" = $1 and d."ownerId" = $2`,
-    [fileId, user.id],
+    [fileId, ownerId],
   );
   const row = file.rows[0];
   if (!row) return fail("This file was not found.");
@@ -195,13 +203,14 @@ export async function deleteFile(fileId: string): Promise<ActionResult> {
 }
 
 export async function setPublished(deliveryId: string, published: boolean): Promise<ActionResult> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   if (!isUuid(deliveryId)) return fail("This delivery was not found.");
   const result = await pool.query(
     `update "delivery"
         set "status" = $1, "updatedAt" = now(), "publishedAt" = case when $2 then coalesce("publishedAt", now()) else "publishedAt" end
       where "id" = $3 and "ownerId" = $4`,
-    [published ? "published" : "draft", published, deliveryId, user.id],
+    [published ? "published" : "draft", published, deliveryId, ownerId],
   );
   if (!result.rowCount) return fail("This delivery was not found.");
   refresh(deliveryId);
@@ -212,7 +221,8 @@ const longestExpiryDays = 5 * 366;
 
 // The browser sends the end of the day the creative picked, in their own time zone, as an ISO time. Null removes it.
 export async function setLinkExpiry(deliveryId: string, expiresAt: string | null): Promise<ActionResult> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   if (!isUuid(deliveryId)) return fail("This delivery was not found.");
   let when: Date | null = null;
   if (expiresAt !== null) {
@@ -224,7 +234,7 @@ export async function setLinkExpiry(deliveryId: string, expiresAt: string | null
   const result = await pool.query(`update "delivery" set "expiresAt" = $1 where "id" = $2 and "ownerId" = $3`, [
     when,
     deliveryId,
-    user.id,
+    ownerId,
   ]);
   if (!result.rowCount) return fail("This delivery was not found.");
   refresh(deliveryId);
@@ -233,7 +243,8 @@ export async function setLinkExpiry(deliveryId: string, expiresAt: string | null
 
 // Null removes the password. A new password also clears any lock left by wrong guesses on the old one.
 export async function setLinkPassword(deliveryId: string, password: string | null): Promise<ActionResult> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   if (!isUuid(deliveryId)) return fail("This delivery was not found.");
   let hash: string | null = null;
   if (password !== null) {
@@ -245,7 +256,7 @@ export async function setLinkPassword(deliveryId: string, password: string | nul
   const result = await pool.query(
     `update "delivery" set "passwordHash" = $1, "passwordFailures" = 0, "passwordLockedUntil" = null
       where "id" = $2 and "ownerId" = $3`,
-    [hash, deliveryId, user.id],
+    [hash, deliveryId, ownerId],
   );
   if (!result.rowCount) return fail("This delivery was not found.");
   refresh(deliveryId);
@@ -254,14 +265,15 @@ export async function setLinkPassword(deliveryId: string, password: string | nul
 
 // A note about what changed, shown to the client above the files. The link stays the same.
 export async function postUpdate(deliveryId: string, note: string): Promise<ActionResult> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   if (!isUuid(deliveryId)) return fail("This delivery was not found.");
   const cleaned = clean(note, { column: "note", max: limits.update, required: true, label: "The update" });
   if ("error" in cleaned) return fail(cleaned.error);
   const result = await pool.query(
     `insert into "deliveryUpdate" ("deliveryId", "note")
      select d."id", $1 from "delivery" d where d."id" = $2 and d."ownerId" = $3`,
-    [cleaned.value, deliveryId, user.id],
+    [cleaned.value, deliveryId, ownerId],
   );
   if (!result.rowCount) return fail("This delivery was not found.");
   refresh(deliveryId);
@@ -269,13 +281,14 @@ export async function postUpdate(deliveryId: string, note: string): Promise<Acti
 }
 
 export async function deleteUpdate(updateId: string): Promise<ActionResult> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   if (!isUuid(updateId)) return fail("This update was not found.");
   const result = await pool.query<{ deliveryId: string }>(
     `delete from "deliveryUpdate" u using "delivery" d
       where u."id" = $1 and d."id" = u."deliveryId" and d."ownerId" = $2
       returning u."deliveryId"`,
-    [updateId, user.id],
+    [updateId, ownerId],
   );
   if (!result.rows[0]) return fail("This update was not found.");
   refresh(result.rows[0].deliveryId);
@@ -285,9 +298,10 @@ export async function deleteUpdate(updateId: string): Promise<ActionResult> {
 // Removes the delivery, its files and everything a client did on it, and clears the files from storage. The editor
 // asks twice before calling this.
 export async function deleteDelivery(deliveryId: string): Promise<ActionResult> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   if (!isUuid(deliveryId)) return fail("This delivery was not found.");
-  const owned = await pool.query(`select 1 from "delivery" where "id" = $1 and "ownerId" = $2`, [deliveryId, user.id]);
+  const owned = await pool.query(`select 1 from "delivery" where "id" = $1 and "ownerId" = $2`, [deliveryId, ownerId]);
   if (!owned.rowCount) return fail("This delivery was not found.");
   const files = await pool.query<StoredFile>(
     `select f."storageKey", f."thumbKey", f."enhancedKey", f."pending"
@@ -305,7 +319,7 @@ export async function deleteDelivery(deliveryId: string): Promise<ActionResult> 
   );
   const removed = await pool.query<{ coverKey: string | null }>(
     `delete from "delivery" where "id" = $1 and "ownerId" = $2 returning "cover"->>'key' as "coverKey"`,
-    [deliveryId, user.id],
+    [deliveryId, ownerId],
   );
   if (!removed.rowCount) return fail("This delivery was not found.");
   const coverKey = removed.rows[0]?.coverKey;

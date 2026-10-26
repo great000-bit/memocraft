@@ -4,20 +4,20 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ClientView } from "@/components/deliveries/ClientView";
 import { getDeliveryForOwner } from "@/lib/deliveries";
-import { requireUser } from "@/lib/session";
-import { brandFrom, getStudio, ownerLogoPath } from "@/lib/studio";
+import { getWorkspace } from "@/lib/team";
+import { brandFrom, getStudio, workspaceLogoPath } from "@/lib/studio";
 import { ownerCoverLink, ownerThumbnailLinks } from "@/lib/thumbnails";
 import styles from "@/components/workspace/Workspace.module.css";
 
 export const metadata: Metadata = { title: "Preview" };
 
 async function Preview({ params }: Pick<PageProps<"/deliveries/[id]/preview">, "params">) {
-  const user = await requireUser();
+  const workspace = await getWorkspace();
   const { id } = await params;
-  const delivery = await getDeliveryForOwner(id, user.id);
+  const delivery = await getDeliveryForOwner(id, workspace.ownerId);
   if (!delivery) notFound();
-  const [thumbs, studio] = await Promise.all([ownerThumbnailLinks(delivery), getStudio(user.id)]);
-  const brand = brandFrom(studio, ownerLogoPath);
+  const [thumbs, studio] = await Promise.all([ownerThumbnailLinks(delivery), getStudio(workspace.ownerId)]);
+  const brand = brandFrom(studio, workspaceLogoPath(workspace.ownerId));
   const coverSrc = await ownerCoverLink(delivery, thumbs);
   return (
     <>
@@ -25,12 +25,18 @@ async function Preview({ params }: Pick<PageProps<"/deliveries/[id]/preview">, "
         <p>
           Preview: this is what your client sees. {delivery.status === "published" ? "It is published." : "It is still a draft, so the link is off."}
         </p>
-        <Link href={`/deliveries/${delivery.id}`} className={styles.previewBack}>
-          Back to editing
-        </Link>
+        {workspace.canEdit ? (
+          <Link href={`/deliveries/${delivery.id}`} className={styles.previewBack}>
+            Back to editing
+          </Link>
+        ) : (
+          <Link href="/deliveries" className={styles.previewBack}>
+            All deliveries
+          </Link>
+        )}
       </div>
       <div className={`site-scope ${styles.previewFrame}`}>
-        <ClientView delivery={delivery} senderName={brand.name ?? user.name} brand={brand} thumbs={thumbs} coverSrc={coverSrc} />
+        <ClientView delivery={delivery} senderName={brand.name ?? workspace.name} brand={brand} thumbs={thumbs} coverSrc={coverSrc} />
       </div>
     </>
   );

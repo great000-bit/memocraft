@@ -4,14 +4,13 @@ import { PageSkeleton } from "@/components/workspace/PageSkeleton";
 import { RequestList } from "@/components/deliveries/RequestList";
 import requestStyles from "@/components/deliveries/Requests.module.css";
 import { listRequests } from "@/lib/requests";
-import { requireUser } from "@/lib/session";
+import { workspaceOwnerId } from "@/lib/team";
 import styles from "@/components/workspace/Workspace.module.css";
 
 export const metadata: Metadata = { title: "Requests" };
 
 async function All() {
-  const user = await requireUser();
-  const requests = await listRequests(user.id);
+  const requests = await listRequests(await workspaceOwnerId());
   if (requests.length === 0) {
     return (
       <p className={requestStyles.empty}>

@@ -738,3 +738,9 @@
 a.signOut {
   text-decoration: none;
 }
+
+/* The workspace switch sits right above the pages it changes. */
+.navStack {
+  display: grid;
+  gap: var(--space-4);
+}

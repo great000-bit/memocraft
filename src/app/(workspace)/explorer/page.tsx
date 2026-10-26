@@ -3,13 +3,12 @@ import { Suspense } from "react";
 import { ExplorerShell } from "@/components/explorer/ExplorerShell";
 import { PageSkeleton } from "@/components/workspace/PageSkeleton";
 import { loadExplorer } from "@/lib/library";
-import { requireUser } from "@/lib/session";
+import { workspaceOwnerId } from "@/lib/team";
 
 export const metadata: Metadata = { title: "Memo Explorer" };
 
 async function Library({ searchParams }: { searchParams: PageProps<"/explorer">["searchParams"] }) {
-  const user = await requireUser();
-  const [data, params] = await Promise.all([loadExplorer(user.id), searchParams]);
+  const [data, params] = await Promise.all([loadExplorer(await workspaceOwnerId()), searchParams]);
   const at = typeof params.at === "string" ? params.at : null;
   return <ExplorerShell data={data} initialAt={at} />;
 }
