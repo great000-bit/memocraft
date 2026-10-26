@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import type { ExFile, ExFolder, ExplorerData } from "@/lib/library";
 import {
   addToCollection,
@@ -940,6 +941,7 @@ export function Explorer({ data, initialAt }: { data: ExplorerData; initialAt: s
     <div
       className={styles.window}
       data-wide
+      data-explorer-window
       data-busy={busy ? "true" : undefined}
       data-preview={prefs.preview ? "true" : undefined}
       data-tree={treeOpen ? "open" : undefined}
@@ -1609,22 +1611,44 @@ type DropdownItem =
   | { separator: true }
   | { label: string; icon?: ExIconName; checked?: boolean; disabled?: boolean; hint?: string; onSelect: () => void; separator?: undefined };
 
+// The toolbar scrolls sideways on narrow screens, which clips anything hanging out of it, so the open menu is drawn on
+// the explorer window itself, placed under its button.
 function Dropdown({ label, icon, items, primary }: { label: string; icon: ExIconName; items: DropdownItem[]; primary?: boolean }) {
-  const [open, setOpen] = useState(false);
+  const [anchor, setAnchor] = useState<{ host: HTMLElement; top: number; left?: number; right?: number } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const open = anchor !== null;
   useEffect(() => {
     if (!open) return;
     const close = (event: PointerEvent) => {
-      if (!ref.current?.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      if (!ref.current?.contains(target) && !menuRef.current?.contains(target)) setAnchor(null);
     };
-    const key = (event: KeyboardEvent) => event.key === "Escape" && setOpen(false);
+    const key = (event: KeyboardEvent) => event.key === "Escape" && setAnchor(null);
+    const dismiss = () => setAnchor(null);
     window.addEventListener("pointerdown", close);
     window.addEventListener("keydown", key);
+    window.addEventListener("resize", dismiss);
     return () => {
       window.removeEventListener("pointerdown", close);
       window.removeEventListener("keydown", key);
+      window.removeEventListener("resize", dismiss);
     };
   }, [open]);
+
+  const toggle = (button: HTMLButtonElement) => {
+    if (open) return setAnchor(null);
+    const host = button.closest<HTMLElement>("[data-explorer-window]");
+    if (!host) return;
+    const box = button.getBoundingClientRect();
+    const frame = host.getBoundingClientRect();
+    const top = box.bottom - frame.top + 6;
+    const left = box.left - frame.left;
+    // Flip to the button's right edge when a menu would run past the window.
+    if (left + 240 > frame.width) setAnchor({ host, top, right: Math.max(8, frame.right - box.right) });
+    else setAnchor({ host, top, left });
+  };
+
   return (
     <div className={styles.dropdown} ref={ref}>
       <button
@@ -1632,40 +1656,53 @@ function Dropdown({ label, icon, items, primary }: { label: string; icon: ExIcon
         className={primary ? styles.newButton : styles.tool}
         aria-haspopup="menu"
         aria-expanded={open}
-        onClick={() => setOpen((value) => !value)}
+        onClick={(event) => toggle(event.currentTarget)}
       >
         <ExIcon name={icon} />
         <span>{label}</span>
         <ExIcon name="chevronDown" size={13} />
       </button>
-      {open && (
-        <div className={styles.menu} role="menu" data-anchored="true">
-          {items.map((item, index) =>
-            item.separator ? (
-              <span key={index} className={styles.menuSeparator} role="separator" />
-            ) : (
-              <button
-                key={item.label}
-                type="button"
-                role={item.checked !== undefined ? "menuitemcheckbox" : "menuitem"}
-                aria-checked={item.checked}
-                className={styles.menuItem}
-                disabled={item.disabled}
-                onClick={() => {
-                  setOpen(false);
-                  item.onSelect();
-                }}
-              >
-                <span className={styles.menuIcon}>
-                  {item.checked ? <ExIcon name="check" size={15} /> : item.icon ? <ExIcon name={item.icon} size={16} /> : null}
-                </span>
-                <span>{item.label}</span>
-                {item.hint && <span className={styles.menuHint}>{item.hint}</span>}
-              </button>
-            ),
-          )}
-        </div>
-      )}
+      {anchor &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className={styles.menu}
+            role="menu"
+            data-anchored="true"
+            style={{
+              top: anchor.top,
+              left: anchor.left ?? "auto",
+              right: anchor.right ?? "auto",
+              transformOrigin: anchor.right !== undefined ? "top right" : undefined,
+            }}
+          >
+            {items.map((item, index) =>
+              item.separator ? (
+                <span key={index} className={styles.menuSeparator} role="separator" />
+              ) : (
+                <button
+                  key={item.label}
+                  type="button"
+                  role={item.checked !== undefined ? "menuitemcheckbox" : "menuitem"}
+                  aria-checked={item.checked}
+                  className={styles.menuItem}
+                  disabled={item.disabled}
+                  onClick={() => {
+                    setAnchor(null);
+                    item.onSelect();
+                  }}
+                >
+                  <span className={styles.menuIcon}>
+                    {item.checked ? <ExIcon name="check" size={15} /> : item.icon ? <ExIcon name={item.icon} size={16} /> : null}
+                  </span>
+                  <span>{item.label}</span>
+                  {item.hint && <span className={styles.menuHint}>{item.hint}</span>}
+                </button>
+              ),
+            )}
+          </div>,
+          anchor.host,
+        )}
     </div>
   );
 }
