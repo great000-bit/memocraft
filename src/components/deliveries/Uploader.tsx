@@ -25,9 +25,9 @@ type Job = {
 // What the quality check said about a picture that has been dropped, kept after its upload card has gone.
 type Note = { id: string; name: string; notes: string[] };
 
-type Picture = { thumb: Blob | null; notes: string[] };
+export type Picture = { thumb: Blob | null; notes: string[] };
 
-class UploadError extends Error {}
+export class UploadError extends Error {}
 
 const FILES_AT_ONCE = 3;
 const PARTS_AT_ONCE = 3;
@@ -91,13 +91,13 @@ async function renderThumbnail(file: File): Promise<Picture> {
 }
 
 // One picture is decoded at a time, so dropping hundreds does not hold hundreds of decoded images in memory.
-function makeThumbnail(file: File): Promise<Picture> {
+export function makeThumbnail(file: File): Promise<Picture> {
   const next = thumbQueue.then(() => renderThumbnail(file));
   thumbQueue = next;
   return next;
 }
 
-function put(url: string, body: Blob, contentType: string | null, signal: AbortSignal, onProgress: (loaded: number) => void) {
+export function put(url: string, body: Blob, contentType: string | null, signal: AbortSignal, onProgress: (loaded: number) => void) {
   return new Promise<void>((resolve, reject) => {
     const request = new XMLHttpRequest();
     request.open("PUT", url);
@@ -130,7 +130,7 @@ async function putPart(url: string, body: Blob, signal: AbortSignal, onProgress:
   }
 }
 
-async function uploadParts(
+export async function uploadParts(
   file: File,
   parts: { number: number; url: string; size: number }[],
   signal: AbortSignal,
