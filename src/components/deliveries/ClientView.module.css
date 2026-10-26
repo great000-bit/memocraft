@@ -1,15 +1,23 @@
 /* What a client sees. The page answers to its own width, not the screen's, so the owner's preview inside the workspace
    lays out exactly as the public link does at that width. */
+/* OLED black, like a phone's always-on screen: true black everywhere so the pictures carry the colour, hairline
+   edges instead of shadows, and the teal and amber kept for marks and the one strong button. */
 .page {
   container: page / inline-size;
   width: 100%;
-  background:
-    radial-gradient(900px 440px at 88% -80px, rgb(63 190 168 / 0.12), transparent 70%),
-    radial-gradient(720px 380px at -4% 0, rgb(232 163 61 / 0.08), transparent 70%),
-    var(--bg);
-  --lift: 0 1px 2px rgb(0 0 0 / 0.3), 0 16px 34px -20px rgb(0 0 0 / 0.7);
-  --lift-hover: 0 2px 4px rgb(0 0 0 / 0.35), 0 26px 44px -22px rgb(0 0 0 / 0.8);
-  --card-radius: 20px;
+  --bg: #000;
+  --surface: #000;
+  --sunken: #0c0c0c;
+  --line: rgb(255 255 255 / 0.1);
+  --glass: rgb(0 0 0 / 0.86);
+  --text: #f5f5f5;
+  --text-muted: #a3a3a3;
+  --text-subtle: #8a8a8a;
+  --lift: none;
+  --lift-hover: none;
+  --card-radius: 16px;
+  background: #000;
+  color: var(--text);
 }
 
 /* A bar that stays in view: whose delivery this is, and a way to ask for something from anywhere on the page. */
@@ -401,95 +409,350 @@
   overflow-wrap: anywhere;
 }
 
-/* Pictures: each keeps its own shape. Two across on a phone, up to four on a desktop. Gallery.tsx turns this plain
-   grid into a masonry; until then each row is as tall as its tallest picture. */
+/* Pictures: each keeps its own shape, edge to edge with a hairline gap like a contact sheet. Two across on a phone, up
+   to four on a desktop. Gallery.tsx turns this plain grid into a masonry; until then each row is as tall as its
+   tallest picture. */
+.gallery {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.galleryBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  min-height: 32px;
+}
+
+.galleryHint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  color: var(--text-subtle);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.hintTouch {
+  display: none;
+}
+
+@media (hover: none) {
+  .hintMouse {
+    display: none;
+  }
+
+  .hintTouch {
+    display: inline;
+  }
+}
+
+.starCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--proof-text);
+  font-weight: 600;
+}
+
+.starCount svg {
+  width: 15px;
+  height: 15px;
+}
+
+.resetOrder {
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.resetOrder:hover {
+  border-color: var(--text-muted);
+  color: var(--text);
+}
+
 .tiles {
+  --gap: 4px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: var(--gap);
   align-items: start;
-  margin: 0;
+  margin: 0 calc(-1 * clamp(0px, 4cqi - 12px, 40px));
   padding: 0;
   list-style: none;
 }
 
 .tiles[data-masonry] {
-  grid-auto-flow: row dense;
+  grid-auto-flow: row;
   grid-auto-rows: 4px;
-  gap: 0 14px;
+  gap: 0 var(--gap);
 }
 
 .tile {
+  position: relative;
   min-width: 0;
+  outline: none;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .tiles[data-masonry] .tile {
-  padding-bottom: 14px;
+  padding-bottom: var(--gap);
 }
 
 .tileCard {
-  display: grid;
-  overflow: hidden;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--card-radius);
-  box-shadow: var(--lift);
-  transition:
-    box-shadow 220ms ease,
-    transform 220ms ease;
-}
-
-.photo {
   position: relative;
+  margin: 0;
   overflow: hidden;
+  border-radius: 3px;
   background: var(--sunken);
+  cursor: grab;
 }
 
-.photo img {
+.tiles[data-dragging] .tileCard {
+  cursor: grabbing;
+}
+
+.tileCard img {
   display: block;
   width: 100%;
   height: auto;
   aspect-ratio: auto 4 / 5;
-  transition: transform 500ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  transition:
+    transform 600ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    opacity 200ms ease;
+}
+
+.tile:focus-visible .tileCard {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* The place the moved picture will land: an outline in the brand teal where the picture was. */
+.tile[data-lifted] .tileCard {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--fixer-ink);
+}
+
+.tile[data-lifted] .tileCard > :not(img) {
+  visibility: hidden;
+}
+
+.tile[data-lifted] .tileCard img {
+  opacity: 0.12;
+}
+
+/* The copy that follows the pointer or finger while a picture is moved. */
+.ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 50;
+  overflow: hidden;
+  border-radius: 6px;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.18),
+    0 30px 60px -12px rgb(0 0 0 / 0.9);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.ghost[hidden] {
+  display: none;
+}
+
+.ghost img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.badges {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.badges .chip {
+  margin: 0;
+  padding: 1px 9px;
+  background: rgb(0 0 0 / 0.62);
+  color: #fff;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.badges .chip[data-kind="new"] {
+  background: var(--fixer);
+  color: var(--on-fixer);
+}
+
+.badges .chip[data-kind="updated"] {
+  background: var(--proof);
+  color: #3d2603;
+}
+
+/* Star, download and share on the picture's bottom corner. With a mouse they come up on hover; on a touch screen they
+   are always there, on a soft shade so they read on a bright picture. A starred picture keeps its star in view. */
+.tools {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 2px;
+  padding: 28px 6px 6px;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.55), transparent);
+  transition: opacity 180ms ease;
+}
+
+.tool {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.5));
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+.tool svg {
+  width: 21px;
+  height: 21px;
+}
+
+.tool:hover {
+  background: rgb(255 255 255 / 0.16);
+}
+
+.tool:active {
+  transform: scale(0.9);
+}
+
+.tool:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 0;
+}
+
+.tool[data-on] {
+  color: var(--proof);
+}
+
+.tool:disabled,
+.toolOff {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tool[data-phase="preparing"] {
+  animation: pulse 900ms ease-in-out infinite;
+  cursor: progress;
+}
+
+.tool[data-phase="ready"] {
+  background: var(--fixer);
+}
+
+.tool[data-phase="saved"] {
+  color: var(--fixer-ink);
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.45;
+  }
 }
 
 @media (hover: hover) {
-  .tileCard:hover {
-    box-shadow: var(--lift-hover);
-    transform: translateY(-3px);
+  .tools {
+    opacity: 0;
   }
 
-  .tileCard:hover .photo img {
-    transform: scale(1.035);
+  .tools[data-starred] {
+    opacity: 1;
+    background: none;
+  }
+
+  .tools[data-starred] .tool:not([data-on]) {
+    opacity: 0;
+  }
+
+  .tileCard:hover .tools,
+  .tile:focus-within .tools {
+    opacity: 1;
+    background: linear-gradient(to top, rgb(0 0 0 / 0.55), transparent);
+  }
+
+  .tileCard:hover .tools .tool:not([data-on]),
+  .tile:focus-within .tools .tool:not([data-on]) {
+    opacity: 1;
+  }
+
+  .tileCard:hover img {
+    transform: scale(1.025);
+  }
+
+  .tiles[data-dragging] .tileCard:hover img {
+    transform: none;
   }
 }
 
-.tileBody {
-  display: grid;
-  align-content: start;
-  gap: 2px;
-  min-width: 0;
-  padding: var(--space-3) var(--space-3) 0;
-}
-
-.tileName {
-  font-size: 15px;
+/* A small note at the foot of the screen: a link copied, a picture moved from the keyboard. */
+.toast {
+  position: fixed;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  left: 50%;
+  z-index: 60;
+  padding: 10px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: rgb(20 20 20 / 0.92);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  color: #fff;
+  font-size: 14px;
   font-weight: 600;
-  line-height: 20px;
-  overflow-wrap: anywhere;
+  opacity: 0;
+  translate: -50% 12px;
+  pointer-events: none;
+  transition:
+    opacity 200ms ease,
+    translate 200ms ease;
 }
 
-.tileActions {
-  display: grid;
-  gap: var(--space-2);
-  padding: var(--space-3);
+.toast[data-show] {
+  opacity: 1;
+  translate: -50% 0;
 }
 
-/* The ask button sits on a picture's corner as a small round control, so a long gallery is not full of the same sentence. */
+/* Asking about one file, from a document row. */
 .askIcon {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
   display: grid;
   place-items: center;
   width: 36px;
@@ -498,22 +761,13 @@
   border: 0;
   border-radius: var(--radius-pill);
   background: rgb(255 255 255 / 0.94);
-  box-shadow: 0 2px 10px rgb(0 0 0 / 0.22);
   color: #171a19;
   cursor: pointer;
-  transition:
-    background-color 150ms ease,
-    color 150ms ease;
 }
 
 .askIcon svg {
   width: 18px;
   height: 18px;
-}
-
-.askIcon:hover {
-  background: var(--fixer);
-  color: var(--on-fixer);
 }
 
 /* New and Updated marks beside a file's name, floating on a picture's corner, and on the note above the files. */
@@ -534,22 +788,6 @@
 .chip[data-kind="updated"] {
   background: var(--proof-tint);
   color: var(--proof-text);
-}
-
-.chipFloat {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  margin: 0;
-  padding: 2px 10px;
-  background: var(--fixer);
-  color: var(--on-fixer);
-  box-shadow: 0 2px 10px rgb(0 0 0 / 0.22);
-}
-
-.chipFloat[data-kind="updated"] {
-  background: var(--proof);
-  color: #3d2603;
 }
 
 /* Documents and everything else that is not a picture. */
@@ -697,34 +935,18 @@
   background: var(--sunken);
 }
 
-.tileSave,
-.tileDownload {
-  min-height: 40px;
-  padding: 0 var(--space-3);
-  border-radius: 12px;
-  font-size: 15px;
-}
-
-.tileSave {
-  min-height: 44px;
-  font-size: 16px;
-}
-
-/* On a picture the Download button is the soft one, a tint of the brand colour... */
-.tileDownload,
+/* On a document the Download button is the soft one, a tint of the brand colour... */
 .rowDownload {
   background: var(--fixer-tint);
   color: var(--fixer-ink, var(--fixer));
 }
 
-.tileDownload:hover,
 .rowDownload:hover {
   background: var(--fixer);
   color: var(--on-fixer);
 }
 
 /* ...and where the phone can save straight to its photo library that is the main button, so Download steps back. */
-.tile:has([data-save]) .tileDownload,
 .file:has([data-save]) .rowDownload {
   background: transparent;
   box-shadow: inset 0 0 0 1px var(--line);
@@ -732,13 +954,11 @@
   font-weight: 500;
 }
 
-.tile:has([data-save]) .tileDownload:hover,
 .file:has([data-save]) .rowDownload:hover {
   background: var(--sunken);
   color: var(--text);
 }
 
-.tile .downloadOff,
 .file .downloadOff {
   background: var(--sunken);
   box-shadow: none;
@@ -775,8 +995,7 @@
   text-underline-offset: 3px;
 }
 
-.askLink:focus-visible,
-.askIcon:focus-visible {
+.askLink:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
   border-radius: 8px;
@@ -786,7 +1005,7 @@
   display: grid;
   gap: var(--space-4) var(--space-12);
   padding: var(--space-6) var(--space-4);
-  background: linear-gradient(145deg, var(--fixer-tint), var(--surface) 75%);
+  background: #000;
   border: 1px solid var(--line);
   border-radius: 28px;
   box-shadow: var(--lift);
@@ -920,16 +1139,8 @@
 
 @container page (min-width: 560px) {
   .tiles {
+    --gap: 6px;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-4);
-  }
-
-  .tiles[data-masonry] {
-    gap: 0 var(--space-4);
-  }
-
-  .tiles[data-masonry] .tile {
-    padding-bottom: var(--space-4);
   }
 
   .file {
@@ -949,15 +1160,6 @@
     font-size: 16px;
   }
 
-  .tileSave {
-    min-height: 44px;
-  }
-
-  .tileSave,
-  .tileDownload {
-    padding: 0 var(--space-3);
-  }
-
   .saveAll .download {
     min-height: 52px;
     padding: 0 var(--space-6);
@@ -969,16 +1171,6 @@
 
   .askSubmit {
     justify-self: start;
-  }
-}
-
-@container page (min-width: 800px) {
-  .tileBody {
-    padding: var(--space-4) var(--space-4) 0;
-  }
-
-  .tileActions {
-    padding: var(--space-4);
   }
 }
 
@@ -1007,16 +1199,8 @@
   }
 
   .tiles {
+    --gap: 8px;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--space-6) var(--space-4);
-  }
-
-  .tiles[data-masonry] {
-    gap: 0 var(--space-4);
-  }
-
-  .tiles[data-masonry] .tile {
-    padding-bottom: var(--space-4);
   }
 }
 
@@ -1029,17 +1213,18 @@
     transform: none;
   }
 
-  .tileCard,
-  .photo img {
+  .tileCard img,
+  .tools,
+  .toast {
     transition: none;
   }
 
-  .tileCard:hover {
+  .tileCard:hover img {
     transform: none;
   }
 
-  .tileCard:hover .photo img {
-    transform: none;
+  .tool[data-phase="preparing"] {
+    animation: none;
   }
 }
 
