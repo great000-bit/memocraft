@@ -120,9 +120,29 @@ export function ClientView({
   const saveAll = [...targets.values()];
   const askable = canAsk && live;
   const [latest, ...earlier] = delivery.updates;
-  const mark = (file: DeliveryFile, floating = false) => {
+  const mark = (file: DeliveryFile) => {
     const found = fileMark(file, delivery.publishedAt);
-    return found && <span className={`${styles.chip} ${floating ? styles.chipFloat : ""}`} data-kind={found.kind}>{found.text}</span>;
+    return found && <span className={styles.chip} data-kind={found.kind}>{found.text}</span>;
+  };
+
+  // Marks on a picture's corner: New or Updated, and Enhanced when the creative improved it with AI.
+  const badges = (file: DeliveryFile) => {
+    const found = fileMark(file, delivery.publishedAt);
+    if (!found && file.enhancedBytes === null) return null;
+    return (
+      <span className={styles.badges}>
+        {found && (
+          <span className={styles.chip} data-kind={found.kind}>
+            {found.text}
+          </span>
+        )}
+        {file.enhancedBytes !== null && (
+          <span className={styles.chip} data-kind="enhanced">
+            Enhanced
+          </span>
+        )}
+      </span>
+    );
   };
 
   const files = sections.flatMap((section) => section.files);
@@ -229,52 +249,25 @@ export function ClientView({
               {section.note && <p className={styles.sectionNote}>{section.note}</p>}
             </header>
             {section.files.some((file) => thumbs[file.id]) && (
-              <Gallery>
-                {section.files
+              <Gallery
+                slug={delivery.slug}
+                section={section.id}
+                items={section.files
                   .filter((file) => thumbs[file.id])
-                  .map((file) => (
-                    <li key={file.id} className={styles.tile}>
-                      <div className={styles.tileCard}>
-                        <div className={styles.photo}>
-                          {/* eslint-disable-next-line @next/next/no-img-element -- a signed storage link, not a site asset */}
-                          <img src={thumbs[file.id]} alt={file.name} {...loadNow(file.id)} referrerPolicy="no-referrer" />
-                          {mark(file, true)}
-                          {askable && <AskAbout fileId={file.id} name={file.name} compact />}
-                        </div>
-                        <div className={styles.tileBody}>
-                          <p className={styles.tileName}>
-                            {file.name}
-                            {file.enhancedBytes !== null && (
-                              <span className={styles.chip} data-kind="enhanced">
-                                Enhanced
-                              </span>
-                            )}
-                          </p>
-                          {file.note && <p className={styles.fileNote}>{file.note}</p>}
-                          <p className={styles.fileMeta}>
-                            {fileMeta(file)}
-                            {file.enhancedBytes !== null && live && (
-                              <>
-                                {" · "}
-                                <a href={`/d/${delivery.slug}/files/${file.id}?original=1`} className={styles.originalLink}>
-                                  Original
-                                </a>
-                              </>
-                            )}
-                          </p>
-                        </div>
-                        <div className={styles.tileActions}>
-                          <SaveFile target={targets.get(file.id)} live={live} label="Save" className={`${styles.download} ${styles.tileSave}`} />
-                          <DownloadButton
-                            file={file}
-                            href={live ? `/d/${delivery.slug}/files/${file.id}` : null}
-                            className={`${styles.download} ${styles.tileDownload}`}
-                          />
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-              </Gallery>
+                  .map((file) => {
+                    const load = loadNow(file.id);
+                    return {
+                      id: file.id,
+                      name: file.name,
+                      src: thumbs[file.id],
+                      eager: load.loading === "eager",
+                      priority: load.fetchPriority === "high" ? "high" : "auto",
+                      badge: badges(file),
+                      href: live ? `/d/${delivery.slug}/files/${file.id}` : null,
+                      save: targets.get(file.id) ?? null,
+                    };
+                  })}
+              />
             )}
             {section.files.some((file) => !thumbs[file.id]) && (
               <ul className={styles.files}>
