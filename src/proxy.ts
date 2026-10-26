@@ -32,6 +32,7 @@ export const config = {
     "/notifications/:path*",
     "/profile/:path*",
     "/settings/:path*",
+    "/team/:path*",
     "/admin",
     "/admin/:path*",
   ],

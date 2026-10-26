@@ -6,6 +6,8 @@ import { DeliveryList } from "@/components/deliveries/DeliveryList";
 import { listDeliveries } from "@/lib/deliveries";
 import { countOpenRequests } from "@/lib/requests";
 import { requireUser } from "@/lib/session";
+import { workspaceOwnerId } from "@/lib/team";
+import { EditorOnly } from "@/components/workspace/TeamSwitcher";
 import { Avatar } from "@/components/workspace/Avatar";
 import { StatCards, StatCardsFallback } from "@/components/workspace/StatCards";
 import styles from "@/components/workspace/Workspace.module.css";
@@ -23,8 +25,7 @@ async function Greeting() {
 
 // A line, not a card: the three cards stay the three things the dashboard is about. It only shows when someone is waiting.
 async function WaitingRequests() {
-  const user = await requireUser();
-  const open = await countOpenRequests(user.id);
+  const open = await countOpenRequests(await workspaceOwnerId());
   if (open === 0) return null;
   return (
     <Link href="/requests" className={styles.requestsNotice}>
@@ -38,8 +39,7 @@ async function WaitingRequests() {
 }
 
 async function Recent() {
-  const user = await requireUser();
-  const deliveries = await listDeliveries(user.id, 6);
+  const deliveries = await listDeliveries(await workspaceOwnerId(), 6);
 
   if (deliveries.length === 0) {
     return (
@@ -81,7 +81,11 @@ export default function DashboardPage() {
         <Suspense fallback={<h1 className={styles.heading}>Welcome</h1>}>
           <Greeting />
         </Suspense>
-        <Button href="/deliveries/new">New delivery</Button>
+        <Suspense fallback={null}>
+          <EditorOnly>
+            <Button href="/deliveries/new">New delivery</Button>
+          </EditorOnly>
+        </Suspense>
       </div>
       <p className={styles.sub}>Your deliveries live here. Each one is a single link your clients open on any phone.</p>
       <Suspense fallback={null}>

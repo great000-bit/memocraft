@@ -7,7 +7,7 @@ import { pool } from "./auth";
 import { isUuid } from "./deliveries";
 import { queueFile, runDriveBackup } from "./drive";
 import { limits } from "./delivery-limits";
-import { requireUser } from "./session";
+import { editableOwnerId, viewOnlyError } from "./team";
 import { storageUsed } from "./storage-usage";
 import {
   completeMultipart,
@@ -75,7 +75,8 @@ function partSizes(size: number): number[] {
 }
 
 export async function beginUpload(input: BeginUploadInput): Promise<BeginUploadResult> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   if (!storageConfigured()) return fail("File storage is not connected yet.");
   if (!isUuid(input.sectionId) || (input.fileId !== undefined && !isUuid(input.fileId))) return fail("This section was not found.");
 
@@ -90,7 +91,7 @@ export async function beginUpload(input: BeginUploadInput): Promise<BeginUploadR
   const owned = await pool.query<{ deliveryId: string }>(
     `select d."id" as "deliveryId" from "deliverySection" s join "delivery" d on d."id" = s."deliveryId"
       where s."id" = $1 and d."ownerId" = $2`,
-    [input.sectionId, user.id],
+    [input.sectionId, ownerId],
   );
   const deliveryId = owned.rows[0]?.deliveryId;
   if (!deliveryId) return fail("This section was not found.");
@@ -105,7 +106,7 @@ export async function beginUpload(input: BeginUploadInput): Promise<BeginUploadR
     previousPending = existing.rows[0].pending;
   }
 
-  if ((await storageUsed(user.id)) + size > storageLimits.accountBytes) {
+  if ((await storageUsed(ownerId)) + size > storageLimits.accountBytes) {
     return fail(`This would pass your ${formatSize(storageLimits.accountBytes)} of storage. Remove a file or upload less.`);
   }
 
@@ -191,8 +192,9 @@ function refresh(deliveryId: string) {
 
 // Called by the browser once every byte is sent. The server checks storage itself before it trusts the upload.
 export async function completeUpload(fileId: string): Promise<Result> {
-  const user = await requireUser();
-  const row = await loadOwnedFile(fileId, user.id);
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
+  const row = await loadOwnedFile(fileId, ownerId);
   if (!row) return fail("This file was not found.");
   const pending = row.pending;
   if (!pending) return fail("There is no upload in progress for this file.");
@@ -250,8 +252,8 @@ export async function completeUpload(fileId: string): Promise<Result> {
   // For people who turned on "Back up to my Drive": copy the new file after the response has gone out.
   after(async () => {
     try {
-      await queueFile(user.id, fileId);
-      await runDriveBackup(user.id, 30_000);
+      await queueFile(ownerId, fileId);
+      await runDriveBackup(ownerId, 30_000);
     } catch (error) {
       console.error("Drive backup could not start", error);
     }
@@ -261,8 +263,9 @@ export async function completeUpload(fileId: string): Promise<Result> {
 
 // Called when the person cancels or an upload fails. A file row that never got a file is removed with it.
 export async function abortUpload(fileId: string): Promise<Result> {
-  const user = await requireUser();
-  const row = await loadOwnedFile(fileId, user.id);
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
+  const row = await loadOwnedFile(fileId, ownerId);
   if (!row) return fail("This file was not found.");
   if (row.pending) await discardPending(row.pending);
   if (row.storageKey) {

@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Logo, LogoMark } from "../Logo";
 import { NavList, SidebarNav } from "./SidebarNav";
 import { SidebarToggle } from "./SidebarToggle";
+import { TeamSwitcher } from "./TeamSwitcher";
 import { UserMenu, UserMenuFallback } from "./UserMenu";
 import styles from "./Workspace.module.css";
 
@@ -21,9 +22,14 @@ export function Sidebar({ nav, home = "/dashboard" }: { nav?: React.ReactNode; h
       </div>
       <div id="workspace-nav" className={styles.drawer}>
         {nav ?? (
-          <Suspense fallback={<NavList pathname={null} />}>
-            <SidebarNav />
-          </Suspense>
+          <div className={styles.navStack}>
+            <Suspense fallback={null}>
+              <TeamSwitcher />
+            </Suspense>
+            <Suspense fallback={<NavList pathname={null} />}>
+              <SidebarNav />
+            </Suspense>
+          </div>
         )}
         <Suspense fallback={<UserMenuFallback />}>
           <UserMenu />

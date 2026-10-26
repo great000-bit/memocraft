@@ -8,7 +8,7 @@ import { coverLimits, isCoverTemplate, type CoverTemplateId } from "./cover";
 import { limits } from "./delivery-limits";
 import { isUuid } from "./deliveries";
 import type { ActionResult } from "./delivery-actions";
-import { requireUser } from "./session";
+import { editableOwnerId, viewOnlyError } from "./team";
 import { deleteObjects, getObject, presignThumb, putObject, storageConfigured } from "./storage";
 
 export type CoverInput = {
@@ -35,7 +35,8 @@ const percent = (value: unknown) => (typeof value === "number" && Number.isFinit
 // The designer saves everything it shows in one go: the template, the title (the delivery's own) and the cover's words.
 // The cover picture is not part of it; only setCoverPhoto makes and stores that.
 export async function saveCover(deliveryId: string, input: CoverInput): Promise<ActionResult> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
   if (!isUuid(deliveryId) || !input || typeof input !== "object") return fail("This delivery was not found.");
   if (!isCoverTemplate(input.template)) return fail("Pick one of the templates.");
   const title = line(input.title, limits.title, "The title");
@@ -51,7 +52,7 @@ export async function saveCover(deliveryId: string, input: CoverInput): Promise<
   const result = await pool.query(
     `update "delivery" set "title" = $1, "cover" = coalesce("cover", '{}'::jsonb) || $2::jsonb, "updatedAt" = now()
       where "id" = $3 and "ownerId" = $4`,
-    [title, JSON.stringify(words), deliveryId, user.id],
+    [title, JSON.stringify(words), deliveryId, ownerId],
   );
   if (!result.rowCount) return fail("This delivery was not found.");
   revalidatePath("/dashboard");
@@ -67,7 +68,8 @@ const COVER_EDGE = 2400;
 // sized for a large screen. A photo the server cannot read (a camera RAW, say) is still chosen, and the page shows
 // its small preview instead.
 export async function setCoverPhoto(deliveryId: string, fileId: string): Promise<{ ok: true; url: string | null } | { ok: false; error: string }> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return { ok: false, error: viewOnlyError };
   if (!isUuid(deliveryId) || !isUuid(fileId)) return { ok: false, error: "This photo was not found." };
   const { rows } = await pool.query<{
     storageKey: string;
@@ -82,7 +84,7 @@ export async function setCoverPhoto(deliveryId: string, fileId: string): Promise
        join "deliverySection" s on s."id" = f."sectionId"
        join "delivery" d on d."id" = s."deliveryId"
       where f."id" = $1 and d."id" = $2 and d."ownerId" = $3 and f."storageKey" is not null`,
-    [fileId, deliveryId, user.id],
+    [fileId, deliveryId, ownerId],
   );
   const file = rows[0];
   if (!file) return { ok: false, error: "This photo was not found." };
@@ -113,7 +115,7 @@ export async function setCoverPhoto(deliveryId: string, fileId: string): Promise
   const result = await pool.query(
     `update "delivery" set "cover" = coalesce("cover", '{}'::jsonb) || $1::jsonb, "updatedAt" = now()
       where "id" = $2 and "ownerId" = $3`,
-    [JSON.stringify({ fileId, key }), deliveryId, user.id],
+    [JSON.stringify({ fileId, key }), deliveryId, ownerId],
   );
   if (!result.rowCount) return { ok: false, error: "This delivery was not found." };
   if (file.oldKey && file.oldKey !== key) await deleteObjects([file.oldKey]);

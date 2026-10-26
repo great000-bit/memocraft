@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { pool } from "./auth";
 import type { ActionResult } from "./delivery-actions";
 import { downloadName, isUuid } from "./deliveries";
-import { requireUser } from "./session";
+import { editableOwnerId, viewOnlyError, workspaceOwnerId } from "./team";
 import { deleteObjects, presignDownload, storageConfigured } from "./storage";
 
 // Earlier versions of a file: the copies kept when a file is replaced. Only the signed-in owner can reach them,
@@ -46,17 +46,18 @@ function refresh(deliveryId: string) {
 }
 
 export async function versionDownloadUrl(versionId: string): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
-  const user = await requireUser();
+  const ownerId = await workspaceOwnerId();
   if (!storageConfigured()) return fail("File storage is not connected yet.");
-  const version = await loadOwnedVersion(versionId, user.id);
+  const version = await loadOwnedVersion(versionId, ownerId);
   if (!version) return fail("This version was not found.");
   const url = await presignDownload(version.storageKey, downloadName(`${version.fileName} (earlier version)`, version.ext), version.mimeType);
   return { ok: true, url };
 }
 
 export async function deleteVersion(versionId: string): Promise<ActionResult> {
-  const user = await requireUser();
-  const version = await loadOwnedVersion(versionId, user.id);
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
+  const version = await loadOwnedVersion(versionId, ownerId);
   if (!version) return fail("This version was not found.");
   await pool.query(`delete from "deliveryFileVersion" where "id" = $1`, [versionId]);
   await deleteObjects([version.storageKey, ...(version.thumbKey ? [version.thumbKey] : [])]);
@@ -67,8 +68,9 @@ export async function deleteVersion(versionId: string): Promise<ActionResult> {
 // Puts an earlier version back as the file's current copy. The copy it replaces is kept as a version, so a restore
 // can be undone by restoring again.
 export async function restoreVersion(versionId: string): Promise<ActionResult> {
-  const user = await requireUser();
-  const version = await loadOwnedVersion(versionId, user.id);
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return fail(viewOnlyError);
+  const version = await loadOwnedVersion(versionId, ownerId);
   if (!version) return fail("This version was not found.");
   const client = await pool.connect();
   try {

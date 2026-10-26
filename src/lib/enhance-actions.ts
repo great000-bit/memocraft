@@ -19,7 +19,7 @@ import {
 } from "./enhance";
 import { GeminiQuotaError, geminiConfigured, monthlyGeminiLimit, repairWithGemini } from "./gemini-enhance";
 import { BROWSER_ENHANCED_MAX_BYTES, browserEnhancedKey, isBrowserEnhancedKey } from "./enhance-browser";
-import { requireUser } from "./session";
+import { editableOwnerId, viewOnlyError, workspaceOwnerId } from "./team";
 import { deleteObjects, getObject, getObjectRange, headObject, presignPut, presignView, putObject, storageConfigured } from "./storage";
 import { formatSize, storageLimits } from "./storage-limits";
 import { storageUsed } from "./storage-usage";
@@ -90,12 +90,12 @@ async function runsThisMonth(ownerId: string): Promise<number> {
 
 // The in-browser enhancer is free and has no monthly allowance; the server one (Replicate) only exists when its token is set.
 export async function enhanceAllowance(): Promise<{ used: number; limit: number; on: boolean; server: boolean; gemini: boolean; geminiLeft: number }> {
-  const user = await requireUser();
+  const ownerId = await workspaceOwnerId();
   const on = storageConfigured();
   const server = on && enhanceConfigured();
   const gemini = on && geminiConfigured();
-  const geminiLeft = gemini ? Math.max(0, monthlyGeminiLimit() - (await geminiRunsThisMonth(user.id))) : 0;
-  return { used: server ? await runsThisMonth(user.id) : 0, limit: monthlyEnhanceLimit(), on, server, gemini, geminiLeft };
+  const geminiLeft = gemini ? Math.max(0, monthlyGeminiLimit() - (await geminiRunsThisMonth(ownerId))) : 0;
+  return { used: server ? await runsThisMonth(ownerId) : 0, limit: monthlyEnhanceLimit(), on, server, gemini, geminiLeft };
 }
 
 async function geminiRunsThisMonth(ownerId: string): Promise<number> {
@@ -109,8 +109,9 @@ async function geminiRunsThisMonth(ownerId: string): Promise<number> {
 
 // Face and detail repair with Gemini: the photo is sent to Google and the answer comes back in the same request.
 export async function repairWithGeminiAction(fileId: string): Promise<EnhanceState> {
-  const user = await requireUser();
-  const file = await loadOwned(fileId, user.id);
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return { state: "failed", error: viewOnlyError };
+  const file = await loadOwned(fileId, ownerId);
   if (!file || !file.storageKey) return { state: "failed", error: "This photo was not found." };
   if (!geminiConfigured() || !storageConfigured()) return { state: "failed", error: "Memocraft repair is not switched on yet." };
   if (file.enhanceJob && !file.enhanceJob.error) return { state: "running" };
@@ -119,10 +120,10 @@ export async function repairWithGeminiAction(fileId: string): Promise<EnhanceSta
     return { state: "failed", error: `Repair works on photos up to ${formatSize(ENHANCE_SOURCE_MAX_BYTES)}.` };
   }
   const limit = monthlyGeminiLimit();
-  if ((await geminiRunsThisMonth(user.id)) >= limit) {
+  if ((await geminiRunsThisMonth(ownerId)) >= limit) {
     return { state: "failed", error: `You have used all ${limit} Memocraft repairs for this month. They come back on the 1st.` };
   }
-  if ((await storageUsed(user.id)) + 8 * 1024 * 1024 > storageLimits.accountBytes) {
+  if ((await storageUsed(ownerId)) + 8 * 1024 * 1024 > storageLimits.accountBytes) {
     return { state: "failed", error: "Your storage is full. Remove a file to make room for the repaired copy." };
   }
   const runId = `gemini-${randomBytes(8).toString("hex")}`;
@@ -132,7 +133,7 @@ export async function repairWithGeminiAction(fileId: string): Promise<EnhanceSta
     if (!original) return { state: "failed", error: "The original could not be read from storage. Try again." };
     const input = await prepareInput(original.bytes, 2_000_000);
     // The run is counted before the call, so a failing loop cannot spend the free quota unnoticed.
-    await pool.query(`insert into "enhanceRun" ("userId", "fileId", "predictionId") values ($1, $2, $3)`, [user.id, fileId, runId]);
+    await pool.query(`insert into "enhanceRun" ("userId", "fileId", "predictionId") values ($1, $2, $3)`, [ownerId, fileId, runId]);
     const repaired = await repairWithGemini(input.bytes);
     if (!repaired) return { state: "failed", error: "The repair did not return a picture for this photo. Your original is untouched. Try again." };
     const jpeg = await finishOutput(repaired);
@@ -172,12 +173,13 @@ type BrowserUpload = { ok: true; key: string; url: string } | { ok: false; error
 // Step before the browser uploads the copy it made: checks the photo is the caller's and there is room, and
 // hands back a one-use upload link for exactly that size.
 export async function prepareBrowserEnhance(fileId: string, size: number): Promise<BrowserUpload> {
-  const user = await requireUser();
-  const file = await loadOwned(fileId, user.id);
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return { ok: false, error: viewOnlyError };
+  const file = await loadOwned(fileId, ownerId);
   if (!file || !file.storageKey || !storageConfigured()) return { ok: false, error: "This photo was not found." };
   if (file.enhanceJob && !file.enhanceJob.error) return { ok: false, error: "An enhance is already running on this photo." };
   if (!Number.isInteger(size) || size < 1 || size > BROWSER_ENHANCED_MAX_BYTES) return { ok: false, error: "The enhanced copy is the wrong size." };
-  if ((await storageUsed(user.id)) + size > storageLimits.accountBytes) {
+  if ((await storageUsed(ownerId)) + size > storageLimits.accountBytes) {
     return { ok: false, error: "Your storage is full. Remove a file to make room for the enhanced copy." };
   }
   const key = browserEnhancedKey(fileId);
@@ -186,8 +188,9 @@ export async function prepareBrowserEnhance(fileId: string, size: number): Promi
 
 // Step after the upload: keeps the copy the browser stored, in place of any earlier one.
 export async function finishBrowserEnhance(fileId: string, key: string): Promise<EnhanceState> {
-  const user = await requireUser();
-  const file = await loadOwned(fileId, user.id);
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return { state: "failed", error: viewOnlyError };
+  const file = await loadOwned(fileId, ownerId);
   if (!file) return { state: "failed", error: "This photo was not found." };
   const discard = async (error: string): Promise<EnhanceState> => {
     if (isBrowserEnhancedKey(fileId, key)) await deleteObjects([key]);
@@ -211,8 +214,9 @@ export async function finishBrowserEnhance(fileId: string, key: string): Promise
 }
 
 export async function startEnhance(fileId: string, faces: boolean): Promise<EnhanceState> {
-  const user = await requireUser();
-  const file = await loadOwned(fileId, user.id);
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return { state: "failed", error: viewOnlyError };
+  const file = await loadOwned(fileId, ownerId);
   if (!file || !file.storageKey) return { state: "failed", error: "This photo was not found." };
   if (!enhanceConfigured() || !storageConfigured()) return { state: "failed", error: "Enhance is not switched on yet." };
   if (file.enhanceJob && !file.enhanceJob.error) return { state: "running" };
@@ -223,11 +227,11 @@ export async function startEnhance(fileId: string, faces: boolean): Promise<Enha
     return { state: "failed", error: `Enhance works on photos up to ${formatSize(ENHANCE_SOURCE_MAX_BYTES)}.` };
   }
   const limit = monthlyEnhanceLimit();
-  if ((await runsThisMonth(user.id)) >= limit) {
+  if ((await runsThisMonth(ownerId)) >= limit) {
     return { state: "failed", error: `You have used all ${limit} enhances for this month. They come back on the 1st.` };
   }
   // An enhanced copy is usually a few megabytes; this keeps the account from going far past its storage.
-  if ((await storageUsed(user.id)) + 8 * 1024 * 1024 > storageLimits.accountBytes) {
+  if ((await storageUsed(ownerId)) + 8 * 1024 * 1024 > storageLimits.accountBytes) {
     return { state: "failed", error: "Your storage is full. Remove a file to make room for the enhanced copy." };
   }
 
@@ -247,7 +251,7 @@ export async function startEnhance(fileId: string, faces: boolean): Promise<Enha
 
   const job: Job = { predictionId: prediction.id, inputKey, startedAt: new Date().toISOString() };
   await pool.query(`insert into "enhanceRun" ("userId", "fileId", "predictionId") values ($1, $2, $3)`, [
-    user.id,
+    ownerId,
     fileId,
     prediction.id,
   ]);
@@ -266,8 +270,8 @@ export async function startEnhance(fileId: string, faces: boolean): Promise<Enha
 
 // The editor asks every few seconds while a run is going.
 export async function checkEnhance(fileId: string): Promise<EnhanceState> {
-  const user = await requireUser();
-  const file = await loadOwned(fileId, user.id);
+  const ownerId = await workspaceOwnerId();
+  const file = await loadOwned(fileId, ownerId);
   if (!file) return { state: "failed", error: "This photo was not found." };
   const job = file.enhanceJob;
   if (!job || job.error || job.finishing) return stateOf(file);
@@ -333,8 +337,9 @@ async function settle(fileId: string, deliveryId: string, job: Job, prediction: 
 
 // Goes back to sending the original only. The run still counts toward the month.
 export async function removeEnhanced(fileId: string): Promise<EnhanceState> {
-  const user = await requireUser();
-  const file = await loadOwned(fileId, user.id);
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return { state: "failed", error: viewOnlyError };
+  const file = await loadOwned(fileId, ownerId);
   if (!file) return { state: "failed", error: "This photo was not found." };
   await pool.query(`update "deliveryFile" set "enhancedKey" = null, "enhancedBytes" = null, "enhanceJob" = null where "id" = $1`, [fileId]);
   await deleteObjects([file.enhancedKey, file.enhanceJob?.inputKey].filter((key): key is string => Boolean(key)));
@@ -344,8 +349,8 @@ export async function removeEnhanced(fileId: string): Promise<EnhanceState> {
 
 // Short-lived links to the original and the enhanced copy, for the before-and-after view in the editor.
 export async function enhanceCompareUrls(fileId: string): Promise<{ ok: true; before: string; after: string } | { ok: false; error: string }> {
-  const user = await requireUser();
-  const file = await loadOwned(fileId, user.id);
+  const ownerId = await workspaceOwnerId();
+  const file = await loadOwned(fileId, ownerId);
   if (!file?.storageKey || !file.enhancedKey || !storageConfigured()) return { ok: false, error: "There is no enhanced copy to show." };
   return {
     ok: true,

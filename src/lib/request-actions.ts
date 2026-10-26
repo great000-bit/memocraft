@@ -8,7 +8,7 @@ import { limits } from "./delivery-limits";
 import { requestEmailsOn, sendInBackground } from "./email";
 import { requestEmail } from "./email-templates";
 import { passesPassword } from "./link-access";
-import { requireUser } from "./session";
+import { editableOwnerId, viewOnlyError } from "./team";
 
 export type RequestResult = { ok: true } | { ok: false; error: string };
 
@@ -94,7 +94,8 @@ async function emailOwner(deliveryId: string, fileName: string | null, message: 
 
 // The creative marks a request handled, or opens it again.
 export async function setRequestDone(requestId: string, done: boolean): Promise<{ ok: true } | { ok: false; error: string }> {
-  const user = await requireUser();
+  const ownerId = await editableOwnerId();
+  if (!ownerId) return { ok: false, error: viewOnlyError };
   if (!isUuid(requestId)) return { ok: false, error: "This request was not found." };
   const result = await pool.query<{ deliveryId: string }>(
     `update "fileRequest" r
@@ -103,7 +104,7 @@ export async function setRequestDone(requestId: string, done: boolean): Promise<
        from "delivery" d
       where r."id" = $1 and d."id" = r."deliveryId" and d."ownerId" = $3
       returning r."deliveryId"`,
-    [requestId, done, user.id],
+    [requestId, done, ownerId],
   );
   if (!result.rows[0]) return { ok: false, error: "This request was not found." };
   revalidatePath("/requests");

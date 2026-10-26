@@ -1,6 +1,6 @@
 import { FeatureIcon, type FeatureIconName } from "../FeatureIcons";
 import { getDashboardStats } from "@/lib/dashboard";
-import { requireUser } from "@/lib/session";
+import { workspaceOwnerId } from "@/lib/team";
 import { formatSize } from "@/lib/storage-limits";
 import styles from "./Dashboard.module.css";
 
@@ -34,8 +34,7 @@ const size = (bytes: number) => (bytes === 0 ? "0 MB" : formatSize(bytes));
 // The three numbers a creative checks first: who they work with, how much room is left, and whether the
 // clients they sent to have actually seen their files. Reads the session, so it sits behind <Suspense>.
 export async function StatCards() {
-  const user = await requireUser();
-  const { clients, storage, proof } = await getDashboardStats(user.id);
+  const { clients, storage, proof } = await getDashboardStats(await workspaceOwnerId());
 
   const used = Math.min(100, (storage.usedBytes / storage.limitBytes) * 100);
   const free = Math.max(0, storage.limitBytes - storage.usedBytes);

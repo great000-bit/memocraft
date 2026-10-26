@@ -26,6 +26,8 @@ export function brandFrom(studio: Studio | null, logoPath: string): Brand {
 }
 
 export const ownerLogoPath = "/api/studio-logo";
+// The same route for a team's logo, which teammates see in the workspace's previews.
+export const workspaceLogoPath = (ownerId: string) => `${ownerLogoPath}?owner=${encodeURIComponent(ownerId)}`;
 export const clientLogoPath = (slug: string) => `/d/${slug}/logo`;
 
 // A PNG states its size in the first chunk: width and height as 4-byte numbers at bytes 16 and 20.

@@ -10,11 +10,13 @@ import { driveGrant, enableBackup, hasDriveScope, recordNoBackup, runDriveBackup
 // A normal sign-in does not record new permissions on an existing account, only linking does, which is why
 // older accounts have to use the Settings card.
 const destinations = new Set(["/dashboard", "/settings"]);
+// A team invite brings people back to its own page to accept it.
+const invitePage = /^\/join\/[A-Za-z0-9_-]{43}$/;
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const asked = url.searchParams.get("to") ?? "/dashboard";
-  const to = destinations.has(asked) ? asked : "/dashboard";
+  const to = destinations.has(asked) || invitePage.test(asked) ? asked : "/dashboard";
   const from = url.searchParams.get("from");
   const go = (path: string, flag?: string) => NextResponse.redirect(new URL(flag ? `${path}?drive=${flag}` : path, url));
 

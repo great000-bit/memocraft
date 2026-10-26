@@ -4,6 +4,7 @@ import { InlineScript } from "@/components/InlineScript";
 import { Notifier } from "@/components/workspace/Notifier";
 import { ServiceWorker } from "@/components/workspace/ServiceWorker";
 import { Sidebar } from "@/components/workspace/Sidebar";
+import { TeamBanner } from "@/components/workspace/TeamSwitcher";
 import { VerifyEmail } from "@/components/workspace/VerifyEmail";
 import { emailConfigured } from "@/lib/email";
 import { getSession } from "@/lib/session";
@@ -39,6 +40,9 @@ export default function WorkspaceLayout({ children }: LayoutProps<"/">) {
         <main className={styles.main}>
           <Suspense fallback={null}>
             <VerifyNotice />
+          </Suspense>
+          <Suspense fallback={null}>
+            <TeamBanner />
           </Suspense>
           {children}
         </main>

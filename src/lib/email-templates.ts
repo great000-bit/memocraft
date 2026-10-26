@@ -213,3 +213,29 @@ export function signupAlertEmail(to: string, user: { name: string; email: string
 <p style="margin:0;font-size:15px;line-height:22px;color:#a9b3ae">${e(user.email)} just created an account with Google.</p>`;
   return { to, subject, text, html: darkShell({ title: subject, preheader: `${user.name} just signed up.`, body, footer: "Turn these off with SIGNUP_ALERTS=off." }) };
 }
+
+// Someone was invited to work in a creative's workspace. The owner typed the address, so this only ever goes to
+// someone they chose. Names are the owner's own text and always escaped.
+export function teamInviteEmail(options: { to: string; ownerName: string; teamName: string; role: "editor" | "viewer"; url: string }): OutgoingEmail {
+  const can = options.role === "editor" ? "work on their deliveries and files with them" : "see their deliveries and files";
+  const subject = `${options.ownerName} invited you to ${options.teamName} on Memocraft`;
+  const text = [
+    "Hi,",
+    "",
+    `${options.ownerName} invited you to join ${options.teamName} on Memocraft, so you can ${can}.`,
+    "",
+    `Join the team: ${options.url}`,
+    "",
+    `Sign in with Google using this address (${options.to}). The link works for 14 days.`,
+    "",
+    "Memocraft",
+  ].join("\n");
+  const e = escapeHtml;
+  const body = `<p style="margin:0 0 6px;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#5fcfbb">Team invite</p>
+<h1 style="margin:0 0 12px;font-size:26px;line-height:32px;font-weight:700;letter-spacing:-0.4px;color:#e6eae8">Join ${e(options.teamName)}</h1>
+<p style="margin:0 0 28px;font-size:16px;line-height:24px;color:#a9b3ae">${e(options.ownerName)} invited you to join their team on Memocraft, so you can ${e(can)}.</p>
+${darkButton("Join the team", options.url)}
+<p style="margin:20px 0 0;font-size:13px;line-height:20px;color:#8d9792">Sign in with Google using ${e(options.to)}. The link works for 14 days.</p>`;
+  const footer = "You get this email because someone on Memocraft typed your address. If you do not know them, ignore it.";
+  return { to: options.to, subject, text, html: darkShell({ title: subject, preheader: `${options.ownerName} invited you to their team.`, body, footer }) };
+}

@@ -1,6 +1,7 @@
 import { userAgent } from "next/server";
 import { auth, pool } from "./auth";
 import { notifyOwner } from "./push";
+import { isOnTeam } from "./team";
 
 // Proof of delivery: what the client did with the link. Only real browsers count, and never the owner.
 
@@ -39,10 +40,11 @@ export function describeDevice(headers: Headers): string | null {
   return "Computer";
 }
 
+// The owner, or anyone on their team: their own visits are not the client.
 async function isOwner(headers: Headers, ownerId: string): Promise<boolean> {
   try {
     const session = await auth.api.getSession({ headers });
-    return session?.user.id === ownerId;
+    return session ? await isOnTeam(ownerId, session.user.id) : false;
   } catch {
     return false;
   }
