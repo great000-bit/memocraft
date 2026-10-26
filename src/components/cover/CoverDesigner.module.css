@@ -1,0 +1,358 @@
+/* The cover designer in the delivery editor: a computer and a phone preview, a rail of templates, the words, the photo. */
+.designer {
+  container: designer / inline-size;
+  display: grid;
+  gap: var(--space-6);
+  padding: clamp(16px, 2.4vw, 28px);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--surface);
+}
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  color: var(--proof-text);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.2vw, 28px);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.status {
+  min-height: 20px;
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: 14px;
+}
+
+.status[data-kind="saved"] {
+  color: var(--fixer-ink, var(--fixer));
+}
+
+.status[data-kind="error"] {
+  color: var(--error-text);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The drawing a preview holds, at its real size, shrunk from the top left corner. */
+.scaled {
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+.stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+}
+
+.desk {
+  display: none;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid #2a2f2d;
+  border-radius: 14px;
+  background: #0d0f0f;
+  box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.9);
+}
+
+.browserBar {
+  display: flex;
+  gap: 6px;
+  padding: 9px 12px;
+  border-bottom: 1px solid #1e2221;
+}
+
+.browserBar span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #2e3432;
+}
+
+.deskScreen,
+.phoneScreen,
+.cardScreen {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.phone {
+  width: min(250px, 72cqi);
+  margin: 0;
+  padding: 8px;
+  border: 1px solid #2f3533;
+  border-radius: 36px;
+  background: #0a0b0b;
+  box-shadow:
+    inset 0 0 0 2px #151817,
+    0 30px 60px -30px rgb(0 0 0 / 0.9);
+}
+
+.phoneScreen {
+  border-radius: 28px;
+}
+
+@container designer (min-width: 640px) {
+  .stage {
+    grid-template-columns: minmax(0, 1fr) clamp(150px, 22cqi, 210px);
+    align-items: end;
+    gap: var(--space-4);
+  }
+
+  .desk {
+    display: block;
+    width: 100%;
+  }
+
+  .phone {
+    width: 100%;
+    margin-bottom: -2px;
+    border-radius: 30px;
+  }
+
+  .phoneScreen {
+    border-radius: 22px;
+  }
+}
+
+/* Twenty templates in a rail that scrolls sideways, each drawn with the creative's own words and photo. */
+.rail {
+  display: grid;
+  grid-auto-columns: clamp(150px, 26cqi, 200px);
+  grid-auto-flow: column;
+  gap: var(--space-3);
+  margin: 0 calc(var(--space-2) * -1);
+  padding: 4px var(--space-2) var(--space-3);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+
+.card {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  scroll-snap-align: start;
+}
+
+.cardScreen {
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px var(--line);
+  transition: box-shadow 160ms ease;
+}
+
+.card:hover .cardScreen {
+  box-shadow: 0 0 0 1px var(--control-border);
+}
+
+.card[aria-checked="true"] .cardScreen {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--proof);
+}
+
+.card[aria-checked="true"] {
+  color: var(--text);
+}
+
+.cardName {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.cardIndex {
+  color: var(--proof-text);
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+@container designer (min-width: 640px) {
+  .fields {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .wide,
+  .fieldHint {
+    grid-column: 1 / -1;
+  }
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.label {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.input {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1px solid var(--control-border);
+  border-radius: 12px;
+  background: var(--sunken);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+}
+
+.input:hover {
+  background: var(--input-hover);
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--field-focus);
+  outline-offset: 1px;
+}
+
+.titleInput {
+  min-height: 60px;
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.4vw, 30px);
+  font-stretch: 106%;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.fieldHint {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: 14px;
+}
+
+.photoRow {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@container designer (min-width: 640px) {
+  .photoRow {
+    grid-template-columns: minmax(0, 1fr) clamp(160px, 26cqi, 220px);
+    align-items: start;
+  }
+}
+
+.photoPick,
+.focusBox {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.photos {
+  display: grid;
+  grid-auto-columns: 72px;
+  grid-auto-flow: column;
+  gap: 8px;
+  padding: 4px 4px 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.photo {
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 10px;
+  background: var(--sunken);
+  cursor: pointer;
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo[aria-checked="true"] {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--proof);
+}
+
+.photo:disabled {
+  cursor: progress;
+}
+
+.focus {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 10px;
+  background: var(--sunken);
+  cursor: crosshair;
+}
+
+.focus img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.focusDot {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px var(--proof),
+    0 2px 10px rgb(0 0 0 / 0.6);
+  translate: -50% -50%;
+  transition:
+    left 160ms ease,
+    top 160ms ease;
+}

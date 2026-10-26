@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { pool } from "./auth";
 import type { Brand } from "./brand";
+import { readCover, type Cover } from "./cover";
 import { brandFrom, clientLogoPath, type Studio } from "./studio";
 
 export type DeliveryFile = {
@@ -62,6 +63,8 @@ export type Delivery = {
   publishedAt: Date | null;
   sections: DeliverySection[];
   updates: DeliveryUpdate[];
+  // The cover a client sees first. Always filled in: a delivery never designed gets the defaults.
+  cover: Cover;
 };
 
 // What the owner sees about the link itself: when it stops working, and whether it asks for a password.
@@ -122,7 +125,10 @@ type DeliveryRow = {
   status: "draft" | "published";
   updatedAt: Date;
   publishedAt: Date | null;
+  cover: unknown;
 };
+
+const withCover = <T extends DeliveryRow>(row: T): Omit<T, "cover"> & { cover: Cover } => ({ ...row, cover: readCover(row.cover, row) });
 
 async function loadSections(deliveryId: string, onlyAttached: boolean): Promise<DeliverySection[]> {
   const sections = await pool.query<{ id: string; title: string; note: string | null }>(
@@ -243,7 +249,7 @@ export async function listDeliveries(ownerId: string, limit = 50): Promise<Deliv
 export async function getDeliveryForOwner(id: string, ownerId: string): Promise<OwnerDelivery | null> {
   if (!isUuid(id)) return null;
   const { rows } = await pool.query<DeliveryRow & { expiresAt: Date | null; expired: boolean; hasPassword: boolean }>(
-    `select "id", "title", "clientName", "message", "slug", "status", "updatedAt", "publishedAt", "expiresAt",
+    `select "id", "title", "clientName", "message", "slug", "status", "updatedAt", "publishedAt", "cover", "expiresAt",
             ("expiresAt" is not null and "expiresAt" <= now()) as "expired",
             "passwordHash" is not null as "hasPassword"
        from "delivery" where "id" = $1 and "ownerId" = $2`,
@@ -251,7 +257,7 @@ export async function getDeliveryForOwner(id: string, ownerId: string): Promise<
   );
   if (!rows[0]) return null;
   const [sections, updates] = await Promise.all([loadSections(rows[0].id, false), loadUpdates(rows[0].id)]);
-  return { ...rows[0], sections, updates };
+  return { ...withCover(rows[0]), sections, updates };
 }
 
 // The sender as a client sees them: the studio name when one is set, else the person's own name, and the logo.
@@ -264,7 +270,7 @@ const senderJoins = `join "user" u on u."id" = d."ownerId" left join "studio" st
 export async function getPublishedBySlug(slug: string): Promise<(Delivery & { senderName: string; brand: Brand }) | null> {
   if (!/^[a-z0-9-]{1,80}$/.test(slug)) return null;
   const { rows } = await pool.query<DeliveryRow & Studio & { senderName: string }>(
-    `select d."id", d."title", d."clientName", d."message", d."slug", d."status", d."updatedAt", d."publishedAt",
+    `select d."id", d."title", d."clientName", d."message", d."slug", d."status", d."updatedAt", d."publishedAt", d."cover",
             ${senderColumns}
        from "delivery" d ${senderJoins}
       where d."slug" = $1 and ${live}`,
@@ -273,7 +279,7 @@ export async function getPublishedBySlug(slug: string): Promise<(Delivery & { se
   if (!rows[0]) return null;
   const { name, logoVersion, logoWidth, logoHeight, ...row } = rows[0];
   const [sections, updates] = await Promise.all([loadSections(row.id, true), loadUpdates(row.id)]);
-  return { ...row, sections, updates, brand: brandFrom({ name, logoVersion, logoWidth, logoHeight }, clientLogoPath(slug)) };
+  return { ...withCover(row), sections, updates, brand: brandFrom({ name, logoVersion, logoWidth, logoHeight }, clientLogoPath(slug)) };
 }
 
 // Enough to attribute an event to a delivery: found by slug, only while its link is live.

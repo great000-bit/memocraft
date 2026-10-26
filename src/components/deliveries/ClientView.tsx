@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { preconnect } from "react-dom";
 import { FeatureIcon } from "../FeatureIcons";
+import { CoverHero } from "../cover/CoverHero";
 import { noBrand, type Brand } from "@/lib/brand";
 import { downloadName, type Delivery, type DeliveryFile } from "@/lib/deliveries";
 import { saveLimits, saveType, type SaveTarget } from "@/lib/save-to-phone";
@@ -95,6 +96,7 @@ export function ClientView({
   senderName,
   brand = noBrand,
   thumbs = {},
+  coverSrc = null,
   canAsk = false,
 }: {
   delivery: Delivery;
@@ -102,6 +104,8 @@ export function ClientView({
   senderName: string;
   brand?: Brand;
   thumbs?: Record<string, string>;
+  // The cover's picture (see clientCoverLink), or null when the delivery has no photo.
+  coverSrc?: string | null;
   // True on the public page, where a client may ask for a file. The owner's preview shows the page without it.
   canAsk?: boolean;
 }) {
@@ -127,8 +131,6 @@ export function ClientView({
 
   const files = sections.flatMap((section) => section.files);
   const totalBytes = files.reduce((sum, file) => sum + (file.sizeBytes ?? 0), 0);
-  // Up to three of the pictures lead the page as a collage; on a narrow screen it is left out, as the pictures follow right away.
-  const lead = files.filter((file) => thumbs[file.id]).slice(0, 3);
   // The first pictures are on screen when the page opens, so they load at once instead of waiting for the layout
   // to decide they are visible. The first row (two across on a phone) goes first. The rest load as the client scrolls.
   const pictures = files.filter((file) => thumbs[file.id]).map((file) => file.id);
@@ -138,9 +140,9 @@ export function ClientView({
     return { loading: "eager", decoding: "async", fetchPriority: index < 2 ? "high" : "auto" } as const;
   };
   // Open the connection to storage while the page is still arriving.
-  const storageOrigin = lead[0] && /^https?:/.test(thumbs[lead[0].id]) ? new URL(thumbs[lead[0].id]).origin : null;
+  const storageOrigin = coverSrc && /^https?:/.test(coverSrc) ? new URL(coverSrc).origin : null;
   if (storageOrigin) preconnect(storageOrigin);
-  const eyebrow = [delivery.clientName && `For ${delivery.clientName}`, !brand.name && `From ${senderName}`].filter(Boolean).join(" \u00b7 ");
+  const cover = delivery.cover;
 
   return (
     <article className={styles.page}>
@@ -155,31 +157,34 @@ export function ClientView({
         </div>
       </header>
 
-      <div className={styles.wrap}>
-        <section className={styles.hero} data-art={lead.length > 0 ? lead.length : undefined} aria-labelledby="delivery-title">
-          <div className={styles.heroText}>
-            {eyebrow && <p className={styles.eyebrow}>{eyebrow}</p>}
-            <h1 id="delivery-title" className={styles.title}>
-              {delivery.title}
-            </h1>
+      <CoverHero
+        template={cover.template}
+        text={{ title: delivery.title, kicker: cover.kicker ?? "", subtitle: cover.subtitle ?? "", button: cover.button ?? "" }}
+        photo={coverSrc}
+        pictures={pictures
+          .filter((fileId) => fileId !== (cover.fileId && pictures.includes(cover.fileId) ? cover.fileId : pictures[0]))
+          .slice(0, 5)
+          .map((fileId) => thumbs[fileId])}
+        focusX={cover.focusX}
+        focusY={cover.focusY}
+        brand={brand}
+        senderName={senderName}
+        fileCount={files.length}
+        href="#gallery"
+        headingId="delivery-title"
+      />
+
+      <div className={styles.wrap} id="gallery">
+        {(delivery.message || files.length > 0) && (
+          <section className={styles.intro} aria-label="About this delivery">
             {delivery.message && <p className={styles.message}>{delivery.message}</p>}
             <ul className={styles.facts}>
               {files.length > 0 && <li>{files.length === 1 ? "1 file" : `${files.length} files`}</li>}
               {totalBytes > 0 && <li>{formatSize(totalBytes)}</li>}
               {delivery.publishedAt && <li>Sent {dateFormat.format(delivery.publishedAt)}</li>}
             </ul>
-          </div>
-          {lead.length > 0 && (
-            <div className={styles.collage} aria-hidden="true">
-              {lead.map((file) => (
-                <div key={file.id} className={styles.collageCard}>
-                  {/* eslint-disable-next-line @next/next/no-img-element -- a signed storage link, not a site asset */}
-                  <img src={thumbs[file.id]} alt="" {...loadNow(file.id)} fetchPriority="auto" referrerPolicy="no-referrer" />
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+          </section>
+        )}
 
         {latest && (
           <aside className={styles.update} aria-label="Latest update">

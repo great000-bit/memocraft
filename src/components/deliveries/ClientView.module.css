@@ -72,44 +72,12 @@
   padding: 0 clamp(16px, 4cqi, 56px) clamp(40px, 6cqi, 80px);
 }
 
-/* The opening: the title as big as the page allows, the message under it, and up to three pictures fanned out beside it. */
-.hero {
-  display: grid;
-  gap: var(--space-8);
-  align-items: center;
-  padding-top: clamp(32px, 7cqi, 96px);
-}
-
-.heroText {
+/* Under the cover: the creative's message and the facts about the delivery. */
+.intro {
   display: grid;
   justify-items: start;
   gap: var(--space-4);
-  min-width: 0;
-}
-
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--fixer-ink, var(--fixer));
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 22px;
-}
-
-.eyebrow::before {
-  content: "";
-  width: 28px;
-  height: 3px;
-  border-radius: 2px;
-  background: var(--proof);
-}
-
-.title {
-  font-size: clamp(38px, 5.6cqi, 76px);
-  line-height: 1.03;
-  letter-spacing: -0.03em;
-  overflow-wrap: anywhere;
+  padding-top: clamp(32px, 5cqi, 64px);
 }
 
 .message {
@@ -141,129 +109,6 @@
   line-height: 20px;
 }
 
-/* Decorative: the pictures are all below, so a phone goes straight to the title. */
-.collage {
-  position: relative;
-  display: none;
-  width: 100%;
-  max-width: 560px;
-  aspect-ratio: 1 / 0.94;
-  justify-self: end;
-}
-
-.collageCard {
-  position: absolute;
-  overflow: hidden;
-  border-radius: 20px;
-  background: var(--sunken);
-  box-shadow:
-    0 0 0 6px var(--surface),
-    0 34px 60px -26px rgb(0 0 0 / 0.8);
-}
-
-.collageCard img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 50% 28%;
-}
-
-.collageCard:nth-child(1) {
-  top: 6%;
-  left: 0;
-  width: 56%;
-  aspect-ratio: 4 / 5;
-  rotate: -5deg;
-}
-
-.collageCard:nth-child(2) {
-  top: 0;
-  right: 0;
-  width: 50%;
-  aspect-ratio: 4 / 5;
-  rotate: 4deg;
-}
-
-.collageCard:nth-child(3) {
-  bottom: 0;
-  left: 27%;
-  z-index: 1;
-  width: 46%;
-  aspect-ratio: 1;
-  rotate: -1.5deg;
-}
-
-.hero[data-art="1"] .collageCard:nth-child(1) {
-  top: 0;
-  left: 16%;
-  width: 68%;
-  rotate: -3deg;
-}
-
-.hero[data-art="2"] .collageCard:nth-child(1) {
-  top: 8%;
-  left: 2%;
-  width: 54%;
-}
-
-.hero[data-art="2"] .collageCard:nth-child(2) {
-  top: 2%;
-  width: 48%;
-}
-
-@container page (min-width: 900px) {
-  .hero[data-art] {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
-    gap: clamp(32px, 5cqi, 88px);
-  }
-
-  .collage {
-    display: block;
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .heroText > * {
-    animation: rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  }
-
-  .heroText > :nth-child(2) {
-    animation-delay: 70ms;
-  }
-
-  .heroText > :nth-child(3) {
-    animation-delay: 140ms;
-  }
-
-  .heroText > :nth-child(4) {
-    animation-delay: 210ms;
-  }
-
-  .collageCard {
-    animation: rise 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  }
-
-  .collageCard:nth-child(2) {
-    animation-delay: 120ms;
-  }
-
-  .collageCard:nth-child(3) {
-    animation-delay: 240ms;
-  }
-}
-
-@keyframes rise {
-  from {
-    opacity: 0;
-    translate: 0 22px;
-  }
-
-  to {
-    opacity: 1;
-    translate: 0 0;
-  }
-}
 
 /* The note about what changed since the link first went out. */
 .update {

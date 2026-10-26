@@ -303,9 +303,13 @@ export async function deleteDelivery(deliveryId: string): Promise<ActionResult> 
       where s."deliveryId" = $1`,
     [deliveryId],
   );
-  const removed = await pool.query(`delete from "delivery" where "id" = $1 and "ownerId" = $2`, [deliveryId, user.id]);
+  const removed = await pool.query<{ coverKey: string | null }>(
+    `delete from "delivery" where "id" = $1 and "ownerId" = $2 returning "cover"->>'key' as "coverKey"`,
+    [deliveryId, user.id],
+  );
   if (!removed.rowCount) return fail("This delivery was not found.");
-  await removeStored([...files.rows, ...versions.rows.map(asStored)]);
+  const coverKey = removed.rows[0]?.coverKey;
+  await removeStored([...files.rows, ...versions.rows.map(asStored), ...(coverKey ? [{ storageKey: coverKey, pending: null }] : [])]);
   revalidatePath("/dashboard");
   revalidatePath("/deliveries");
   redirect("/deliveries");

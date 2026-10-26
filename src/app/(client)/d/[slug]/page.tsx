@@ -7,7 +7,7 @@ import { OpenBeacon } from "@/components/deliveries/OpenBeacon";
 import { PasswordGate } from "@/components/deliveries/PasswordGate";
 import { getLinkBySlug, getPublishedBySlug } from "@/lib/deliveries";
 import { passesPassword } from "@/lib/link-access";
-import { clientThumbnailLinks } from "@/lib/thumbnails";
+import { clientCoverLink, clientThumbnailLinks } from "@/lib/thumbnails";
 
 export const metadata: Metadata = { title: "Your delivery" };
 
@@ -19,11 +19,12 @@ async function Delivery({ params }: Pick<PageProps<"/d/[slug]">, "params">) {
   if (!(await passesPassword(link.id, link.passwordHash))) return <PasswordGate slug={slug} senderName={link.senderName} brand={link.brand} />;
   const delivery = await getPublishedBySlug(slug);
   if (!delivery) notFound();
+  const thumbs = await clientThumbnailLinks(delivery);
   return (
     <>
       <ClientView delivery={delivery} senderName={delivery.senderName}
         brand={delivery.brand}
-        thumbs={await clientThumbnailLinks(delivery)} canAsk />
+        thumbs={thumbs} coverSrc={await clientCoverLink(delivery, thumbs)} canAsk />
       <OpenBeacon slug={delivery.slug} />
     </>
   );
