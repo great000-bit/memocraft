@@ -14,7 +14,9 @@ import { linkState, type DeliveryFile, type DeliverySection, type OwnerDelivery 
 import type { Activity } from "@/lib/delivery-events";
 import type { FileRequestItem } from "@/lib/requests";
 import { storageConfigured } from "@/lib/storage";
-import { ownerThumbnailLinks } from "@/lib/thumbnails";
+import { ownerCoverLink, ownerThumbnailLinks } from "@/lib/thumbnails";
+import type { Brand } from "@/lib/brand";
+import { CoverDesigner } from "../cover/CoverDesigner";
 import { formatSize } from "@/lib/storage-limits";
 import { ActionButton } from "./ActionButton";
 import { ActivityPanel } from "./ActivityPanel";
@@ -202,10 +204,15 @@ export async function DeliveryEditor({
   delivery,
   activity,
   requests,
+  brand,
+  senderName,
 }: {
   delivery: OwnerDelivery;
   activity: Activity;
   requests: FileRequestItem[];
+  // How the creative's studio shows on the cover.
+  brand: Brand;
+  senderName: string;
 }) {
   const state = linkState(delivery);
   // Once a link has been sent it keeps its place at the top, whether it is live, paused or expired.
@@ -226,6 +233,11 @@ export async function DeliveryEditor({
   const grouped = delivery.sections.length > 1;
   const fileCount = delivery.sections.reduce((sum, section) => sum + section.files.length, 0);
   const only = delivery.sections[0];
+  const coverSrc = await ownerCoverLink(delivery, thumbs);
+  const photos = delivery.sections
+    .flatMap((section) => section.files)
+    .filter((file) => file.attached && thumbs[file.id])
+    .map((file) => ({ id: file.id, name: file.name, thumb: thumbs[file.id] }));
 
   return (
     <>
@@ -245,15 +257,26 @@ export async function DeliveryEditor({
             </Link>
           </div>
         </div>
-        <EditableField
-          label="Delivery name"
-          hideLabel
-          look="title"
-          defaultValue={delivery.title}
-          maxLength={limits.title}
-          save={saveDeliveryField.bind(null, delivery.id, "title")}
-        />
       </div>
+
+      <CoverDesigner
+        deliveryId={delivery.id}
+        initial={{
+          template: delivery.cover.template,
+          title: delivery.title,
+          kicker: delivery.cover.kicker ?? "",
+          subtitle: delivery.cover.subtitle ?? "",
+          button: delivery.cover.button ?? "",
+          focusX: delivery.cover.focusX,
+          focusY: delivery.cover.focusY,
+        }}
+        photos={photos}
+        coverFileId={delivery.cover.fileId}
+        coverSrc={coverSrc}
+        brand={brand}
+        senderName={senderName}
+        fileCount={fileCount}
+      />
 
       {sent && (
         <>

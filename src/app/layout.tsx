@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Archivo, Instrument_Sans, JetBrains_Mono } from "next/font/google";
+import { Archivo, Bodoni_Moda, Instrument_Sans, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -19,6 +19,23 @@ const instrument = Instrument_Sans({
 const jetbrains = JetBrains_Mono({
   variable: "--font-jetbrains",
   subsets: ["latin"],
+  preload: false,
+});
+
+// The client cover templates' serif and Didone faces. Only a cover that uses one downloads it.
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-serif",
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  preload: false,
+});
+
+const bodoni = Bodoni_Moda({
+  variable: "--font-didone",
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  axes: ["opsz"],
   preload: false,
 });
 
@@ -62,7 +79,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${archivo.variable} ${instrument.variable} ${jetbrains.variable}`}>
+    <html lang="en" className={`${archivo.variable} ${instrument.variable} ${jetbrains.variable} ${instrumentSerif.variable} ${bodoni.variable}`}>
       <body>{children}</body>
     </html>
   );

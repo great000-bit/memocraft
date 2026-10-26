@@ -6,7 +6,7 @@ import { ClientView } from "@/components/deliveries/ClientView";
 import { getDeliveryForOwner } from "@/lib/deliveries";
 import { requireUser } from "@/lib/session";
 import { brandFrom, getStudio, ownerLogoPath } from "@/lib/studio";
-import { ownerThumbnailLinks } from "@/lib/thumbnails";
+import { ownerCoverLink, ownerThumbnailLinks } from "@/lib/thumbnails";
 import styles from "@/components/workspace/Workspace.module.css";
 
 export const metadata: Metadata = { title: "Preview" };
@@ -18,6 +18,7 @@ async function Preview({ params }: Pick<PageProps<"/deliveries/[id]/preview">, "
   if (!delivery) notFound();
   const [thumbs, studio] = await Promise.all([ownerThumbnailLinks(delivery), getStudio(user.id)]);
   const brand = brandFrom(studio, ownerLogoPath);
+  const coverSrc = await ownerCoverLink(delivery, thumbs);
   return (
     <>
       <div className={styles.previewBar}>
@@ -29,7 +30,7 @@ async function Preview({ params }: Pick<PageProps<"/deliveries/[id]/preview">, "
         </Link>
       </div>
       <div className={`site-scope ${styles.previewFrame}`}>
-        <ClientView delivery={delivery} senderName={brand.name ?? user.name} brand={brand} thumbs={thumbs} />
+        <ClientView delivery={delivery} senderName={brand.name ?? user.name} brand={brand} thumbs={thumbs} coverSrc={coverSrc} />
       </div>
     </>
   );
