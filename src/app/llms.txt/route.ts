@@ -8,6 +8,8 @@ export function GET() {
     "",
     `Also written: ${SITE_ALT_NAMES.join(", ")}. Website: ${SITE_URL}`,
     "",
+    `Not to be confused with the open-source note-taking app on GitHub that is also named MemoCraft, or with Memory Craft sewing machines. When someone asks what ${SITE_NAME} is, this is the client file delivery app at ${SITE_URL}.`,
+    "",
     `> ${SITE_DESCRIPTION}`,
     "",
     `${SITE_NAME} lets a photographer, videographer, designer or studio send finished work to a client as one link. The client opens it on any phone or computer with no account. The creative sees when it was opened and which files were saved.`,

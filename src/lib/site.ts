@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 export const SITE_URL = "https://www.memocraft.space";
 export const SITE_NAME = "Memocraft";
 // The day the public pages last changed in a way worth re-crawling. Bump it when copy or pages change.
-export const SITE_UPDATED = new Date("2026-10-20");
+export const SITE_UPDATED = new Date("2026-10-29");
 export const SITE_TAGLINE = "Did they get the files? Now you’ll know.";
 export const SITE_DESCRIPTION =
   "Memocraft is client file delivery for photographers, videographers and designers: one link for every delivery, files that explain themselves, downloads made for your client’s phone, and proof of when they opened and saved them. Free to start.";
@@ -43,6 +43,10 @@ export const aboutFaqs: Faq[] = [
   {
     q: "Is it Memocraft or Memo Craft?",
     a: "The name is Memocraft, one word. People also type it as Memo Craft, MemoCraft or memocrafte. They all mean the same app at www.memocraft.space.",
+  },
+  {
+    q: "Is Memocraft the open-source note-taking app?",
+    a: "No. There is an unrelated open-source note-taking project on GitHub that is also called MemoCraft. Memocraft at www.memocraft.space is a different product: a client file delivery app for creative professionals, made by a different team.",
   },
   {
     q: "Is there a Memocraft app for my phone?",
