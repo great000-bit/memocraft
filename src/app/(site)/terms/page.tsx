@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal/LegalPage";
 
-export const metadata: Metadata = { title: "Terms of service", alternates: { canonical: "/terms" } };
+export const metadata: Metadata = {
+  title: "Terms of service",
+  description: "The terms for using Memocraft to deliver files to clients: your account, your files, what you must not do, and ending your account.",
+  alternates: { canonical: "/terms" },
+};
 
 export default function TermsPage() {
   return (

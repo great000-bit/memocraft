@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal/LegalPage";
 
-export const metadata: Metadata = { title: "Privacy policy", alternates: { canonical: "/privacy" } };
+export const metadata: Metadata = {
+  title: "Privacy policy",
+  description: "What Memocraft collects, why, who handles it, and how to delete your account and files.",
+  alternates: { canonical: "/privacy" },
+};
 
 export default function PrivacyPage() {
   return (
