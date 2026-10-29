@@ -17,7 +17,7 @@ import { Photo } from "@/components/Photo";
 import type { PhotoKey } from "@/components/photos";
 import { Reveal } from "@/components/Reveal";
 import { SiteNav } from "@/components/SiteNav";
-import { audiences as trades, homeFaqs, SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_URL, socialFor } from "@/lib/site";
+import { audiences as trades, homeFaqs, SITE_ALT_NAMES, SITE_DESCRIPTION, SITE_NAME, SITE_PROFILES, SITE_TAGLINE, SITE_URL, socialFor } from "@/lib/site";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
@@ -34,15 +34,20 @@ const schema = {
       "@type": "Organization",
       "@id": `${SITE_URL}/#organization`,
       name: SITE_NAME,
+      alternateName: SITE_ALT_NAMES,
       url: SITE_URL,
       logo: `${SITE_URL}/icons/icon-512.png`,
       description: SITE_DESCRIPTION,
+      foundingDate: "2026",
+      contactPoint: { "@type": "ContactPoint", contactType: "customer support", url: `${SITE_URL}/contact` },
+      ...(SITE_PROFILES.length ? { sameAs: SITE_PROFILES } : {}),
     },
     {
       "@type": "WebSite",
       "@id": `${SITE_URL}/#website`,
       url: SITE_URL,
       name: SITE_NAME,
+      alternateName: SITE_ALT_NAMES,
       description: SITE_DESCRIPTION,
       publisher: { "@id": `${SITE_URL}/#organization` },
       inLanguage: "en",
@@ -51,6 +56,8 @@ const schema = {
       "@type": "SoftwareApplication",
       "@id": `${SITE_URL}/#app`,
       name: SITE_NAME,
+      alternateName: SITE_ALT_NAMES,
+      publisher: { "@id": `${SITE_URL}/#organization` },
       url: SITE_URL,
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web, iOS, Android",

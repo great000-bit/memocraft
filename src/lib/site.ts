@@ -5,10 +5,16 @@ import type { Metadata } from "next";
 export const SITE_URL = "https://www.memocraft.space";
 export const SITE_NAME = "Memocraft";
 // The day the public pages last changed in a way worth re-crawling. Bump it when copy or pages change.
-export const SITE_UPDATED = new Date("2026-10-20");
+export const SITE_UPDATED = new Date("2026-10-29");
 export const SITE_TAGLINE = "Did they get the files? Now you’ll know.";
 export const SITE_DESCRIPTION =
   "Memocraft is client file delivery for photographers, videographers and designers: one link for every delivery, files that explain themselves, downloads made for your client’s phone, and proof of when they opened and saved them. Free to start.";
+
+// Other ways people type the name. Published as alternateName so search engines and assistants tie them to us.
+export const SITE_ALT_NAMES = ["MemoCraft", "Memo Craft", "Memocraft app", "memocraft.space"];
+// Official profiles elsewhere (X, LinkedIn, Instagram, Product Hunt...). Published as sameAs, which is how Google links
+// a brand's profiles to its site. Add each one here once it exists; only real, live URLs.
+export const SITE_PROFILES: string[] = [];
 
 // A page that sets its own openGraph replaces the site-wide one, picture included, so each page spells out all of it.
 export function socialFor(path: string, title: string, description: string): Pick<Metadata, "openGraph" | "twitter"> {
@@ -27,6 +33,34 @@ export function socialFor(path: string, title: string, description: string): Pic
 }
 
 export type Faq = { q: string; a: string };
+
+// What the brand is, in the words people search with when they only know the name.
+export const aboutFaqs: Faq[] = [
+  {
+    q: "What is Memocraft?",
+    a: "Memocraft is a client file delivery app for photographers, videographers, filmmakers, designers and studios. You send finished work to a client as one link, and see when they open it and which files they save. Its website is memocraft.space.",
+  },
+  {
+    q: "Is it Memocraft or Memo Craft?",
+    a: "The name is Memocraft, one word. People also type it as Memo Craft, MemoCraft or memocrafte. They all mean the same app at www.memocraft.space.",
+  },
+  {
+    q: "Is Memocraft the open-source note-taking app?",
+    a: "No. There is an unrelated open-source note-taking project on GitHub that is also called MemoCraft. Memocraft at www.memocraft.space is a different product: a client file delivery app for creative professionals, made by a different team.",
+  },
+  {
+    q: "Is there a Memocraft app for my phone?",
+    a: "Yes. Open www.memocraft.space on your phone and add it to your Home Screen. It opens full screen like an app and can send you a notification when a client opens a delivery. There is nothing to download from an app store.",
+  },
+  {
+    q: "Is Memocraft related to Memory Craft sewing machines?",
+    a: "No. Memocraft is a file delivery app for creative professionals. It has no connection to sewing machines, scrapbooking or memo pads.",
+  },
+  {
+    q: "How do I contact Memocraft?",
+    a: "Use the contact form at www.memocraft.space/contact. We reply by email.",
+  },
+];
 
 // Shown on the landing page and published as FAQPage data. Answers stand on their own, so an assistant can quote one.
 export const homeFaqs: Faq[] = [
