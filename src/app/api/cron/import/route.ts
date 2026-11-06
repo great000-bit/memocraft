@@ -38,27 +38,26 @@ export async function GET() {
   const sizes: number[] = [];
   try {
     const reader = response.body.getReader();
-    let chunks: Uint8Array[] = [];
+    // R2 wants every part but the last to be the same size, so parts are cut at exactly PART bytes.
+    let part = new Uint8Array(PART);
     let held = 0;
     const flush = async () => {
-      const part = new Uint8Array(held);
-      let at = 0;
-      for (const chunk of chunks) {
-        part.set(chunk, at);
-        at += chunk.length;
-      }
-      chunks = [];
+      sizes.push(held);
+      await uploadPart(key, uploadId, sizes.length, part.subarray(0, held));
+      part = new Uint8Array(PART);
       held = 0;
-      sizes.push(part.length);
-      await uploadPart(key, uploadId, sizes.length, part);
     };
     for (;;) {
       const { done, value } = await reader.read();
       if (done) break;
-      chunks.push(value);
-      held += value.length;
-      // Parts other than the last must be at least 5 MB; 16 MB keeps the count low.
-      if (held >= PART) await flush();
+      let at = 0;
+      while (at < value.length) {
+        const take = Math.min(PART - held, value.length - at);
+        part.set(value.subarray(at, at + take), held);
+        held += take;
+        at += take;
+        if (held === PART) await flush();
+      }
     }
     if (held > 0 || sizes.length === 0) await flush();
     if (!(await completeMultipart(key, uploadId, sizes))) throw new Error("parts did not match");
