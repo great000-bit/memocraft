@@ -126,6 +126,13 @@ export async function completeMultipart(key: string, uploadId: string, expectedS
   return true;
 }
 
+// Server-side part upload, for files the server copies in itself (see /api/cron/import).
+export async function uploadPart(key: string, uploadId: string, partNumber: number, body: Uint8Array) {
+  await s3().send(
+    new UploadPartCommand({ Bucket: bucket(), Key: key, UploadId: uploadId, PartNumber: partNumber, Body: body }),
+  );
+}
+
 export async function abortMultipart(key: string, uploadId: string) {
   await s3().send(new AbortMultipartUploadCommand({ Bucket: bucket(), Key: key, UploadId: uploadId }));
 }
