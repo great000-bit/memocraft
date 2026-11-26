@@ -1,7 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { batchTargets, canSaveToPhone, prepareFile, shareFiles, type SaveTarget, type ShareResult } from "@/lib/save-to-phone";
+import {
+  batchTargets,
+  canSaveToPhone,
+  downloadToPhone,
+  isAndroidPhone,
+  prepareFile,
+  shareFiles,
+  type SaveTarget,
+  type ShareResult,
+} from "@/lib/save-to-phone";
 import styles from "./ClientView.module.css";
 
 const noopSubscribe = () => () => {};
@@ -16,7 +25,8 @@ type State =
 const useFallback = "Use Download instead.";
 
 // Saves files to the phone's photo library through the share sheet. The files are fetched first and then
-// offered together; a long delivery goes in batches, one tap each. Nothing shows on a computer or in a
+// offered together; a long delivery goes in batches, one tap each. On Android there is no such option in the share
+// sheet, so one tap downloads every file straight to the phone instead. Nothing shows on a computer or in a
 // browser without file sharing, so the plain Download button is all anyone sees there.
 // With an icon it is a small round button on a picture: the words go to its label, and if saving fails the file is
 // downloaded instead, as there is no room for an error under it.
@@ -34,7 +44,8 @@ export function SaveToPhone({
   icon?: React.ReactNode;
 }) {
   const canSave = useSyncExternalStore(noopSubscribe, canSaveToPhone, () => false);
-  const batches = useMemo(() => batchTargets(targets), [targets]);
+  const android = useSyncExternalStore(noopSubscribe, isAndroidPhone, () => false);
+  const batches = useMemo(() => (android ? (targets.length > 0 ? [targets] : []) : batchTargets(targets)), [android, targets]);
   const [batchIndex, setBatchIndex] = useState(0);
   const [state, setState] = useState<State>({ phase: "idle" });
   const prepared = useRef<File[]>([]);
@@ -81,6 +92,13 @@ export function SaveToPhone({
     }
   }
 
+  async function saveDirect() {
+    setState({ phase: "preparing", done: 0 });
+    await downloadToPhone(batch);
+    setState({ phase: "saved" });
+    setTimeout(() => setState({ phase: "idle" }), 2500);
+  }
+
   async function prepareAndShare() {
     const abort = new AbortController();
     controller.current = abort;
@@ -120,7 +138,9 @@ export function SaveToPhone({
   const many = batch.length > 1;
   const status =
     state.phase === "preparing"
-      ? many
+      ? android
+        ? "Saving…"
+        : many
         ? `Getting ${Math.min(state.done + 1, batch.length)} of ${batch.length}…`
         : "Getting it ready…"
       : state.phase === "ready"
@@ -146,7 +166,7 @@ export function SaveToPhone({
         aria-label={icon ? status : undefined}
         title={icon ? status : undefined}
         disabled={state.phase === "preparing" || state.phase === "saved"}
-        onClick={() => (state.phase === "ready" ? shareReady() : prepareAndShare())}
+        onClick={() => (android ? saveDirect() : state.phase === "ready" ? shareReady() : prepareAndShare())}
       >
         {icon ?? status}
       </button>

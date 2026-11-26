@@ -56,7 +56,14 @@ export function batchTargets(targets: SaveTarget[]): SaveTarget[][] {
   return batches;
 }
 
+// An Android phone has no "save to photos" in its share sheet, so there it saves by downloading straight to the phone.
+export function isAndroidPhone(): boolean {
+  if (typeof navigator === "undefined" || !/Android/i.test(navigator.userAgent)) return false;
+  return window.matchMedia("(pointer: coarse)").matches;
+}
+
 function detectSaveToPhone(): boolean {
+  if (isAndroidPhone()) return true;
   if (typeof navigator === "undefined" || typeof navigator.share !== "function" || typeof navigator.canShare !== "function") return false;
   if (!window.matchMedia("(pointer: coarse)").matches) return false;
   try {
@@ -97,5 +104,24 @@ export async function shareFiles(files: File[]): Promise<ShareResult> {
     if (name === "AbortError") return "cancelled";
     if (name === "NotAllowedError") return "blocked";
     throw error;
+  }
+}
+
+const pauseBetweenDownloads = 700;
+
+// Android: each file is handed to the browser's own downloader through the same link the Download button uses.
+// It lands in the phone's Downloads folder and shows up in the gallery, with no share sheet in between and no
+// limit on size, as nothing is held in memory.
+export async function downloadToPhone(targets: SaveTarget[]): Promise<void> {
+  for (let i = 0; i < targets.length; i++) {
+    const link = document.createElement("a");
+    link.href = targets[i].url;
+    link.download = targets[i].fileName;
+    link.rel = "noopener";
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    if (i < targets.length - 1) await new Promise((resolve) => setTimeout(resolve, pauseBetweenDownloads));
   }
 }
